@@ -10,7 +10,7 @@
 
     <name>Eclipse MOSAIC Parent</name>
     <description>Parent Module Descriptor for Eclipse MOSAIC</description>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <inceptionYear>2020</inceptionYear>
     <organization>
@@ -28,7 +28,7 @@
     <scm>
         <connection>scm:git:git@github.com:eclipse/mosaic.git</connection>
         <developerConnection>scm:git:git@github.com:eclipse/mosaic.git</developerConnection>
-        <url>https://github.com/eclipse/mosaic/tree/main</url>
+        <url>https://github.com/eclipse-mosaic/mosaic/tree/main</url>
     </scm>
 
     <distributionManagement>

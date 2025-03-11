@@ -12,7 +12,7 @@
 
     <artifactId>mosaic-sns</artifactId>
     <name>Eclipse MOSAIC Simple Network Simulator</name>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <dependencies>
         <dependency>

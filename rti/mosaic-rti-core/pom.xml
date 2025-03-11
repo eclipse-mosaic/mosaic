@@ -12,7 +12,7 @@
 
     <artifactId>mosaic-rti-core</artifactId>
     <name>Eclipse MOSAIC Runtime Infrastructure Implementation</name>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <properties>
         <skip.jar-test-creation>true</skip.jar-test-creation>

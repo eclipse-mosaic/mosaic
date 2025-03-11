@@ -12,7 +12,7 @@
 
     <artifactId>mosaic-cell</artifactId>
     <name>Eclipse MOSAIC Cellular Simulator</name>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <dependencies>
         <dependency>

@@ -16,7 +16,7 @@
 
     <name>Eclipse MOSAIC Highway Management Application for Highway Tutorial</name>
     <description>Simple application which interacts with highway infrastructure.</description>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

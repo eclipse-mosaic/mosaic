@@ -12,7 +12,7 @@
 
     <artifactId>mosaic-sumo</artifactId>
     <name>Eclipse MOSAIC SUMO Ambassador</name>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <repositories>
         <repository>

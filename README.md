@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-EPL%202.0-green.svg)](https://opensource.org/licenses/EPL-2.0)
 ![Made with java](https://img.shields.io/badge/Made%20with-Java-1f425f.svg) 
 ![Size](https://img.shields.io/github/repo-size/eclipse/mosaic.svg) <br>
-[![Build](https://github.com/eclipse/mosaic/workflows/Java%20CI%20with%20Maven/badge.svg)](https://github.com/eclipse/mosaic/actions?query=branch%3Amain+workflow%3A%22Java+CI+with+Maven%22)
+[![Build](https://github.com/eclipse-mosaic/mosaic/workflows/Java%20CI%20with%20Maven/badge.svg)](https://github.com/eclipse-mosaic/mosaic/actions?query=branch%3Amain+workflow%3A%22Java+CI+with+Maven%22)
 [![Jenkins Build](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.eclipse.org%2Fmosaic%2Fjob%2Fmosaic%2Fjob%2Fmain&label=Jenkins%20build)](https://ci.eclipse.org/mosaic/job/mosaic/)
 
 
@@ -60,7 +60,7 @@ Additional simulators and assessment features are provided by [Fraunhofer FOKUS]
 
 ## Contact
 
-Any questions regarding Eclipse MOSAIC can be asked, discussed, and found in the [Discussion section](https://github.com/eclipse/mosaic/discussions) here at GitHub.
+Any questions regarding Eclipse MOSAIC can be asked, discussed, and found in the [Discussion section](https://github.com/eclipse-mosaic/mosaic/discussions) here at GitHub.
 
 For further questions we are available via mosaic@fokus.fraunhofer.de
 

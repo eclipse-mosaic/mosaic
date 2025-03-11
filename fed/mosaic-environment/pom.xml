@@ -12,7 +12,7 @@
 
     <artifactId>mosaic-environment</artifactId>
     <name>Eclipse MOSAIC Environment Simulator</name>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <dependencies>
         <dependency>

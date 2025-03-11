@@ -16,7 +16,7 @@
 
     <name>Eclipse MOSAIC Traffic Light Application for Tiergarten Tutorial</name>
     <description>Simple application that communicates with traffic signals.</description>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

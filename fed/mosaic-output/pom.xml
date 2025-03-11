@@ -12,7 +12,7 @@
 
     <artifactId>mosaic-output</artifactId>
     <name>Eclipse MOSAIC Output Generation Ambassador</name>
-    <url>https://github.com/eclipse/mosaic</url>
+    <url>https://github.com/eclipse-mosaic/mosaic</url>
 
     <dependencies>
         <dependency>
