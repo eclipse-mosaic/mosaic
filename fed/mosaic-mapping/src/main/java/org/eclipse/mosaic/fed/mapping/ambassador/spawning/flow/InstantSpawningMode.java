@@ -16,7 +16,7 @@
 package org.eclipse.mosaic.fed.mapping.ambassador.spawning.flow;
 
 public class InstantSpawningMode implements SpawningMode {
-    long startingTime;
+    private final long startingTime;
 
     public InstantSpawningMode(long startingTime) {
         this.startingTime = startingTime;

@@ -278,8 +278,8 @@ public class SumoAmbassador extends AbstractSumoAmbassador {
                     iterator.remove();
                     continue;
                 }
-                // TODO: Find better solution. Currently, an arbitrary SUMO route for external vehicles is selected, since a registered
-                //       SUMO route is required when adding a vehicle to SUMO. Using an empty route id "" leads to an error.
+                // We choose "" as the default routeId because we want it to be possible to spawn vehicles without a defined route.
+                // This is especially useful for parking vehicles that are not supposed to move.
                 routeId = Iterables.getFirst(routes.keySet(), "");
                 laneId = "free";
             }
@@ -391,17 +391,11 @@ public class SumoAmbassador extends AbstractSumoAmbassador {
     }
 
     private String extractDepartureSpeed(VehicleRegistration vehicleRegistration) {
-        switch (vehicleRegistration.getDeparture().getDepartureSpeedMode()) {
-            case PRECISE -> {
-                return String.format(Locale.ENGLISH, "%.2f", vehicleRegistration.getDeparture().getDepartureSpeed());
-            }
-            case RANDOM -> {
-                return "random";
-            }
-            default -> {
-                return "max";
-            }
-        }
+        return switch (vehicleRegistration.getDeparture().getDepartureSpeedMode()) {
+            case PRECISE -> String.format(Locale.ENGLISH, "%.2f", vehicleRegistration.getDeparture().getDepartureSpeed());
+            case RANDOM -> "random";
+            case MAXIMUM -> "max";
+        };
     }
 
     private String extractDepartureLane(VehicleRegistration vehicleRegistration) {

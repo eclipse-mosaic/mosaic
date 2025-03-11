@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -58,7 +59,7 @@ public class CentralPerceptionComponent {
     /**
      * The last {@link VehicleUpdates} interaction which is used to update the vehicleIndex.
      */
-    private final HashMap<String, VehicleUpdates> latestVehicleUpdates = new HashMap<>();
+    private final Map<String, VehicleUpdates> latestVehicleUpdates = new HashMap<>();
 
     /**
      * The last {@link TrafficLightUpdates} interaction which is used to update the vehicleIndex.

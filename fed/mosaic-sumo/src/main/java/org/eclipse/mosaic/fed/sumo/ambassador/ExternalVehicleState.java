@@ -76,10 +76,6 @@ class ExternalVehicleState {
         return lastMovementInfo;
     }
 
-    public boolean hasMoved() {
-        return true;
-    }
-
     /**
      * Checks whether the last vehicle movement is added.
      *
