@@ -34,6 +34,7 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -127,7 +128,7 @@ public class OutputAmbassador extends AbstractFederateAmbassador {
                     loader = loaderClass.getDeclaredConstructor().newInstance();
 
                     loader.initialize(rti, generatorXmlConfiguration, ambassadorParameter.configuration.getParentFile());
-                } catch (InternalFederateException e) {
+                } catch (InternalFederateException | IllegalArgumentException | IllegalStateException e) {
                     throw e;
                 } catch (Exception e) {
                     LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME).warn("Loading output generator configuration failed: " + e.getMessage());
@@ -135,9 +136,10 @@ public class OutputAmbassador extends AbstractFederateAmbassador {
                     continue;
                 }
 
-                if (generatorLoader.putIfAbsent(loader.getId(), loader) == loader) {
+                if (generatorLoader.putIfAbsent(loader.getId(), loader) != null) {
+                    // putIfAbsent returns the _previous_ value
                     log.error("Could not add output generator due to duplicate id={}", loader.getId());
-                    continue;
+                    throw new IllegalArgumentException("Could not add output generator due to duplicate id=" + loader.getId());
                 }
 
                 globalUpdateIntervalInSeconds = MathUtils.gcd(loader.getUpdateIntervalInSeconds(), globalUpdateIntervalInSeconds);
@@ -152,7 +154,7 @@ public class OutputAmbassador extends AbstractFederateAmbassador {
 
             // do not yet create output generators. This is done when the ambassadors initialize method is called
             return generatorLoader.values();
-        } catch (InternalFederateException e) {
+        } catch (InternalFederateException | IllegalArgumentException | IllegalStateException | IOException e) {
             throw new RuntimeException(e);
         } catch (Exception ex) {
             log.error("Error while initializing OutputAmbassador", ex);

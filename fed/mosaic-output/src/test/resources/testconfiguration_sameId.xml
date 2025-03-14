@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="https://github.com/eclipse/mosaic/blob/main/fed/mosaic-output/src/main/resources/output_config.xsd">
+
+    <output id="generator1" loader="org.eclipse.mosaic.fed.output.ambassador.TestOutputGeneratorLoader">
+    </output>
+    <output id="generator1" loader="org.eclipse.mosaic.fed.output.ambassador.TestOutputGeneratorLoader">
+    </output>
+
+</configuration>
