@@ -20,21 +20,91 @@ import static com.google.common.reflect.ClassPath.from;
 
 import org.eclipse.mosaic.rti.api.Interaction;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class InteractionUtils {
 
-    private final static Logger log = LoggerFactory.getLogger(InteractionUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InteractionUtils.class);
 
-    private static Map<String, Class<?>> supportedInteractions = new HashMap<>();
+    /**
+     * Cached list of all top level classes found in the classpath.
+     */
+    private static final List<ClassInfo> TOP_LEVEL_CLASSES = new ArrayList<>();
+    /**
+     * All packages to scan in that particular order.
+     */
+    private static final List<String> PACKAGES_FOR_SCAN = Lists.newArrayList("org.eclipse.mosaic");
+
+    /**
+     * Cached scan results for each provided package to scan.
+     *
+     * @see #PACKAGES_FOR_SCAN
+     */
+    private static final Map<String, Map<String, Class<?>>> SCAN_RESULTS = new HashMap<>();
+
+    /**
+     * All cached interaction classes found in the classpath.
+     */
+    private static final Map<String, Class<?>> INTERACTIONS = new HashMap<>();
+
+    /**
+     * Returns the {@link Interaction} class for the given interaction type id.
+     */
+    public static Class<?> getInteractionClassForTypeId(String typeId) {
+        Class<?> interactionClass = INTERACTIONS.get(typeId);
+        if (interactionClass != null) {
+            return interactionClass;
+        }
+
+        for (String packageName : PACKAGES_FOR_SCAN) {
+            Map<String, Class<?>> scanResult = SCAN_RESULTS.get(packageName);
+            if (scanResult == null) {
+                scanResult = getInteractionsWithinPackage(packageName);
+                scanResult.forEach(INTERACTIONS::putIfAbsent);
+                SCAN_RESULTS.put(packageName, scanResult);
+            }
+
+            interactionClass = INTERACTIONS.get(typeId);
+            if (interactionClass != null) {
+                return interactionClass;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Caches the provided class to be accessible via {@link #getInteractionClassForTypeId(String)}.
+     * If the class is not cached but requested, a full scan of classes in the classpath
+     * is executed which may result in slow startup times.
+     *
+     * @param interactionClass a subclass of {@link Interaction}
+     */
+    public static void storeInteractionClass(Class<?> interactionClass) {
+        if (Interaction.class.isAssignableFrom(interactionClass)) {
+            String typeId = extractTypeId(interactionClass)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            String.format("Could not extract TYPE_ID from provided interaction class '%s'", interactionClass))
+                    );
+            INTERACTIONS.put(typeId, interactionClass);
+        } else {
+            throw new IllegalArgumentException(
+                    String.format("Provided class '%s' is not an Interaction.", interactionClass)
+            );
+        }
+    }
 
     /**
      * Helper method, which returns all classes which are supported to be visualized. A class
@@ -46,40 +116,44 @@ public class InteractionUtils {
      * @return the map with all supported message classes
      */
     @SuppressWarnings({"unchecked", "UnstableApiUsage"})
-    public static Map<String, Class<?>> getAllSupportedInteractions(String... allowedPackages) {
-        if (supportedInteractions.isEmpty()) {
-            try {
-                ImmutableSet<ClassInfo> topLevelClassesRecursive = from(InteractionUtils.class.getClassLoader()).getAllClasses();
-                for (ClassInfo info : topLevelClassesRecursive) {
-                    if (info.getName().equals(Interaction.class.getName())) {
-                        continue;
-                    }
-                    boolean isValidPackage = info.getName().startsWith("org.eclipse.mosaic");;
-                    for (String allowedPackageName: allowedPackages) {
-                        isValidPackage |= info.getName().startsWith(allowedPackageName);
-                    }
-                    if (!isValidPackage || info.getName().contains("ClientServerChannelProtos")) {
-                        continue;
-                    }
-                    try {
-                        Class<?> messageClass = Class.forName(info.getName());
-                        if (Interaction.class.isAssignableFrom(messageClass)) {
-                            String msgType = extractTypeId(messageClass)
-                                    .orElse(Interaction.createTypeIdentifier((Class<? extends Interaction>) messageClass));
-                            Class<?> knownClass = supportedInteractions.putIfAbsent(msgType, messageClass);
-                            if (knownClass != null && knownClass != messageClass) {
-                                log.warn("Ambiguous interaction type '{}'. Already registered with class {}", msgType, knownClass);
-                            }
-                        }
-                    } catch (Throwable e) {
-                        //nop
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Could not generate list of supported interaction types", e);
+    private static Map<String, Class<?>> getInteractionsWithinPackage(String searchPackage) {
+        final Map<String, Class<?>> result = new HashMap<>();
+        StopWatch sw = new StopWatch();
+        sw.start();
+        try {
+            if (TOP_LEVEL_CLASSES.isEmpty()) {
+                TOP_LEVEL_CLASSES.addAll(from(ClassLoader.getSystemClassLoader()).getTopLevelClasses());
             }
+            for (ClassInfo info : TOP_LEVEL_CLASSES) {
+                if (info.getName().equals(Interaction.class.getName())) {
+                    continue;
+                }
+                if (!info.getPackageName().startsWith(searchPackage)) {
+                    continue;
+                }
+                if (info.getName().contains("ClientServerChannelProtos")) {
+                    continue;
+                }
+                try {
+                    Class<?> messageClass = info.load();
+                    if (Interaction.class.isAssignableFrom(messageClass)) {
+                        String msgType = extractTypeId(messageClass)
+                                .orElse(Interaction.createTypeIdentifier((Class<? extends Interaction>) messageClass));
+                        Class<?> knownClass = result.putIfAbsent(msgType, messageClass);
+                        if (knownClass != null && knownClass != messageClass) {
+                            LOG.warn("Ambiguous interaction type '{}'. Already registered with class {}", msgType, knownClass);
+                        }
+                    }
+                } catch (Throwable e) {
+                    //nop
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("Could not generate list of supported interaction types", e);
         }
-        return supportedInteractions;
+        sw.stop();
+        LOG.info("Scanning for {} interactions in '{}' took {} ms", result.size(), searchPackage, sw.getTime(TimeUnit.MILLISECONDS));
+        return result;
     }
 
     /**
@@ -99,8 +173,20 @@ public class InteractionUtils {
                 return Optional.of((String) typeIdField.get(null));
             }
         } catch (Throwable e) {
-            log.warn("Could not extract field TYPE_ID of class {}", interactionClass.getName());
+            LOG.warn("Could not extract field TYPE_ID of class {}", interactionClass.getName());
         }
         return Optional.empty();
+    }
+
+    /**
+     * Registers an additional package to scan for Interaction classes
+     * which have not yet been cached using {@link #storeInteractionClass(Class)}.
+     *
+     * @param packageName the name of the additional package.
+     */
+    public static void addPackageForScan(String packageName) {
+        if (!PACKAGES_FOR_SCAN.contains(packageName)) {
+            PACKAGES_FOR_SCAN.add(packageName);
+        }
     }
 }

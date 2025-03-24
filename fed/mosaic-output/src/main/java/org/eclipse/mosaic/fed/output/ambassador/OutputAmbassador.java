@@ -260,7 +260,7 @@ public class OutputAmbassador extends AbstractFederateAmbassador {
 
             this.generators.put(id, new GeneratorInformation(config, generator, (int) (this.globalUpdateInterval / TIME.SECOND)));
 
-            log.info("Registered output generator '{}' for messages {}. Update interval={}", id, config.getInteractionTypes(), config.getUpdateIntervalInSeconds());
+            log.info("Registered output generator '{}' for interactions {}. Update interval={}", id, config.getInteractionTypes(), config.getUpdateIntervalInSeconds());
         }
     }
 

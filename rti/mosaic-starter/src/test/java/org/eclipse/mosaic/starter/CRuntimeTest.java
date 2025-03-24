@@ -17,7 +17,6 @@ package org.eclipse.mosaic.starter;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import org.eclipse.mosaic.lib.util.InteractionUtils;
 import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
@@ -28,7 +27,6 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 public class CRuntimeTest {
 
@@ -46,16 +44,13 @@ public class CRuntimeTest {
         }
         assertNotNull(runtimeConfiguration);
 
-        Map<String, Class<?>> allSupportedInteractions = InteractionUtils.getAllSupportedInteractions();
-        assertFalse(allSupportedInteractions.isEmpty());
-
         for (CRuntime.CFederate federate : runtimeConfiguration.federates) {
             assertFalse("Federate " + federate.id + " should have at least one subscription",
                     federate.subscriptions.isEmpty()
             );
             for (String subscription : federate.subscriptions) {
-                assertTrue("\"" + subscription + "\" is not a valid subscription (see federate \"" + federate.id + "\")",
-                        allSupportedInteractions.containsKey(subscription)
+                assertNotNull("\"" + subscription + "\" is not a valid subscription (see federate \"" + federate.id + "\")",
+                        InteractionUtils.getInteractionClassForTypeId(subscription)
                 );
             }
         }

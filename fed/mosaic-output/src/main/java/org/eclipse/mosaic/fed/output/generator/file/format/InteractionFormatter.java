@@ -48,20 +48,20 @@ public class InteractionFormatter {
 
         this.methodManagers = new HashMap<>();
 
-        Map<String, Class<?>> interactionClasses = InteractionUtils.getAllSupportedInteractions("com.dcaiti.mosaic");
-
         for (Entry<String, List<List<String>>> e : interactionDefinitions.entrySet()) {
             String interactionId = e.getKey();
 
             this.methodManagers.putIfAbsent(interactionId, new ArrayList<>());
 
-            if (interactionClasses.containsKey(interactionId)) {
+            Class<?> interactionClass = InteractionUtils.getInteractionClassForTypeId(interactionId);
+
+            if (interactionClass != null) {
                 List<List<String>> interactionDefList = e.getValue();
 
                 for (List<String> interactionDef : interactionDefList) {
                     // create method manager for this definition
                     MethodManager methodMgr =
-                            new MethodManager(separator, decimalSeparator, interactionDef, interactionClasses.get(interactionId));
+                            new MethodManager(separator, decimalSeparator, interactionDef, interactionClass);
 
                     this.methodManagers.get(interactionId).add(methodMgr);
                 }
