@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +37,6 @@ public class InteractionUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(InteractionUtils.class);
 
-    /**
-     * Cached list of all top level classes found in the classpath.
-     */
-    private static final List<ClassInfo> TOP_LEVEL_CLASSES = new ArrayList<>();
     /**
      * All packages to scan in that particular order.
      */
@@ -143,10 +138,7 @@ public class InteractionUtils {
 
         final Map<String, Class<?>> result = new HashMap<>();
         try {
-            if (TOP_LEVEL_CLASSES.isEmpty()) {
-                TOP_LEVEL_CLASSES.addAll(from(ClassLoader.getSystemClassLoader()).getTopLevelClasses());
-            }
-            for (ClassInfo info : TOP_LEVEL_CLASSES) {
+            for (ClassInfo info : from(InteractionUtils.class.getClassLoader()).getTopLevelClasses()) {
                 if (info.getName().equals(Interaction.class.getName())) {
                     continue;
                 }
