@@ -52,7 +52,7 @@ public class InteractionUtils {
      *
      * @see #PACKAGES_FOR_SCAN
      */
-    private static final Map<String, Map<String, Class<?>>> SCAN_RESULTS = new HashMap<>();
+    private static final Map<String, Map<String, Class<?>>> SCAN_RESULTS_PER_PACKAGE = new HashMap<>();
 
     /**
      * All cached interaction classes found in the classpath.
@@ -61,6 +61,13 @@ public class InteractionUtils {
 
     /**
      * Returns the {@link Interaction} class for the given interaction type id.
+     * <br>
+     * If no interaction could be found for the given type ID, the whole classpath
+     * is searched for a class which extends {@link Interaction} and provides a
+     * field named {@code TYPE_ID} which equals the provided {@code typeId} parameter.
+     * <br>
+     * The default package to scan is {@code org.eclipse.mosaic}. To search within
+     * further packages, it must be added via {@link #addPackageForScan(String)}.
      */
     public static Class<?> getInteractionClassForTypeId(String typeId) {
         Class<?> interactionClass = INTERACTIONS.get(typeId);
@@ -68,21 +75,35 @@ public class InteractionUtils {
             return interactionClass;
         }
 
+        // If not cached, then search in packages one after another
         for (String packageName : PACKAGES_FOR_SCAN) {
-            Map<String, Class<?>> scanResult = SCAN_RESULTS.get(packageName);
+            Map<String, Class<?>> scanResult = SCAN_RESULTS_PER_PACKAGE.get(packageName);
             if (scanResult == null) {
                 scanResult = getInteractionsWithinPackage(packageName);
+                SCAN_RESULTS_PER_PACKAGE.put(packageName, scanResult);
+
                 scanResult.forEach(INTERACTIONS::putIfAbsent);
-                SCAN_RESULTS.put(packageName, scanResult);
             }
 
-            interactionClass = INTERACTIONS.get(typeId);
+            interactionClass = scanResult.get(typeId);
             if (interactionClass != null) {
                 return interactionClass;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Registers an additional package to scan for Interaction classes
+     * which have not yet been cached using {@link #storeInteractionClass(Class)}.
+     *
+     * @param packageName the name of the additional package.
+     */
+    public static void addPackageForScan(String packageName) {
+        if (!PACKAGES_FOR_SCAN.contains(packageName)) {
+            PACKAGES_FOR_SCAN.add(packageName);
+        }
     }
 
     /**
@@ -96,12 +117,12 @@ public class InteractionUtils {
         if (Interaction.class.isAssignableFrom(interactionClass)) {
             String typeId = extractTypeId(interactionClass)
                     .orElseThrow(() -> new IllegalArgumentException(
-                            String.format("Could not extract TYPE_ID from provided interaction class '%s'", interactionClass))
+                            String.format("Could not extract TYPE_ID from provided interaction class '%s'", interactionClass.getName()))
                     );
             INTERACTIONS.put(typeId, interactionClass);
         } else {
             throw new IllegalArgumentException(
-                    String.format("Provided class '%s' is not an Interaction.", interactionClass)
+                    String.format("Provided class '%s' is not an Interaction.", interactionClass.getName())
             );
         }
     }
@@ -117,9 +138,10 @@ public class InteractionUtils {
      */
     @SuppressWarnings({"unchecked", "UnstableApiUsage"})
     private static Map<String, Class<?>> getInteractionsWithinPackage(String searchPackage) {
-        final Map<String, Class<?>> result = new HashMap<>();
-        StopWatch sw = new StopWatch();
+        final StopWatch sw = new StopWatch();
         sw.start();
+
+        final Map<String, Class<?>> result = new HashMap<>();
         try {
             if (TOP_LEVEL_CLASSES.isEmpty()) {
                 TOP_LEVEL_CLASSES.addAll(from(ClassLoader.getSystemClassLoader()).getTopLevelClasses());
@@ -176,17 +198,5 @@ public class InteractionUtils {
             LOG.warn("Could not extract field TYPE_ID of class {}", interactionClass.getName());
         }
         return Optional.empty();
-    }
-
-    /**
-     * Registers an additional package to scan for Interaction classes
-     * which have not yet been cached using {@link #storeInteractionClass(Class)}.
-     *
-     * @param packageName the name of the additional package.
-     */
-    public static void addPackageForScan(String packageName) {
-        if (!PACKAGES_FOR_SCAN.contains(packageName)) {
-            PACKAGES_FOR_SCAN.add(packageName);
-        }
     }
 }
