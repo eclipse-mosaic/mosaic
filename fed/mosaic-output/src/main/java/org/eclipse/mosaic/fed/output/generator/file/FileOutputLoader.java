@@ -40,7 +40,7 @@ import java.util.Map;
 public class FileOutputLoader extends OutputGeneratorLoader {
 
     private static final Logger log = LoggerFactory.getLogger(FileOutputLoader.class);
-    private static final char DEFAULT_SEPARATOR = ';';
+    private static final char DEFAULT_SEPARATOR = ',';
     private static final char DEFAULT_DECIMAL_SEPARATOR = '.';
     /* Configuration properties */
     private static final String FILE_NAME = "filename";

@@ -60,7 +60,8 @@ public class VisualizationAmbassadorTest {
     @Rule
     public TestFileRule testFileRule = new TestFileRule()
             .with("/testconfiguration.xml")
-            .with("/testconfiguration_faulty.xml");
+            .with("/testconfiguration_faulty.xml")
+            .with("/testconfiguration_sameId.xml");
 
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -247,6 +248,23 @@ public class VisualizationAmbassadorTest {
         // AFTER
         // remove appender
         ((Logger) LoggerFactory.getLogger(OutputAmbassador.class)).detachAppender(listAppender);
+    }
+
+    /**
+     * A test to check if faulty start of file `_sameId` is handled correctly.
+     */
+    @Test
+    public void testFaultyConfig_sameId() throws InternalFederateException {
+        AmbassadorParameter ambassadorParameter = new AmbassadorParameter("output", testFileRule.get("testconfiguration_sameId.xml"));
+        outputFaulty = new OutputAmbassador(ambassadorParameter);
+        outputFaulty.setRtiAmbassador(rtiMock);
+        
+        assertThrows(RuntimeException.class, () -> outputFaulty.initialize(0, 100));
+        try {
+            outputFaulty.initialize(0, 100);
+        } catch (RuntimeException e) {
+            assertTrue(e.getMessage().contains("due to duplicate id"));
+        }
     }
 
 }

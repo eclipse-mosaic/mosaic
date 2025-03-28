@@ -24,6 +24,7 @@ import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.stream.Collectors;
@@ -53,6 +54,9 @@ public class XmlUtils {
     }
 
     public static XMLConfiguration readXmlFromFile(File file) throws IOException {
+        if (!file.exists() || !file.isFile()) {
+            throw new FileNotFoundException(file.getAbsolutePath() + " cannot be found");
+        }
         final XMLConfiguration configuration = createEmptyConfigurationWithIndentation(DEFAULT_XML_INDENTATION);
         try {
             new FileHandler(configuration).load(file);

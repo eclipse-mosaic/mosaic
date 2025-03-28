@@ -51,6 +51,8 @@ public class PerRegionBandwidthMeasurement implements StreamListener {
 
     final static String WILDCARD_ALL = "*";
 
+    private final static char SEPARATOR = ',';
+
     private final File parentDir;
     /**
      * The region id of the region that is the initiator of the transmission.
@@ -184,7 +186,7 @@ public class PerRegionBandwidthMeasurement implements StreamListener {
         StringBuilder b = new StringBuilder();
         b.append("time");
         for (int i = 0; i < indexMap.size(); i++) {
-            b.append(";").append(indexMap.inverse().get(i));
+            b.append(SEPARATOR).append(indexMap.inverse().get(i));
         }
         writeToCsv(b.toString());
         flushCsv();
@@ -339,7 +341,7 @@ public class PerRegionBandwidthMeasurement implements StreamListener {
 
             /* Previous version:
              *      for (Long transmitted: transmittedDataList.get(rowIndex)) {
-             *          b.append(";").append(ObjectUtils.defaultIfNull(transmitted, 0).toString());
+             *          b.append(SEPARATOR).append(ObjectUtils.defaultIfNull(transmitted, 0).toString());
              *      }
              * was quite slow; especially due to inefficient iteration over the array and
              * frequent conversions of zeros to string. */
@@ -348,9 +350,9 @@ public class PerRegionBandwidthMeasurement implements StreamListener {
             for (int i = 0; i < row.size(); i++) {
                 transmitted = row.get(i);
                 if (transmitted == 0L) {
-                    b.append(";0");
+                    b.append(SEPARATOR).append("0");
                 } else {
-                    b.append(";").append(Long.toUnsignedString(transmitted));
+                    b.append(SEPARATOR).append(Long.toUnsignedString(transmitted));
                 }
             }
             transmittedData.clearRow(rowIndex);
