@@ -51,7 +51,6 @@
             <groupId>org.eclipse.mosaic</groupId>
             <artifactId>mosaic-interactions</artifactId>
             <version>${mosaic.version}</version>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- ambassador references to use when starting from IDE -->
