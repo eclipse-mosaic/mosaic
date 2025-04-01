@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.lib.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -49,7 +51,7 @@ public class FileUtils {
 
         final Set<File> matchingSet = new HashSet<>();
         while (maxDepth-- > 0) {
-            if (searchSet.size() > 0) {
+            if (!searchSet.isEmpty()) {
                 Set<File> newDirectorySet = new HashSet<>();
                 for (File f : searchSet) {
                     if (f.canRead() && acceptPredicate.test(f)) {
@@ -110,6 +112,19 @@ public class FileUtils {
      * Creates a new file in the given path and name. If the file already exists, a number suffix
      * is added to the actual file name.
      *
+     * @param path        the path to the file to create.
+     * @param extension   provides the file extension
+     * @param ignoreExist if {@code true}, no check is done and the file is returned as requested.
+     * @return the actual file object with the name having a suffix if already exists
+     */
+    public static File getIncrementFile(String path, String extension, boolean ignoreExist) throws IOException {
+        return getIncrementFile(new File(path), extension, ignoreExist);
+    }
+
+    /**
+     * Creates a new file in the given path and name. If the file already exists, a number suffix
+     * is added to the actual file name.
+     *
      * @param file        the file to create
      * @param ignoreExist if {@code true}, no check is done and the file is returned as requested.
      * @return the actual file object with the name having a suffix if already exists
@@ -121,6 +136,28 @@ public class FileUtils {
             int pos = filename.lastIndexOf('.');
             if (pos > 0) {
                 extension = filename.substring(pos);
+            }
+            return getIncrementFile(file, extension, false);
+        }
+        return file;
+    }
+
+    /**
+     * Creates a new file in the given path and name. If the file already exists, a number suffix
+     * is added to the actual file name.
+     *
+     * @param file        the file to create
+     * @param extension   provides the file extension
+     * @param ignoreExist if {@code true}, no check is done and the file is returned as requested.
+     * @return the actual file object with the name having a suffix if already exists
+     */
+    public static File getIncrementFile(File file, String extension, boolean ignoreExist) throws IOException {
+        if (file.exists() && !ignoreExist) {
+            if (!file.getName().endsWith(extension)) {
+                throw new IllegalArgumentException("Provided file does not end with provided extension.");
+            }
+            if (StringUtils.isNotEmpty(extension) && !extension.startsWith(".")) {
+                extension = "." + extension;
             }
 
             String pathWithoutExtension = file.getCanonicalPath();
