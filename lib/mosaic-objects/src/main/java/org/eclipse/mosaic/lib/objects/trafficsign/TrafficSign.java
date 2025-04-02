@@ -126,7 +126,7 @@ public abstract class TrafficSign<T> implements Serializable {
      * @param visibility The visibility of the sign.
      */
     public TrafficSign setVisibility(double visibility) {
-        this.visibility = MathUtils.clamp(0, visibility, 1.0d);
+        this.visibility = MathUtils.clamp(visibility, 0, 1.0d);
         return this;
     }
 
