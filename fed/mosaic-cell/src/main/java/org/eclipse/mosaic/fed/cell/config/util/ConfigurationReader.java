@@ -74,6 +74,22 @@ public class ConfigurationReader {
         networkConfig.globalNetwork.downlink.maxCapacity = networkConfig.globalNetwork.downlink.capacity;
         networkConfig.globalNetwork.uplink.maxCapacity = networkConfig.globalNetwork.uplink.capacity;
 
+        // server capacity isn't limited by the network configuration, but handled within the cell module configuration
+        networkConfig.servers.forEach((server) -> {
+            if (ObjectUtils.defaultIfNull(server.downlink.capacity, 0L) != 0 ||
+                    ObjectUtils.defaultIfNull(server.uplink.capacity, 0L) != 0) {
+                log.warn("It seems like you've tried to set a capacity value for a server. This should be done when enabling the "
+                        + "CellModule in you application. Your set values will be dismissed");
+            }
+            if (server.downlink.multicast != null) {
+                log.warn("It seems like you've tried to set the downlink multicast for a server."
+                        + "Servers can't be addressed with multicasts. Your set values will be dismissed");
+            }
+            server.downlink.maxCapacity = server.downlink.capacity = Long.MAX_VALUE;
+            server.uplink.maxCapacity = server.uplink.capacity = Long.MAX_VALUE;
+            server.downlink.multicast = null;
+        });
+
         return networkConfig;
     }
 
