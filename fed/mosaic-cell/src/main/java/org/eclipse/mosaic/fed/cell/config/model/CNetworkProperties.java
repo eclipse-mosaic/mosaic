@@ -66,7 +66,7 @@ public class CNetworkProperties {
          * Current capacity.
          */
         @JsonAdapter(DataFieldAdapter.Bandwidth.class)
-        public long capacity;
+        public Long capacity;
         /**
          * The maximal Capacity (when no transmission is ongoing).
          */
@@ -93,7 +93,7 @@ public class CNetworkProperties {
          * Shared capacity between unicast and multicast.
          */
         @JsonAdapter(DataFieldAdapter.Bandwidth.class)
-        public long capacity;
+        public Long capacity;
         /**
          * The maximal Capacity (when no transmission is ongoing).
          */

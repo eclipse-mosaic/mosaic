@@ -119,8 +119,8 @@ public class ConfigurationTest {
 
         assertEquals(0.5, region.downlink.multicast.transmission.lossProbability, EPSILON);
 
-        assertEquals(2000, region.uplink.capacity);
-        assertEquals(42000, region.downlink.capacity);
+        assertEquals(2000, region.uplink.capacity.longValue());
+        assertEquals(42000, region.downlink.capacity.longValue());
     }
 
     @Test

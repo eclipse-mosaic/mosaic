@@ -124,9 +124,9 @@ public class CNetworkImportTest {
 
         assertEquals(0.1, server.downlink.unicast.transmission.lossProbability, EPSILON);
 
-        assertEquals(Long.MAX_VALUE, server.uplink.capacity);
+        assertEquals(Long.MAX_VALUE, server.uplink.capacity.longValue());
         assertEquals(Long.MAX_VALUE, server.uplink.maxCapacity);
-        assertEquals(Long.MAX_VALUE, server.downlink.capacity);
+        assertEquals(Long.MAX_VALUE, server.downlink.capacity.longValue());
         assertEquals(Long.MAX_VALUE, server.downlink.maxCapacity);
     }
 }

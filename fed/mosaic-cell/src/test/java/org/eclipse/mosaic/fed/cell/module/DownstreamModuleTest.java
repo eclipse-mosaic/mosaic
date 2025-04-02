@@ -195,7 +195,7 @@ public class DownstreamModuleTest {
             );
         }
 
-        assertEquals((42000 - 8960) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals((42000 - 8960) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -232,7 +232,7 @@ public class DownstreamModuleTest {
             assertEquals(10000 * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode(receivers[i]).getAvailableDownlinkBitrate());
         }
 
-        assertEquals((42000 - 8960) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals((42000 - 8960) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -268,7 +268,7 @@ public class DownstreamModuleTest {
         //640 bps of capacity remain, since only 50% of the full capacity is usable for the Multicast
         long endTime = 10 * TIME.SECOND + 800 * TIME.MILLI_SECOND;
         checkNotifyOnFinishMessage(0, GLOBAL_NETWORK_ID, 560 * DATA.BIT, 10 * TIME.SECOND, endTime);
-        assertEquals(560 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(560 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
 
         for (int i = 0; i < receivers.length; i++) {
             testRtiV2xMessages(i, receivers[i], endTime, sampleV2XMessage.getId());
@@ -333,7 +333,7 @@ public class DownstreamModuleTest {
                 sampleV2XMessage
         );
 
-        assertEquals(560 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(560 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
 
         for (int i = 1; i < receivers.length; i++) {
             assertEquals(2240 * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode(receivers[i]).getAvailableDownlinkBitrate());
@@ -370,7 +370,7 @@ public class DownstreamModuleTest {
         testRtiV2xMessages(0, receiverName, endTime, sampleV2XMessage.getId());
 
         assertEquals(0L, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
-        assertEquals((42000 - 2240) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals((42000 - 2240) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -402,7 +402,7 @@ public class DownstreamModuleTest {
         testRtiV2xMessages(0, receiverName, endTime, sampleV2XMessage.getId());
 
         assertEquals(0, SimulationData.INSTANCE.getCellConfigurationOfNode("veh_0").getAvailableDownlinkBitrate());
-        assertEquals((3360 - 2240) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals((3360 - 2240) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -434,7 +434,7 @@ public class DownstreamModuleTest {
         testRtiV2xMessages(0, receiverName, endTime, sampleV2XMessage.getId());
 
         assertEquals((2240 - 1120) * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode("veh_0").getAvailableDownlinkBitrate());
-        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -466,7 +466,7 @@ public class DownstreamModuleTest {
         testRtiAckMessages(0, nackReasons, sampleV2XMessage);
 
         assertEquals(2240 * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
-        assertEquals(3360 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(3360 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -500,7 +500,7 @@ public class DownstreamModuleTest {
         );
         assertEquals(
                 (42000 - expectedBandwidthInBps) * DATA.BIT,
-                ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity)
+                ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue())
         ;
 
         // FREE
@@ -513,7 +513,7 @@ public class DownstreamModuleTest {
 
         // ASSERT
         assertEquals(Long.MAX_VALUE * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
-        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
 
 
     }
@@ -552,7 +552,7 @@ public class DownstreamModuleTest {
                 (Long.MAX_VALUE - expectedBandwidthInBps) * DATA.BIT,
                 SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate()
         );
-        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -593,7 +593,7 @@ public class DownstreamModuleTest {
                 (Long.MAX_VALUE - expectedBandwidth) * DATA.BIT,
                 SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate()
         );
-        assertEquals((42000 - expectedBandwidth) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals((42000 - expectedBandwidth) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -626,7 +626,7 @@ public class DownstreamModuleTest {
                 (Long.MAX_VALUE - expectedBandwidth) * DATA.BIT,
                 SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate()
         );
-        assertEquals((42000 - expectedBandwidth) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals((42000 - expectedBandwidth) * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -658,7 +658,7 @@ public class DownstreamModuleTest {
         testRtiAckMessages(0, nackReasons, sampleV2XMessage);
 
         assertEquals(0L, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
-        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -691,7 +691,7 @@ public class DownstreamModuleTest {
         testRtiAckMessages(0, nackReasons, sampleV2XMessage);
 
         assertEquals(0L, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
-        assertEquals(1140 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(1140 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -721,7 +721,7 @@ public class DownstreamModuleTest {
         testRtiAckMessages(0, nackReasons, sampleV2XMessage);
 
         assertEquals(Long.MAX_VALUE * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
-        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -755,7 +755,7 @@ public class DownstreamModuleTest {
         testRtiAckMessages(0, nackReasons, sampleV2XMessage);
 
         assertEquals(0L, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
-        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(0L, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     @Test
@@ -785,7 +785,7 @@ public class DownstreamModuleTest {
         List<NegativeAckReason> nackReasons = Arrays.asList(NegativeAckReason.NODE_DEACTIVATED);
         testRtiAckMessages(0, nackReasons, sampleV2XMessage);
 
-        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
         assertEquals(Long.MAX_VALUE * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode(receiverName).getAvailableDownlinkBitrate());
     }
 
@@ -831,7 +831,7 @@ public class DownstreamModuleTest {
         List<NegativeAckReason> nackReasons = Collections.singletonList(NegativeAckReason.NODE_DEACTIVATED);
         testRtiAckMessages(0, nackReasons, sampleV2XMessage);
 
-        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
         assertEquals(Long.MAX_VALUE * DATA.BIT, SimulationData.INSTANCE.getCellConfigurationOfNode("veh_0").getAvailableDownlinkBitrate());
     }
 
@@ -875,7 +875,7 @@ public class DownstreamModuleTest {
 
         // ASSERT
         assertEquals(400 * DATA.BIT, cellConfiguration.getAvailableDownlinkBitrate());
-        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity);
+        assertEquals(42000 * DATA.BIT, ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork.downlink.capacity.longValue());
     }
 
     private void testRtiAckMessages(int index, List<NegativeAckReason> negativeAckReasons, SampleV2xMessage sampleV2XMessage) {

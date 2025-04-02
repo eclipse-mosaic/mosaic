@@ -78,8 +78,8 @@ public class RegionCapacityUtilityTest {
         // The normal, easy case. Enough bandwidth available.
         RegionCapacityUtility.consumeCapacityDown(defaultRegion, 2500 * DATA.BIT);
         RegionCapacityUtility.consumeCapacityUp(defaultRegion, 1500 * DATA.BIT);
-        assertEquals((capacityDown - 2500) * DATA.BIT, defaultRegion.downlink.capacity);
-        assertEquals((capacityUp - 1500) * DATA.BIT, defaultRegion.uplink.capacity);
+        assertEquals((capacityDown - 2500) * DATA.BIT, defaultRegion.downlink.capacity.longValue());
+        assertEquals((capacityUp - 1500) * DATA.BIT, defaultRegion.uplink.capacity.longValue());
 
         assertTrue(RegionCapacityUtility.isCapacitySufficientDown(defaultRegion, 1000 * DATA.BIT));
         assertTrue(RegionCapacityUtility.isCapacitySufficientUp(defaultRegion, 1000 * DATA.BIT));
@@ -89,8 +89,8 @@ public class RegionCapacityUtilityTest {
         // This can happen when a message has a packet loss and needs to consumeCapacity anyway.
         RegionCapacityUtility.consumeCapacityDown(defaultRegion, 40000 * DATA.BIT);
         RegionCapacityUtility.consumeCapacityUp(defaultRegion, 40000 * DATA.BIT);
-        assertEquals((capacityDown - 2500 - 40000) * DATA.BIT, defaultRegion.downlink.capacity);
-        assertEquals((capacityUp - 1500 - 40000) * DATA.BIT, defaultRegion.uplink.capacity);
+        assertEquals((capacityDown - 2500 - 40000) * DATA.BIT, defaultRegion.downlink.capacity.longValue());
+        assertEquals((capacityUp - 1500 - 40000) * DATA.BIT, defaultRegion.uplink.capacity.longValue());
 
         assertFalse(RegionCapacityUtility.isCapacitySufficientDown(defaultRegion, 1000 * DATA.BIT));
         assertFalse(RegionCapacityUtility.isCapacitySufficientUp(defaultRegion, 1000 * DATA.BIT));
@@ -98,7 +98,7 @@ public class RegionCapacityUtilityTest {
         // Try to free some bandwidth
         RegionCapacityUtility.freeCapacityDown(defaultRegion, 1500 * DATA.BIT);
         RegionCapacityUtility.freeCapacityUp(defaultRegion, 2500 * DATA.BIT);
-        assertEquals((capacityDown - 2500 - 40000 + 1500) * DATA.BIT, defaultRegion.downlink.capacity);
-        assertEquals((capacityUp - 1500 - 40000 + 2500) * DATA.BIT, defaultRegion.uplink.capacity);
+        assertEquals((capacityDown - 2500 - 40000 + 1500) * DATA.BIT, defaultRegion.downlink.capacity.longValue());
+        assertEquals((capacityUp - 1500 - 40000 + 2500) * DATA.BIT, defaultRegion.uplink.capacity.longValue());
     }
 }

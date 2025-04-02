@@ -20,15 +20,15 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class CParameterDeviations {
 
-    public double length = 0.0;
-    public double width = 0.0;
-    public double height = 0.0;
-    public double minGap = 0.0;
-    public double maxSpeed = 0.0;
-    public double speedFactor = 0.0;
-    public double accel = 0.0;
-    public double decel = 0.0;
-    public double tau = 0.0;
+    public Double length;
+    public Double width;
+    public Double height;
+    public Double minGap;
+    public Double maxSpeed;
+    public Double speedFactor;
+    public Double accel;
+    public Double decel;
+    public Double tau;
 
     public CParameterDeviations copy() {
         final CParameterDeviations copy = new CParameterDeviations();

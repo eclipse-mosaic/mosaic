@@ -30,6 +30,7 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,21 +74,6 @@ public class ConfigurationReader {
         networkConfig.globalNetwork.downlink.maxCapacity = networkConfig.globalNetwork.downlink.capacity;
         networkConfig.globalNetwork.uplink.maxCapacity = networkConfig.globalNetwork.uplink.capacity;
 
-        // server capacity isn't limited by the network configuration, but handled within the cell module configuration
-        networkConfig.servers.forEach((server) -> {
-            if (server.downlink.capacity != 0 || server.uplink.capacity != 0) {
-                log.warn("It seems like you've tried to set a capacity value for a server. This should be done when enabling the "
-                        + "CellModule in you application. Your set values will be dismissed");
-            }
-            if (server.downlink.multicast != null) {
-                log.warn("It seems like you've tried to set the downlink multicast for a server."
-                        + "Servers can't be addressed with multicasts. Your set values will be dismissed");
-            }
-            server.downlink.maxCapacity = server.downlink.capacity = Long.MAX_VALUE;
-            server.uplink.maxCapacity = server.uplink.capacity = Long.MAX_VALUE;
-            server.downlink.multicast = null;
-        });
-
         return networkConfig;
     }
 
@@ -101,6 +87,8 @@ public class ConfigurationReader {
     public static CRegion importRegionConfig(String regionConfigPath) throws InternalFederateException {
         CRegion regionConfig = readConfigFile(regionConfigPath, ConfigBuilderFactory.getConfigBuilder(), CRegion.class);
         regionConfig.regions.forEach((region) -> {
+            region.downlink.capacity = ObjectUtils.defaultIfNull(region.downlink.capacity, 0L);
+            region.uplink.capacity = ObjectUtils.defaultIfNull(region.uplink.capacity, 0L);
             /*
              * Here the maximum capacity is set for the region.
              * The maximum capacity is needed to compute what
