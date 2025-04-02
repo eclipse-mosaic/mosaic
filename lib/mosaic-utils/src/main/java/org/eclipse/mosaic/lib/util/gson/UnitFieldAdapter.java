@@ -29,6 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,7 +84,8 @@ public class UnitFieldAdapter extends TypeAdapter<Double> {
 
     @Override
     public void write(JsonWriter out, Double param) throws IOException {
-        out.value(ObjectUtils.defaultIfNull(param, 0d) + " " + unit);
+        out.value(new DecimalFormat("#.#####", DecimalFormatSymbols.getInstance(Locale.ENGLISH))
+                .format(ObjectUtils.defaultIfNull(param, 0d)) + " " + unit);
     }
 
     @Override
