@@ -23,6 +23,7 @@ import org.eclipse.mosaic.fed.mapping.config.CPrototype;
 import org.eclipse.mosaic.lib.enums.LaneChangeMode;
 import org.eclipse.mosaic.lib.enums.SpeedMode;
 import org.eclipse.mosaic.lib.enums.VehicleClass;
+import org.eclipse.mosaic.lib.math.MathUtils;
 import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
 
@@ -175,11 +176,11 @@ public class VehicleTypeSpawner extends UnitSpawner implements Weighted {
         );
     }
 
-    Double deviateWithBounds(RandomNumberGenerator random, Double mean, double deviation) {
-        if (mean != null && Math.abs(deviation) > 0.0001) {
+    Double deviateWithBounds(RandomNumberGenerator random, Double mean, Double deviation) {
+        if (mean != null && deviation != null && Math.abs(deviation) > 0.0001) {
             double randomValue = random.nextGaussian(mean, deviation);
 
-            return Math.max(Math.min(mean + 2 * deviation, randomValue), mean - 2 * deviation);
+            return MathUtils.clamp(randomValue,  mean - 2 * deviation,  mean + 2 * deviation);
         }
         return mean;
     }
