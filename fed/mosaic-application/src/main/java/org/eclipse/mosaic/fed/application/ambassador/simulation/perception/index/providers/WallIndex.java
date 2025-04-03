@@ -26,7 +26,6 @@ public abstract class WallIndex {
 
     private Database database = null;
 
-
     public abstract void initialize();
 
     public abstract Collection<Edge<Vector3d>> getSurroundingWalls(PerceptionModel perceptionModel);

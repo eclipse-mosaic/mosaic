@@ -19,6 +19,7 @@ import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.PerceptionModel;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.TrafficObjectIndex;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.TrafficLightObject;
+import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroup;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroupInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightState;
@@ -44,20 +45,14 @@ public abstract class TrafficLightIndex {
     }
 
     /**
-     * Method called to initialize index after configuration has been read.
-     */
-    public abstract void initialize();
-
-    /**
      * Queries the {@link TrafficObjectIndex} and returns all traffic lights inside the {@link PerceptionModel}.
      */
     public abstract List<TrafficLightObject> getTrafficLightsInRange(PerceptionModel perceptionModel);
 
     /**
-     * Abstract method to be implemented by the specific traffic light indexes.
-     * Shall contain functionality to be called before traffic lights are updated.
+     * Queries the {@link TrafficObjectIndex} and returns all traffic lights inside the {@link org.eclipse.mosaic.lib.geo.GeoCircle}.
      */
-    public abstract void onTrafficLightsUpdate();
+    public abstract List<TrafficLightObject> getTrafficLightsInCircle(GeoCircle circle);
 
     /**
      * Adds traffic lights to the spatial index, as their positions are static it is sufficient
@@ -90,7 +85,6 @@ public abstract class TrafficLightIndex {
      * @param trafficLightGroupsToUpdate a list of information packages transmitted by the traffic simulator
      */
     public void updateTrafficLights(Map<String, TrafficLightGroupInfo> trafficLightGroupsToUpdate) {
-        onTrafficLightsUpdate();
         trafficLightGroupsToUpdate.forEach(
                 (trafficLightGroupId, trafficLightGroupInfo) -> {
                     List<TrafficLightState> trafficLightStates = trafficLightGroupInfo.getCurrentState();

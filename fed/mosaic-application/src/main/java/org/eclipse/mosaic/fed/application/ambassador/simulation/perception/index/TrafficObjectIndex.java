@@ -58,9 +58,6 @@ public class TrafficObjectIndex {
         if (vehicleIndexConfigured()) {
             this.vehicleIndex.initialize();
         }
-        if (trafficLightIndexConfigured()) {
-            this.trafficLightIndex.initialize();
-        }
         if (wallIndexConfigured()) {
             this.wallIndex.initialize();
         }
