@@ -110,10 +110,10 @@ public class FileUtils {
 
     /**
      * Creates a new file in the given path and name. If the file already exists, a number suffix
-     * is added to the actual file name.
+     * is added to the actual file name, by respecting the given file extension.
      *
      * @param path        the path to the file to create.
-     * @param extension   provides the file extension
+     * @param extension   provides the file extension (e.g., ".rou.xml").
      * @param ignoreExist if {@code true}, no check is done and the file is returned as requested.
      * @return the actual file object with the name having a suffix if already exists
      */
@@ -144,10 +144,10 @@ public class FileUtils {
 
     /**
      * Creates a new file in the given path and name. If the file already exists, a number suffix
-     * is added to the actual file name.
+     * is added to the actual file name, by respecting the given file extension.
      *
      * @param file        the file to create
-     * @param extension   provides the file extension
+     * @param extension   provides the file extension (e.g., ".rou.xml").
      * @param ignoreExist if {@code true}, no check is done and the file is returned as requested.
      * @return the actual file object with the name having a suffix if already exists
      */

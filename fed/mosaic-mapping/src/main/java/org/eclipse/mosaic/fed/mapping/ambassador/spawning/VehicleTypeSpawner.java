@@ -177,7 +177,7 @@ public class VehicleTypeSpawner extends UnitSpawner implements Weighted {
     }
 
     Double deviateWithBounds(RandomNumberGenerator random, Double mean, Double deviation) {
-        if (mean != null && deviation != null && Math.abs(deviation) > 0.0001) {
+        if (mean != null && deviation != null && !MathUtils.isFuzzyZero(deviation)) {
             double randomValue = random.nextGaussian(mean, deviation);
 
             return MathUtils.clamp(randomValue,  mean - 2 * deviation,  mean + 2 * deviation);

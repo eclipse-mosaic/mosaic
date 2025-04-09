@@ -76,8 +76,7 @@ public class ConfigurationReader {
 
         // server capacity isn't limited by the network configuration, but handled within the cell module configuration
         networkConfig.servers.forEach((server) -> {
-            if (ObjectUtils.defaultIfNull(server.downlink.capacity, 0L) != 0 ||
-                    ObjectUtils.defaultIfNull(server.uplink.capacity, 0L) != 0) {
+            if (server.downlink.capacity != null || server.uplink.capacity != null) {
                 log.warn("It seems like you've tried to set a capacity value for a server. This should be done when enabling the "
                         + "CellModule in you application. Your set values will be dismissed");
             }
