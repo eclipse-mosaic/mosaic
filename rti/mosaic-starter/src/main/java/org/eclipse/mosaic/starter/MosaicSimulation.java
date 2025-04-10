@@ -15,6 +15,7 @@
 
 package org.eclipse.mosaic.starter;
 
+import org.eclipse.mosaic.interactions.Interactions;
 import org.eclipse.mosaic.lib.geo.UtmPoint;
 import org.eclipse.mosaic.lib.geo.UtmZone;
 import org.eclipse.mosaic.lib.objects.UnitNameGenerator;
@@ -84,6 +85,10 @@ public class MosaicSimulation {
     private static final Path LOG_DIRECTORY = Paths.get("logs");
 
     private static final Path FEDERATE_DIRECTORY = Paths.get("bin", "fed");
+
+    static {
+        Interactions.cacheDefaultInteractions();
+    }
 
     private ComponentProviderFactory componentProviderFactory = MosaicComponentProvider::new;
     private CRuntime runtimeConfiguration;
