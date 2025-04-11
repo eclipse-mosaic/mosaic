@@ -30,8 +30,8 @@ public class TestUtils {
     public static void setPrivateField(Object object, String fieldName, Object value) throws IllegalStateException {
         try {
             final Field field;
-            if (object instanceof Class<?> objectClass) {
-                field = objectClass.getDeclaredField(fieldName);
+            if (object instanceof Class<?>) {
+                field = ((Class<?>) object).getDeclaredField(fieldName);
             } else {
                 field = object.getClass().getDeclaredField(fieldName);
             }

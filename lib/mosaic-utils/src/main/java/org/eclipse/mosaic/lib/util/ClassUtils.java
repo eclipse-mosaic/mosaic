@@ -66,14 +66,15 @@ public class ClassUtils {
 
     /**
      * Add a URL to the system class loader.
+     *
      * @throws IllegalStateException
      */
     public static void addUrlToClassloader(File jar) throws Exception {
         ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        if (systemClassLoader instanceof URLClassLoader urlClassLoader) {
-            Method m = urlClassLoader.getClass().getDeclaredMethod("addURL", URL.class);
+        if (systemClassLoader instanceof URLClassLoader) {
+            Method m = ((URLClassLoader) systemClassLoader).getClass().getDeclaredMethod("addURL", URL.class);
             m.setAccessible(true);
-            m.invoke(urlClassLoader, jar.toURI().toURL());
+            m.invoke(systemClassLoader, jar.toURI().toURL());
         } else {
             throw new IllegalStateException("Invalid class loader implementation. URLClassLoader required, but was "
                     + systemClassLoader.getClass().getSimpleName()
