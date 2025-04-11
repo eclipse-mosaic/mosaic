@@ -46,7 +46,7 @@ check_shell
 required_programs=( unzip tar bison flex protoc gcc python )
 required_libraries=( "libprotobuf-dev >= 3.7.0" "libxml2-dev" )
 
-omnet_federate_url="https://github.com/mosaic-addons/omnetpp-federate/archive/refs/tags/24.1.zip"
+omnet_federate_url="https://github.com/mosaic-addons/omnetpp-federate/archive/refs/tags/25.0.zip"
 omnet_src_url="https://github.com/omnetpp/omnetpp/releases/download/omnetpp-5.5.1/omnetpp-5.5.1-src-linux.tgz"
 inet_src_url="https://github.com/inet-framework/inet/releases/download/v4.1.1/inet-4.1.1-src.tgz"
 

@@ -71,7 +71,7 @@ ns3_scratch="${ns3_simulator_folder}/scratch"
 ns3_source="${ns3_simulator_folder}/src"
 
 ####### semi automatic parameters ########
-ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/tags/24.1.zip"
+ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/tags/25.0.zip"
 ns3_url="https://www.nsnam.org/releases/$ns3_version_affix.tar.bz2"
 
 ###### more automatic parameters #########
