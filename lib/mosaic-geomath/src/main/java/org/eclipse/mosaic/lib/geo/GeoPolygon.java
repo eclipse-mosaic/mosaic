@@ -17,15 +17,14 @@ package org.eclipse.mosaic.lib.geo;
 
 import org.eclipse.mosaic.lib.math.MathUtils;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GeoPolygon implements Polygon<GeoPoint>, GeoArea {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
     private final List<GeoPoint> vertices;
@@ -97,7 +96,7 @@ public class GeoPolygon implements Polygon<GeoPoint>, GeoArea {
 
     public CartesianPolygon toCartesian() {
         return new CartesianPolygon(
-                getVertices().stream().map(GeoPoint::toCartesian).toList()
+                getVertices().stream().map(GeoPoint::toCartesian).collect(Collectors.toList())
         );
     }
 

@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * This class represents a point cloud based on the {@link Vector3d} coordinate system.
@@ -281,7 +282,7 @@ public final class PointCloud implements Serializable {
             return pointCloud.points.stream()
                     .filter(filter)
                     .map(point -> (Point) pointCloud.orientation.multiply(new Point(point, point.getDistance(), point.getHitType())).add(pointCloud.origin))
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         private static List<Point> absoluteToRelative(PointCloud pointCloud, Predicate<Point> filter) {
@@ -289,7 +290,7 @@ public final class PointCloud implements Serializable {
             return pointCloud.points.stream()
                     .filter(filter)
                     .map(point -> (Point) inv.multiply(point.subtract(pointCloud.origin, new Point(point, point.getDistance(), point.getHitType()))))
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         private static List<Point> noTransformation(PointCloud pointCloud, Predicate<Point> filter) {
@@ -297,7 +298,7 @@ public final class PointCloud implements Serializable {
                     ? Collections.unmodifiableList(pointCloud.points)
                     : pointCloud.points.stream()
                     .filter(filter)
-                    .toList();
+                    .collect(Collectors.toList());
         }
     }
 }
