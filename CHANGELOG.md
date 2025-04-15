@@ -2,16 +2,16 @@
 
 * [M+] MOSAIC now requires at least Java 17 Runtime Environment to be executed.
 * [M+] Extended 2D web visualizer to visualize other vehicle classes, such as buses or bicycles.
-* [M+] Provide possibility to run OMNeT++ or ns-3 federate via Windows Subsystem for Linux (WSL). 
+* [M+] Provide possibility to run OMNeT++ or ns-3 federate via Windows Subsystem for Linux (WSL).
 * [M-] Exit simulation if the output configuration is erroneous.
 * [A+] Overhaul of API for building routing information for sending V2X messages (cellular and ad-hoc).
 * [A+] Overhaul of API to access sensor information, such as environmental events or LiDAR point clouds.
-* [A+] Introducing a new routing module for calculation for calculating public transport routes based on GTFS data.
+* [A+] Introducing a new routing module for calculating public transport routes based on GTFS data.
 * [S+] Added new option --list-routes to Scenario-Convert to print all routes stored in the scenario database.
 * [T+] Now supports SUMO 1.22.0
 * [X+] Provide a method for electric vehicles applications to search charging stations within a certain area (Extended).
 * [X+] New Agent Simulator allows to model multi-modal journeys for individual agents (Extended).
-* [X-] Improved route compatibility in PHABMACS (Extended). 
+* [X-] Improved route compatibility in PHABMACS (Extended).
 
 # Changelog Eclipse MOSAIC 24.1 (September 2024)
 
