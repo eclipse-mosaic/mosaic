@@ -371,31 +371,6 @@ public class Database {
     }
 
     /**
-     * Returns the ids of nodes at the map border (whose only incoming and outgoing connection share the same adjacent node)
-     *
-     * @return List of node IDs, referring to Nodes at the border of the map.
-     */
-    @Nonnull
-    public List<String> getBorderNodeIds() {
-
-        // only build if not already done
-        if (borderNodes == null) {
-
-            borderNodes = new ArrayList<>();
-
-            for (Node node : nodes.values()) {
-                boolean deadEnd = node.getIncomingConnections().size() == 1 && node.getOutgoingConnections().size() == 1
-                        && node.getIncomingConnections().get(0).getFrom() == node.getOutgoingConnections().get(0).getTo();
-                if (deadEnd) {
-                    borderNodes.add(node.getId());
-                }
-            }
-        }
-
-        return borderNodes;
-    }
-
-    /**
      * Builder class for simple generation for a new {@link Database}.
      */
     public static class Builder {
