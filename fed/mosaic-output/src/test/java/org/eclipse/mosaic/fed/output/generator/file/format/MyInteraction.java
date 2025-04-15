@@ -24,7 +24,9 @@ public class MyInteraction extends Interaction {
 
     private static final long serialVersionUID = 1L;
 
-    private List<VehicleUpdates> interactions;
+    public final static String TYPE_ID = createTypeIdentifier(MyInteraction.class);
+
+    private final List<VehicleUpdates> interactions;
 
     MyInteraction(List<VehicleUpdates> interactions) {
         super(0);
@@ -37,7 +39,7 @@ public class MyInteraction extends Interaction {
 
     @Override
     public String getTypeId() {
-        return "test";
+        return TYPE_ID;
     }
 }
 
