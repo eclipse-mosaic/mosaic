@@ -47,7 +47,7 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>src/assembly/resources/scenarios</directory>
+            <directory>${project.build.outputDirectory}/scenarios</directory>
             <outputDirectory>scenarios</outputDirectory>
             <filtered>false</filtered>
             <includes>

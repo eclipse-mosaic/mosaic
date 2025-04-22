@@ -7,22 +7,7 @@
 
     <fileSets>
         <fileSet>
-            <directory>src/assembly/resources/fed</directory>
-            <outputDirectory>fed</outputDirectory>
-            <includes>
-                <include>**</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>src/assembly/resources/scenarios</directory>
-            <outputDirectory>scenarios</outputDirectory>
-            <filtered>false</filtered>
-            <includes>
-                <include>**</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${build.directory}/classes</directory>
+            <directory>${project.build.outputDirectory}</directory>
             <outputDirectory>.</outputDirectory>
             <filtered>false</filtered>
             <includes>

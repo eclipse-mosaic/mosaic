@@ -180,15 +180,19 @@ public class MosaicSimulationRule extends TemporaryFolder {
     }
 
     public MosaicSimulation.SimulationResult executeTestScenario(String folder) {
-        return executeSimulation(Paths.get("..", "scenarios", folder));
+        return executeSimulation(Paths.get("..", "..", "scenarios", "test", folder));
     }
 
     public MosaicSimulation.SimulationResult executeTestScenario(String folder, String config) {
-        return executeSimulation(Paths.get("..", "scenarios", folder), config);
+        return executeSimulation(Paths.get("..", "..", "scenarios", "test", folder), config);
+    }
+
+    public MosaicSimulation.SimulationResult executeWorkshopScenario(String folder) {
+        return executeSimulation(Paths.get("..", "..", "scenarios", "workshop", folder));
     }
 
     public MosaicSimulation.SimulationResult executeReleaseScenario(String folder) {
-        return executeSimulation(Paths.get("..", "..", "bundle", "src", "assembly", "resources", "scenarios", folder));
+        return executeSimulation(Paths.get("..", "..", "scenarios", "bundle", folder));
     }
 
     public MosaicSimulation.SimulationResult executeSimulation(Path scenarioDirectory) {

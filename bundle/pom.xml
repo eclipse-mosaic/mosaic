@@ -170,10 +170,40 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/target/classes/etc</outputDirectory>
+                            <outputDirectory>${project.build.outputDirectory}/etc</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.parent.basedir}/rti/mosaic-starter/etc</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-bundle-scenarios</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/scenarios</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.parent.basedir}/scenarios/bundle</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-fed-scripts</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/fed</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/assembly/resources/fed</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -201,7 +231,7 @@
                             <goal>bundle</goal>
                         </goals>
                         <configuration>
-                            <resourcesDirectory>${basedir}/src/assembly/resources</resourcesDirectory>
+                            <resourcesDirectory>${project.build.outputDirectory}</resourcesDirectory>
                             <includes>
                                 <include>fed/**</include>
                                 <include>scenarios/**</include>
