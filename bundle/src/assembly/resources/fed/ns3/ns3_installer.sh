@@ -56,8 +56,6 @@ ns3_version="3.36.1"
 ####### automated parameters #############
 premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-linux.tar.gz"
 premake5_tar="$(basename "$premake5_url")"
-premake5_autoconf_url="https://github.com/Blizzard/premake-autoconf/archive/master.zip"
-premake5_autoconf_zip="$(basename "$premake5_autoconf_url")"
 ns3_version_affix="ns-allinone-$ns3_version"
 ns3_version_affix_unified="ns-allinone" #deprecated, not used momentarily
 ns3_short_affix="ns-$ns3_version"
@@ -295,10 +293,7 @@ download() {
 download_premake5() {
    log "Downloading premake5 from ${premake5_url}..."
    download "$premake5_url"
-   log "Downloading premake-autoconf from ${premake5_autoconf_url}..."
-   download "$premake5_autoconf_url"
 }
-
 
 download_ns3() {
    if [ ! -z "$arg_ns3_file" ]; then
@@ -350,13 +345,6 @@ extract_premake() {
   oldpwd=`pwd`
   cd federate
   tar xvf ../$premake5_tar
-  unzip ../$premake5_autoconf_zip
-  cp premake-autoconf-master/api.lua .
-  cp premake-autoconf-master/autoconf.lua .
-  cp premake-autoconf-master/clang.lua .
-  cp premake-autoconf-master/gcc.lua .
-  cp premake-autoconf-master/msc.lua .
-  rm -fr premake-autoconf-master
   cd "$oldpwd"
 }
 
