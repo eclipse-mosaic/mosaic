@@ -384,7 +384,8 @@ deploy_ns3()
     if [ "$arg_deploy" == "true" ]; then
         log "Deploying ns3 binaries"
         if [ "$arg_dev" == "true" ]; then
-            # will copy 1.8GB instead of 470MB at beginning of each simulation run
+            # will not delete ns3 source files in order to recompile depending on your needs
+            # this now will copy 1.8GB (instead of 470MB) at beginning of each simulation run!
             cd "${ns3_installation_path}"
             cp federate/bin/ns3-federate "$ns3_simulator_path/build/scratch/"
         else
