@@ -395,7 +395,7 @@ deploy_ns3()
         if [ "$arg_dev" == "true" ]; then
             # will copy 1.8GB instead of 470MB at beginning of each simulation run
             cd "${ns3_installation_path}"
-            cp federate/bin/ns3-federate "$ns3_simulator_folder/build/scratch/mosaic_starter"
+            cp federate/bin/ns3-federate "$ns3_simulator_folder/build/scratch/"
         else
             cd "${ns3_installation_path}"
 
@@ -406,7 +406,7 @@ deploy_ns3()
                 cp "$i" "$ns3_deploy_folder/build/"
             done
 
-            cp federate/bin/ns3-federate "$ns3_deploy_folder/build/scratch/mosaic_starter"
+            cp federate/bin/ns3-federate "$ns3_deploy_folder/build/scratch/"
 
             mkdir "${ns3_deploy_folder}/scratch"
 
