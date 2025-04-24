@@ -373,9 +373,6 @@ build_ns3_federate()
   mv src/ClientServerChannel.h .
   mv src/ClientServerChannel.cc .
 
-  # adjust build instruction to cover scrambled files
-  sed -i -e "s|\"/usr/include\"|\"../ns-allinone-${ns3_version}/ns-${ns3_version}/build/include\"|" premake5.lua
-  sed -i -e "s|\"/usr/lib\"|\"../ns-allinone-${ns3_version}/ns-${ns3_version}/build/lib\"|" premake5.lua
   if [ "${arg_regen_protobuf}" == "true" ]; then
      if [ -f src/ClientServerChannelMessages.pb.h ]; then
        rm src/ClientServerChannelMessages.pb.h
