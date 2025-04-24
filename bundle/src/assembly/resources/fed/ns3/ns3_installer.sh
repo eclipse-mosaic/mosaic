@@ -350,7 +350,7 @@ extract_premake() {
 
 copy_runfile()
 {
-   cp -f "./federate/run.sh" "$ns3_installation_path/run.sh"
+   cp -f "./federate/run_from_ns3installer.sh" "$ns3_installation_path/run.sh"
    chmod +x "$ns3_installation_path/run.sh"
 
    if [ "$arg_dev" == "true" ]; then
