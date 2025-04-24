@@ -370,8 +370,6 @@ build_ns3_federate()
 {
   log "Build ns3-federate"
   cd ${ns3_installation_path}/federate
-  mv src/ClientServerChannel.h .
-  mv src/ClientServerChannel.cc .
 
   if [ "${arg_regen_protobuf}" == "true" ]; then
      if [ -f src/ClientServerChannelMessages.pb.h ]; then
