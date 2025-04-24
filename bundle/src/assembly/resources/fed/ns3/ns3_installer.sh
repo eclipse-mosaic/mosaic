@@ -374,7 +374,6 @@ build_ns3_federate()
   mv src/ClientServerChannel.cc .
 
   # adjust build instruction to cover scrambled files
-  sed -i -e "s|/usr/local|.|" premake5.lua
   sed -i -e "s|\"/usr/include\"|\"../ns-allinone-${ns3_version}/ns-${ns3_version}/build/include\"|" premake5.lua
   sed -i -e "s|\"/usr/lib\"|\"../ns-allinone-${ns3_version}/ns-${ns3_version}/build/lib\"|" premake5.lua
   if [ "${arg_regen_protobuf}" == "true" ]; then
@@ -384,13 +383,14 @@ build_ns3_federate()
      if [ -f src/ClientServerChannelMessages.pb.cc ]; then
        rm src/ClientServerChannelMessages.pb.cc
      fi
-    ./premake5 gmake --generate-protobuf --install
+    ./premake5 gmake --generate-protobuf
   else
-    ./premake5 gmake --install
+    ./premake5 gmake
   fi
   make config=debug clean
   make -j1 config=debug # make is running targets in parallel, but we have to build 'prebuild'-target, target,
                         # and 'postbuild'-target sequentially
+  mv ./bin/Debug/ns3-federate ./bin
 }
 
 deploy_ns3()
