@@ -50,34 +50,25 @@ required_programs_display=( python3 gcc unzip tar protobuf-compiler )
 required_programs_test=( python3 gcc unzip tar protoc )
 required_libraries=( "libprotobuf-dev >= 3.7.0" "libxml2-dev" "libsqlite3-dev" )
 
-####### configurable parameters ##########
 ns3_version="3.36.1"
 
-####### automated parameters #############
 premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-linux.tar.gz"
 premake5_tar="$(basename "$premake5_url")"
 ns3_version_affix="ns-allinone-$ns3_version"
-ns3_version_affix_unified="ns-allinone" #deprecated, not used momentarily
 ns3_short_affix="ns-$ns3_version"
-ns3_short_affix_unified="ns3"
 ns3_deploy_folder="ns3-deployed"  #name to be used when ns3 is deployed (i.e. keep only binaries)
 working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 federate_path="bin/fed/ns3"
 ns3_installation_path=${working_directory}
 ns3_simulator_folder="${ns3_installation_path}/$ns3_version_affix/$ns3_short_affix" #due to the ns3 tarball structure
-ns3_scratch="${ns3_simulator_folder}/scratch"
-ns3_source="${ns3_simulator_folder}/src"
 
-####### semi automatic parameters ########
 ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/tags/25.0.zip"
 ns3_url="https://www.nsnam.org/releases/$ns3_version_affix.tar.bz2"
-
-###### more automatic parameters #########
 ns3_federate_filename="ns3-federate-$(basename "$ns3_federate_url")"
 ns3_filename="$(basename "$ns3_url")"
 
 temporary_files=""
-uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_version_affix $ns3_short_affix_unified $ns3_version_affix_unified ${ns3_deploy_folder}"
+uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_version_affix $ns3_deploy_folder"
 
 print_help() {
     log "\nUsage: ns3_installer.sh [options]\n"
