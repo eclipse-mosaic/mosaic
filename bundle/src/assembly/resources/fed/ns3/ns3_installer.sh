@@ -54,21 +54,21 @@ ns3_version="3.36.1"
 
 premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-linux.tar.gz"
 premake5_tar="$(basename "$premake5_url")"
-ns3_version_affix="ns-allinone-$ns3_version"
+ns3_long_affix="ns-allinone-$ns3_version"
 ns3_short_affix="ns-$ns3_version"
 ns3_deploy_folder="ns3-deployed"  #name to be used when ns3 is deployed (i.e. keep only binaries)
-working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 federate_path="bin/fed/ns3"
+working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ns3_installation_path=${working_directory}
-ns3_simulator_folder="${ns3_installation_path}/$ns3_version_affix/$ns3_short_affix" #due to the ns3 tarball structure
+ns3_simulator_path="${working_directory}/$ns3_long_affix/$ns3_short_affix" #due to the ns3 tarball structure
 
 ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/tags/25.0.zip"
-ns3_url="https://www.nsnam.org/releases/$ns3_version_affix.tar.bz2"
+ns3_url="https://www.nsnam.org/releases/$ns3_long_affix.tar.bz2"
 ns3_federate_filename="ns3-federate-$(basename "$ns3_federate_url")"
 ns3_filename="$(basename "$ns3_url")"
 
 temporary_files=""
-uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_version_affix $ns3_deploy_folder"
+uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_long_affix $ns3_deploy_folder"
 
 print_help() {
     log "\nUsage: ns3_installer.sh [options]\n"
@@ -306,7 +306,7 @@ download_federate() {
 
 extract_ns3()
 {
-   if [ ! -d "$2/ns3_version_affix" ]; then
+   if [ ! -d "$2/ns3_long_affix" ]; then
       arg1="$1"
       arg2="$2"
       tar --ignore-command-error -C "$arg2" -xf "$arg1"
@@ -386,14 +386,14 @@ deploy_ns3()
         if [ "$arg_dev" == "true" ]; then
             # will copy 1.8GB instead of 470MB at beginning of each simulation run
             cd "${ns3_installation_path}"
-            cp federate/bin/ns3-federate "$ns3_simulator_folder/build/scratch/"
+            cp federate/bin/ns3-federate "$ns3_simulator_path/build/scratch/"
         else
             cd "${ns3_installation_path}"
 
             mkdir -p "$ns3_deploy_folder/build/scratch/"
 
 
-            for i in $(find "${ns3_simulator_folder}/build/" -name "*.so"); do
+            for i in $(find "${ns3_simulator_path}/build/" -name "*.so"); do
                 cp "$i" "$ns3_deploy_folder/build/"
             done
 
@@ -401,8 +401,8 @@ deploy_ns3()
 
             mkdir "${ns3_deploy_folder}/scratch"
 
-            rm -rf ${ns3_simulator_folder}
-            mv "${ns3_deploy_folder}" "${ns3_simulator_folder}"
+            rm -rf ${ns3_simulator_path}
+            mv "${ns3_deploy_folder}" "${ns3_simulator_path}"
         fi
     fi
 }
