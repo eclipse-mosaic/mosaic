@@ -339,16 +339,6 @@ extract_premake() {
   cd "$oldpwd"
 }
 
-copy_runfile()
-{
-   cp -f "./federate/run_from_ns3installer.sh" "$ns3_installation_path/run.sh"
-   chmod +x "$ns3_installation_path/run.sh"
-
-   if [ "$arg_dev" == "true" ]; then
-      sed -i -e 's|LD_LIBRARY_PATH=../ns-allinone-$ns3Version/ns-$ns3Version/build|LD_LIBRARY_PATH=../ns-allinone-$ns3Version/ns-$ns3Version/build/lib|' "$ns3_installation_path/run.sh"
-   fi
-}
-
 build_ns3()
 {
   log "Build ns3 version ${ns3_version}"
@@ -386,8 +376,6 @@ deploy_ns3()
         if [ "$arg_dev" == "true" ]; then
             # will not delete ns3 source files in order to recompile depending on your needs
             # this now will copy 1.8GB (instead of 470MB) at beginning of each simulation run!
-            cd "${ns3_installation_path}"
-            cp federate/bin/ns3-federate "$ns3_simulator_path/build/scratch/"
         else
             cd "${ns3_installation_path}"
 
@@ -398,14 +386,25 @@ deploy_ns3()
                 cp "$i" "$ns3_deploy_folder/build/"
             done
 
-            cp federate/bin/ns3-federate "$ns3_deploy_folder/build/scratch/"
-
             mkdir "${ns3_deploy_folder}/scratch"
 
             rm -rf ${ns3_simulator_path}
             mv "${ns3_deploy_folder}" "${ns3_simulator_path}"
         fi
     fi
+}
+
+deploy_ns3_federate()
+{
+  log "Deploy ns3-federate"
+  cd $ns3_installation_path
+  mv ./federate/bin/ns3-federate .
+  cp -f ./federate/run_from_ns3installer.sh ./run.sh
+  chmod +x ./run.sh
+
+  if [ "$arg_dev" == "true" ]; then
+     sed -i -e 's|LD_LIBRARY_PATH=../ns-allinone-$ns3Version/ns-$ns3Version/build|LD_LIBRARY_PATH=../ns-allinone-$ns3Version/ns-$ns3Version/build/lib|' "$ns3_installation_path/run.sh"
+  fi
 }
 
 uninstall()
@@ -487,14 +486,13 @@ extract_ns3_federate
 
 extract_premake
 
-copy_runfile
-
 log "Building ns-3..."
 build_ns3
 build_ns3_federate
 
 log "Deploying ns-3..."
 deploy_ns3
+deploy_ns3_federate
 
 log "Set ns-3 debug-levels..."
 set_nslog
