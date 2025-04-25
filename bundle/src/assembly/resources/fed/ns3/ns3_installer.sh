@@ -315,7 +315,11 @@ extract_ns3_federate()
         fail "Directory federate in "." already exists.";
     fi
 
-    temporary_files="$temporary_files federate"
+    if [ "$arg_dev" == "true" ]; then
+        log "Keep federate source files"
+    else
+        temporary_files="$temporary_files federate"
+    fi
 
     unzip --qq -o "$(basename "$ns3_federate_url")"
     # The archive should have contained the folder "ns3-federate-xxx".
@@ -369,10 +373,10 @@ deploy_ns3()
     if [ "$arg_dev" == "true" ]; then
         # will not delete ns3 source files in order to recompile depending on your needs
         # this now will copy 1.8GB (instead of 470MB) at beginning of each simulation run!
-        log "Keep source files"
+        log "Keep ns3 source files"
     else
         # delete everything but the compiled files inside of `long/short/build/lib`
-        log "Delete source files"
+        log "Delete ns3 source files"
         cd $ns3_installation_path
         cd $ns3_long_affix
         find . .* -maxdepth 0 -not -name . -not -name .. | xargs rm -r
