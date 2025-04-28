@@ -36,4 +36,4 @@ VOLUME ["/home/mosaic/bin/fed/ns3/ns3config"]
 
 EXPOSE 40001 40002
 
-ENTRYPOINT ./run.sh 40001 40002
+ENTRYPOINT ["./run.sh", "40001", "40002"]
