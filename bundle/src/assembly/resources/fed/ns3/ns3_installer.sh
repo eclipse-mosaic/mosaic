@@ -42,7 +42,6 @@ arg_regen_protobuf=true
 arg_ns3_file=""
 arg_federate_file=""
 arg_integration_testing=false
-arg_make_parallel=""
 arg_dev=false
 
 required_programs_display=( python3 gcc unzip tar protobuf-compiler )
@@ -78,7 +77,6 @@ print_help() {
     log "   -k --keep-src\t\t\tSource code is not removed after installation."
     log "   -s --skip-gen-protobuf\t\tDo not regenerate Protobuf c++ source."
     log "   -h --help\t\t\t\tPrint this help"
-    log "   -j --parallel <n>\t\t\tUse n threads for compilation "
     log "   -u --uninstall       Remove the ns-3 federate"
     log "\n"
 }
@@ -116,10 +114,6 @@ get_arguments() {
                 ;;
             -k|--keep-src)
                 arg_dev=true
-                ;;
-            -j|--parallel)
-                arg_make_parallel="-j $2"
-                shift # past argument
                 ;;
             -h|--help)
                 arg_yes=true
