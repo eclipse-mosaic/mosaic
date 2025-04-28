@@ -36,13 +36,13 @@ bold="\033[1m"
 restore="\033[0m"
 
 arg_yes=false
-arg_uninstall=false
-arg_fail_clean=true
-arg_regen_protobuf=true
 arg_ns3_file=""
 arg_federate_file=""
-arg_integration_testing=false
+arg_regen_protobuf=true
 arg_dev=false
+arg_fail_clean=true
+arg_uninstall=false
+arg_integration_testing=false
 
 required_programs_display=( python3 gcc unzip tar protobuf-compiler )
 required_programs_test=( python3 gcc unzip tar protoc )
@@ -70,13 +70,13 @@ uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_long_affix"
 print_help() {
     log "\nUsage: ns3_installer.sh [options]\n"
     log "Options:\n"
+    log "   -h --help\t\t\t\tPrint this help"
     log "   -y --yes\t\t\t\tThe script will not require any input."
     log "   -s --simulator <ns3 archive>\t\tThe script will not attempt to download NS3 but use the given argument."
     log "   -f --federate <federate archive>\tThe script will not attempt to download the federate archive but use the given argument."
-    log "   -c --no-clean-on-failure\t\tDo not remove installation files when install fails."
-    log "   -k --keep-src\t\t\tSource code is not removed after installation."
     log "   -s --skip-gen-protobuf\t\tDo not regenerate Protobuf c++ source."
-    log "   -h --help\t\t\t\tPrint this help"
+    log "   -k --keep-src\t\t\tSource code is not removed after installation."
+    log "   -c --no-clean-on-failure\t\tDo not remove installation files when install fails."
     log "   -u --uninstall       Remove the ns-3 federate"
     log "\n"
 }
@@ -86,40 +86,41 @@ get_arguments() {
     do
         key="$1"
         case $key in
+            -h|--help)
+                arg_yes=true
+                print_info
+                print_help
+                exit 1
+                ;;
             -y|--yes)
                 arg_yes=true
-                ;;
-            -u|--uninstall)
-                arg_uninstall=true
-                ;;
-            -c|--no-clean-on-failure)
-                arg_fail_clean=false
-                ;;
-            -s|--skip-gen-protobuf)
-                arg_regen_protobuf=false
-                ;;
-            -f|--federate)
-                arg_federate_file="$2"
-                ns3_federate_filename="$2"
-                shift # past argument
                 ;;
             -s|--simulator)
                 arg_ns3_file="$2"
                 ns3_filename="$2"
                 shift # past argument
                 ;;
-            -it|--integration_testing)
-                arg_integration_testing=true
-                arg_yes=true
+            -f|--federate)
+                arg_federate_file="$2"
+                ns3_federate_filename="$2"
+                shift # past argument
+                ;;
+            -s|--skip-gen-protobuf)
+                arg_regen_protobuf=false
                 ;;
             -k|--keep-src)
                 arg_dev=true
                 ;;
-            -h|--help)
+            -c|--no-clean-on-failure)
+                arg_fail_clean=false
+                ;;
+            -u|--uninstall)
+                arg_uninstall=true
+                ;;
+            # non-advertised options
+            -it|--integration_testing)
+                arg_integration_testing=true
                 arg_yes=true
-                print_info
-                print_help
-                exit 1
                 ;;
         esac
     shift
