@@ -38,7 +38,6 @@ restore="\033[0m"
 arg_quiet=false
 arg_uninstall=false
 arg_fail_clean=true
-arg_deploy=true
 arg_regen_protobuf=true
 arg_ns3_file=""
 arg_federate_file=""
@@ -56,7 +55,6 @@ premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-b
 premake5_tar="$(basename "$premake5_url")"
 ns3_long_affix="ns-allinone-$ns3_version"
 ns3_short_affix="ns-$ns3_version"
-ns3_deploy_folder="ns3-deployed"  #name to be used when ns3 is deployed (i.e. keep only binaries)
 federate_path="bin/fed/ns3"
 working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ns3_installation_path=${working_directory}
@@ -68,7 +66,7 @@ ns3_federate_filename="ns3-federate-$(basename "$ns3_federate_url")"
 ns3_filename="$(basename "$ns3_url")"
 
 temporary_files=""
-uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_long_affix $ns3_deploy_folder"
+uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_long_affix"
 
 print_help() {
     log "\nUsage: ns3_installer.sh [options]\n"
@@ -77,7 +75,6 @@ print_help() {
     log "   -f --federate <federate archive>\tThe script will not attempt to download the federate archive but use the given argument."
     log "   -q --quiet\t\t\t\tThe script will not give any output but run silently instead."
     log "   -c --no-clean-on-failure\t\tDo not remove installation files when install fails."
-    log "   -d --no-deploy\t\t\tDo not extract binary data from ns3 (useful for development)."
     log "   -k --keep-src\t\t\tSource code is not removed after installation."
     log "   -p --regen-protobuf\ŧ\tRegenerate Protobuf c++ source, when using a different version of protobuf 3."
     log "   -h --help\t\t\t\tPrint this help"
@@ -99,9 +96,6 @@ get_arguments() {
               ;;
           -c|--no-clean-on-failure)
               arg_fail_clean=false
-              ;;
-          -d|--no-deploy)
-              arg_deploy=false
               ;;
           -p|--skip-gen-protobuf)
               arg_regen_protobuf=false
@@ -371,27 +365,24 @@ build_ns3_federate()
 
 deploy_ns3()
 {
-    if [ "$arg_deploy" == "true" ]; then
-        log "Deploying ns3 binaries"
+        log "Deploy ns3" # aka remove what we don't need
         if [ "$arg_dev" == "true" ]; then
             # will not delete ns3 source files in order to recompile depending on your needs
             # this now will copy 1.8GB (instead of 470MB) at beginning of each simulation run!
+            log "Keep source files"
         else
-            cd "${ns3_installation_path}"
-
-            mkdir -p "$ns3_deploy_folder/build/scratch/"
-
-
-            for i in $(find "${ns3_simulator_path}/build/" -name "*.so"); do
-                cp "$i" "$ns3_deploy_folder/build/"
-            done
-
-            mkdir "${ns3_deploy_folder}/scratch"
-
-            rm -rf ${ns3_simulator_path}
-            mv "${ns3_deploy_folder}" "${ns3_simulator_path}"
+            # delete everything but the compiled files inside of `long/short/build/lib`
+            log "Delete source files"
+            cd $ns3_installation_path
+            cd $ns3_long_affix
+            find . .* -maxdepth 0 -not -name . -not -name .. | xargs rm -r
+            find .  * -maxdepth 0 -not -name . -not -name .. -not -name $ns3_short_affix | xargs rm -r
+            cd $ns3_short_affix
+            find . .* -maxdepth 0 -not -name . -not -name .. | xargs rm -r
+            find .  * -maxdepth 0 -not -name . -not -name .. -not -name build | xargs rm -r
+            cd build
+            find .  * -maxdepth 0 -not -name . -not -name .. -not -name lib | xargs rm -r
         fi
-    fi
 }
 
 deploy_ns3_federate()
@@ -401,10 +392,6 @@ deploy_ns3_federate()
   mv ./federate/bin/ns3-federate .
   cp -f ./federate/run_from_ns3installer.sh ./run.sh
   chmod +x ./run.sh
-
-  if [ "$arg_dev" == "true" ]; then
-     sed -i -e 's|LD_LIBRARY_PATH=../ns-allinone-$ns3Version/ns-$ns3Version/build|LD_LIBRARY_PATH=../ns-allinone-$ns3Version/ns-$ns3Version/build/lib|' "$ns3_installation_path/run.sh"
-  fi
 }
 
 uninstall()
