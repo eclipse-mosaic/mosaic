@@ -118,7 +118,7 @@ get_arguments() {
                 arg_uninstall=true
                 ;;
             # non-advertised options
-            -it|--integration_testing)
+            -it|--integration-testing)
                 arg_integration_testing=true
                 arg_yes=true
                 ;;
