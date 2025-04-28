@@ -28,16 +28,12 @@ WORKDIR /home/mosaic/bin/fed/ns3
 
 COPY ./ns* ./
 
-RUN \
-    ./ns3_installer.sh -p --quiet && \
-    mkdir -p ns3/scratch && \
-    chmod -R 755 run.sh ns-allinone-3* && \
-    chmod -R 777 ns3
+RUN ./ns3_installer.sh --yes 
+RUN mkdir -p ns3config
+RUN chmod -R 755 run.sh ns-allinone-3* && chmod -R 777 ns3config
 
-VOLUME ["/home/mosaic/bin/fed/ns3/scratch"]
+VOLUME ["/home/mosaic/bin/fed/ns3/ns3config"]
 
 EXPOSE 40001 40002
 
-ENTRYPOINT \
-    cp scratch/* ns3/scratch && \
-    ./run.sh 40001 40002
+ENTRYPOINT ["./run.sh", "40001", "40002"]
