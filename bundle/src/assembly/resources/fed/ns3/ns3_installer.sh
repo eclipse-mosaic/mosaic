@@ -76,7 +76,7 @@ print_help() {
     log "   -q --quiet\t\t\t\tThe script will not give any output but run silently instead."
     log "   -c --no-clean-on-failure\t\tDo not remove installation files when install fails."
     log "   -k --keep-src\t\t\tSource code is not removed after installation."
-    log "   -p --regen-protobuf\ŧ\tRegenerate Protobuf c++ source, when using a different version of protobuf 3."
+    log "   -s --skip-gen-protobuf\t\tDo not regenerate Protobuf c++ source."
     log "   -h --help\t\t\t\tPrint this help"
     log "   -j --parallel <n>\t\t\tUse n threads for compilation "
     log "   -u --uninstall       Remove the ns-3 federate"
@@ -97,7 +97,7 @@ get_arguments() {
             -c|--no-clean-on-failure)
                 arg_fail_clean=false
                 ;;
-            -p|--skip-gen-protobuf)
+            -s|--skip-gen-protobuf)
                 arg_regen_protobuf=false
                 ;;
             -f|--federate)
