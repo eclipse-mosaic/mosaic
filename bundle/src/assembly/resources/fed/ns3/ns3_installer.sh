@@ -35,7 +35,7 @@ red="\033[01;31m"
 bold="\033[1m"
 restore="\033[0m"
 
-arg_quiet=false
+arg_yes=false
 arg_uninstall=false
 arg_fail_clean=true
 arg_regen_protobuf=true
@@ -71,9 +71,9 @@ uninstall_files="license_gplv2.txt run.sh $ns3_short_affix $ns3_long_affix"
 print_help() {
     log "\nUsage: ns3_installer.sh [options]\n"
     log "Options:\n"
+    log "   -y --yes\t\t\t\tThe script will not require any input."
     log "   -s --simulator <ns3 archive>\t\tThe script will not attempt to download NS3 but use the given argument."
     log "   -f --federate <federate archive>\tThe script will not attempt to download the federate archive but use the given argument."
-    log "   -q --quiet\t\t\t\tThe script will not give any output but run silently instead."
     log "   -c --no-clean-on-failure\t\tDo not remove installation files when install fails."
     log "   -k --keep-src\t\t\tSource code is not removed after installation."
     log "   -s --skip-gen-protobuf\t\tDo not regenerate Protobuf c++ source."
@@ -88,8 +88,8 @@ get_arguments() {
     do
         key="$1"
         case $key in
-            -q|--quiet)
-                arg_quiet=true
+            -y|--yes)
+                arg_yes=true
                 ;;
             -u|--uninstall)
                 arg_uninstall=true
@@ -112,7 +112,7 @@ get_arguments() {
                 ;;
             -it|--integration_testing)
                 arg_integration_testing=true
-                arg_quiet=true
+                arg_yes=true
                 ;;
             -k|--keep-src)
                 arg_dev=true
@@ -122,7 +122,7 @@ get_arguments() {
                 shift # past argument
                 ;;
             -h|--help)
-                arg_quiet=true
+                arg_yes=true
                 print_info
                 print_help
                 exit 1
@@ -171,7 +171,7 @@ print_info() {
     log "\nThis shell script will download and install the NS3 network simulator version $ns3_version."
     log "\nPlease make sure you have installed the packages g++ libsqlite3-dev libxml2-dev libprotobuf-dev >= 3.7.0 ."
     log "\nIf there is an error (like a missing package) during the installation, the output may give hints about what went wrong.\n"
-    if [ "$arg_quiet" = false ]; then
+    if [ "$arg_yes" = false ]; then
         read -p "Press any key to continue..." -n1 -s
         log "\n"
     fi
@@ -221,7 +221,7 @@ check_nslog() {
 
 ask_dependencies()
 {
-    if $arg_integration_testing || $arg_quiet; then
+    if $arg_integration_testing || $arg_yes; then
         return
     fi
 
@@ -425,7 +425,7 @@ clean_up()
     if [ "$arg_integration_testing" = false ]; then
         while  [ true ]; do
             log "Do you want to remove the following files and folders? ${bold}${red} $temporary_files ${restore} \n[y/n] "
-        if $arg_quiet; then
+        if $arg_yes; then
                 answer=Y
             else
                 read answer
