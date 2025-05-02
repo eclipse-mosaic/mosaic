@@ -17,40 +17,7 @@ package org.eclipse.mosaic.fed.sumo.bridge.facades;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetParameter;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetRouteId;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetVehicleTypeId;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetChangeLane;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetColor;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetHighlight;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetImperfection;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetLaneChangeMode;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMaxAcceleration;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMaxDeceleration;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMaxSpeed;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMinGap;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMoveToXY;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetParameter;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetReactionTime;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetResume;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetRouteById;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSlowDown;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSpeed;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSpeedFactor;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSpeedMode;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetStop;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetVehicleLength;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetAccel;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetDecel;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetHeight;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetLength;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetMaxSpeed;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetMinGap;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetSigma;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetSpeedFactor;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetTau;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetVClass;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetWidth;
+import org.eclipse.mosaic.fed.sumo.bridge.api.*;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoLaneChangeMode;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoSpeedMode;
 import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
@@ -63,7 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class VehicleFacade {
@@ -99,6 +68,7 @@ public class VehicleFacade {
     private final VehicleSetLaneChangeMode setLaneChangeMode;
     private final VehicleSetSpeedMode setSpeedMode;
     private final VehicleSetParameter setParameter;
+    private final VehicleGetTaxiFleet getTaxiFleet;
 
     private final VehicleTypeGetLength getVehicleTypeLength;
     private final VehicleTypeGetWidth getVehicleTypeWidth;
@@ -147,6 +117,7 @@ public class VehicleFacade {
         setLaneChangeMode = bridge.getCommandRegister().getOrCreate(VehicleSetLaneChangeMode.class);
         setSpeedMode = bridge.getCommandRegister().getOrCreate(VehicleSetSpeedMode.class);
         setParameter = bridge.getCommandRegister().getOrCreate(VehicleSetParameter.class);
+        getTaxiFleet = bridge.getCommandRegister().getOrCreate(VehicleGetTaxiFleet.class);
 
         getVehicleTypeLength = bridge.getCommandRegister().getOrCreate(VehicleTypeGetLength.class);
         getVehicleTypeWidth = bridge.getCommandRegister().getOrCreate(VehicleTypeGetWidth.class);
@@ -500,6 +471,18 @@ public class VehicleFacade {
         } catch (IllegalArgumentException | CommandException e) {
             log.warn("Could not set speed for vehicle {}", vehicleId);
         }
+    }
+
+    public List<String> getTaxiFleet(int taxiState) throws InternalFederateException {
+        List<String> taxiFleet = new ArrayList<>();
+
+        try {
+            taxiFleet = getTaxiFleet.execute(bridge, taxiState);
+        } catch (IllegalArgumentException | CommandException e) {
+            log.warn("Could not get taxi fleet for state {}", taxiState);
+        }
+
+        return taxiFleet;
     }
 
     /**

@@ -41,6 +41,8 @@ public class CommandRetrieveVehicleState {
 
     public final static SumoVar VAR_ROUTE_ID = SumoVar.var(0x53);
 
+    public final static SumoVar VAR_TAXI_FLEET = SumoVar.var(0x20);
+
     public final static SumoVar VAR_LANE_POSITION = SumoVar.var(0x56);
 
     public final static SumoVar VAR_LATERAL_LANE_POSITION = SumoVar.var(0xb8);

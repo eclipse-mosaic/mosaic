@@ -271,7 +271,7 @@ public abstract class AbstractTraciCommand<T> {
                             resultObjects.add(o);
                         }
                     }
-                    if (resultObjects.size() > 0) {
+                    if (!resultObjects.isEmpty()) {
                         results.add(constructResult(status, resultObjects.toArray(new Object[0])));
                     }
 

@@ -53,8 +53,8 @@ public class SumoTraciInteractionApp extends AbstractApplication<VehicleOperatin
     /**
      * The "meat" of this application. Here a byte array is assembled
      * that follows the traci protocol. With the byte array constructed
-     * here we instruct sumo directly to give us the speed for the
-     * provided vehicle. https://sumo.dlr.de/wiki/TraCI/Vehicle_Value_Retrieval
+     * here, we instruct sumo directly to give us the speed for the
+     * provided vehicle. <a href="https://sumo.dlr.de/wiki/TraCI/Vehicle_Value_Retrieval">Vehicle_Value_Retrieval</a>
      *
      * @param vehicleId Vehicle to get the speed from
      * @return The byte array to be sent to sumo

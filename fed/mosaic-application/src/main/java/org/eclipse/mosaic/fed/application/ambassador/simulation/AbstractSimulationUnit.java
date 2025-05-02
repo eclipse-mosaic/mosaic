@@ -166,19 +166,19 @@ public abstract class AbstractSimulationUnit implements EventProcessor, Operatin
             final List<EventProcessor> processors = originalEvent.getProcessors();
 
             // hand written loop 3x faster on ArrayLists: http://developer.android.com/training/articles/perf-tips.html#Loops
-            final int size = processors.size();
-            for (int i = 0; i < size; ++i) {
-                EventProcessor processor = processors.get(i);
-                if (!processor.canProcessEvent()) {
-                    continue;
-                }
+			for(EventProcessor processor : processors) {
+				if(!processor.canProcessEvent()) {
+					continue;
+				}
 
-                try {
-                    processor.processEvent(originalEvent);
-                } catch (Exception ex) {
-                    throw new RuntimeException(ErrorRegister.SIMULATION_UNIT_UncaughtExceptionDuringProcessEvent.toString(), ex);
-                }
-            }
+				try {
+					processor.processEvent(originalEvent);
+				}
+				catch(Exception ex) {
+					throw new RuntimeException(
+						ErrorRegister.SIMULATION_UNIT_UncaughtExceptionDuringProcessEvent.toString(), ex);
+				}
+			}
 
             return true;
         } else {

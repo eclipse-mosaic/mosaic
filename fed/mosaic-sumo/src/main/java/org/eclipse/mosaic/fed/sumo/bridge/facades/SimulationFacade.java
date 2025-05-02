@@ -18,32 +18,8 @@ package org.eclipse.mosaic.fed.sumo.bridge.facades;
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.fed.sumo.bridge.SumoVersion;
-import org.eclipse.mosaic.fed.sumo.bridge.api.InductionLoopSubscribe;
-import org.eclipse.mosaic.fed.sumo.bridge.api.LaneAreaSubscribe;
-import org.eclipse.mosaic.fed.sumo.bridge.api.LaneGetLength;
-import org.eclipse.mosaic.fed.sumo.bridge.api.LaneGetShape;
-import org.eclipse.mosaic.fed.sumo.bridge.api.LaneSetAllow;
-import org.eclipse.mosaic.fed.sumo.bridge.api.LaneSetDisallow;
-import org.eclipse.mosaic.fed.sumo.bridge.api.LaneSetMaxSpeed;
-import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetDepartedVehicleIds;
-import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetTrafficLightIds;
-import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSimulateStep;
-import org.eclipse.mosaic.fed.sumo.bridge.api.TrafficLightSubscribe;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleAdd;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTeleportingList;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetRemove;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetUpdateBestLanes;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscribe;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscribeSurroundingVehicle;
-import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscriptionSetFieldOfVision;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.AbstractSubscriptionResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.InductionLoopSubscriptionResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.LaneAreaSubscriptionResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.LeadFollowVehicle;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TraciSimulationStepResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TrafficLightSubscriptionResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleContextSubscriptionResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleSubscriptionResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.*;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.*;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.InductionLoop;
 import org.eclipse.mosaic.fed.sumo.util.TrafficLightStateDecoder;
@@ -55,39 +31,27 @@ import org.eclipse.mosaic.lib.enums.VehicleStopMode;
 import org.eclipse.mosaic.lib.objects.pt.PtVehicleData;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.road.SimpleRoadPosition;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 import org.eclipse.mosaic.lib.objects.traffic.InductionLoopInfo;
 import org.eclipse.mosaic.lib.objects.traffic.LaneAreaDetectorInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroupInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightState;
-import org.eclipse.mosaic.lib.objects.vehicle.Consumptions;
-import org.eclipse.mosaic.lib.objects.vehicle.Emissions;
-import org.eclipse.mosaic.lib.objects.vehicle.SurroundingVehicle;
-import org.eclipse.mosaic.lib.objects.vehicle.VehicleConsumptions;
-import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
-import org.eclipse.mosaic.lib.objects.vehicle.VehicleEmissions;
-import org.eclipse.mosaic.lib.objects.vehicle.VehicleSensors;
-import org.eclipse.mosaic.lib.objects.vehicle.VehicleSignals;
+import org.eclipse.mosaic.lib.objects.vehicle.*;
 import org.eclipse.mosaic.lib.objects.vehicle.sensor.DistanceSensor;
 import org.eclipse.mosaic.lib.objects.vehicle.sensor.RadarSensor;
 import org.eclipse.mosaic.lib.util.objects.Position;
 import org.eclipse.mosaic.rti.TIME;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SimulationFacade {
 
     /**
      * Density of vehicle gasoline in g/m^3. Since 1.14.0 SUMO returns
-     * fuel consumptions in mg, thus we convert it back to ml for compatibility.
+     * fuel consumption in mg, thus we convert it back to ml for compatibility.
      */
     private final static double FUEL_DENSITY = 0.74; // g/m^3
 
@@ -102,7 +66,6 @@ public class SimulationFacade {
     private final VehicleAdd vehicleAdd;
     private final VehicleSetRemove remove;
     private final VehicleGetTeleportingList getTeleportingList;
-
 
     private final VehicleSubscribe vehicleSubscribe;
     private final VehicleSubscribeSurroundingVehicle vehicleSubscribeSurrounding;
@@ -223,7 +186,7 @@ public class SimulationFacade {
     }
 
     /**
-     * Adds an vehicle to the simulation.
+     * Adds a vehicle to the simulation.
      *
      * @param vehicleId   the id of the vehicle. Must not be assigned to another vehicle
      * @param vehicleType the vehicle type. Must be existing
@@ -555,12 +518,23 @@ public class SimulationFacade {
             if (sumoConfiguration.subscriptions != null && sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_TRAINS)) {
                 vehicleDataBuilder.additional(extractTrainData(veh));
             }
+
+            if ("TaxiVeh".equals(bridge.getVehicleControl().getVehicleTypeId(veh.id))) {
+                TaxiVehicleData taxiVehicleData = extractTaxiData(veh);
+                vehicleDataBuilder.additional(taxiVehicleData);
+
+                if (!isNewVehicle) {
+                    List<String> taxiFleet = bridge.getVehicleControl().getTaxiFleet(0);
+                    log.info("TaxiFleet result: {}", taxiFleet);
+                }
+            }
+
             if (isParking) {
                 if (!sumoVehicle.lastVehicleData.isStopped()) {
                     log.info("Vehicle {} has parked at {} (edge: {})", veh.id, veh.position, veh.edgeId);
                 }
                 vehicleDataBuilder
-                        // use the last known road position, otherwise we can not retrieve a valid one
+                        // use the last known road position, otherwise we cannot retrieve a valid one
                         .road(sumoVehicle.lastVehicleData.getRoadPosition())
                         // for parking vehicles, there are no consumptions and emissions to measure
                         .consumptions(new VehicleConsumptions(
@@ -583,7 +557,18 @@ public class SimulationFacade {
         return new PtVehicleData.Builder().withLineId(veh.line).nextStops(veh.nextStops).build();
     }
 
-    private List<String> findRemovedVehicles(long time) throws CommandException, InternalFederateException {
+    private TaxiVehicleData extractTaxiData(VehicleSubscriptionResult veh) throws InternalFederateException {
+        String taxiState = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.state");
+        String numberOfServedCustomers = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.customers");
+        String occupiedDistance = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.occupiedDistance");
+        String occupiedTime = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.occupiedTime");
+        String currentCustomers = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.currentCustomers");
+
+        return new TaxiVehicleData.Builder().withState(taxiState).withCustomersServed(numberOfServedCustomers).withTotalOccupiedDistanceInMeters(occupiedDistance)
+            .withTotalOccupiedTimeInSeconds(occupiedTime).withCustomersToPickUpOrOnBoard(currentCustomers).build();
+    }
+
+    private List<String> findRemovedVehicles(long time) throws CommandException {
         final List<String> removedVehicles = new LinkedList<>();
         for (Iterator<SumoVehicleState> vehicleIt = sumoVehicles.values().iterator(); vehicleIt.hasNext(); ) {
             SumoVehicleState vehicle = vehicleIt.next();
@@ -720,7 +705,7 @@ public class SimulationFacade {
     }
 
     /**
-     * Maps vehicles to the their current lane segments (on which a vehicle is located).
+     * Maps vehicles to their current lane segments (on which a vehicle is located).
      *
      * @param subscriptions Subscription data.
      * @return The segment of the vehicle.
