@@ -1,0 +1,12 @@
+<configuration>
+	<input>
+		<net-file value="theodorHeuss.net.xml"/>
+		<route-files value="theodorHeuss.rou.xml"/>
+		<device.taxi.dispatch-algorithm value="traci"/>
+        <device.taxi.idle-algorithm value="stop"/>
+	</input>
+	<time>
+		<begin value="0" />
+		<end value="700" />
+	</time>
+</configuration>

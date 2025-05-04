@@ -1,0 +1,11 @@
+{
+  "headerLengths": {
+    "ethernetHeader": "144 b",
+    "cellularHeader": "144 b",
+    "ipHeader": "160 b",
+    "tcpHeader": "160 b",
+    "udpHeader": "64 b"
+  },
+  "networkConfigurationFile": "network.json",
+  "regionConfigurationFile": "regions.json"
+}

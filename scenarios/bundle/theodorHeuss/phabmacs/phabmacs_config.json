@@ -1,0 +1,47 @@
+{
+  "initialization": {
+    "waitForInitMessages": true
+  },
+  "map": "theodorHeuss.osm",
+  "stepSize": "50 ms",
+  "showVisualizer": true,
+  "showRoutes": false,
+  "lidarVisualize": false,
+  "cameraPosition": {
+    "latitude": 52.5110318,
+    "longitude": 13.2822697
+  },
+  "vehicleTypes": {
+    "Car": {
+      "sensors": [],
+      "skills": [],
+      "features": []
+    }
+  },
+  "trajectories": {},
+  "parkingVehicles": [],
+  "screenshotInterval": "0 s",
+  "extrapolation": {
+    "benchmarkAccuracy": false
+  },
+  "lidarNumberOfThreads": 1,
+  "lidarAbsoluteCoordinates": true,
+  "lidarFrameTransport": "RAW",
+  "defaultLidarConfiguration": {
+    "horizontalFieldOfView": 120,
+    "verticalFieldOfView": 4.0,
+    "horizontalResolution": 1.0,
+    "verticalResolution": 1.0,
+    "pitchOffset": 2.0,
+    "range": 200.0,
+    "samplingRate": 20.0,
+    "position": {
+      "x": 0.0,
+      "y": 0.1,
+      "z": -1.45
+    },
+    "lidarNoise": "0.0 m",
+    "measurementTimeOffset": 0.0
+  },
+  "lidarConfigurations": {}
+}

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="http://www.dcaiti.tu-berlin.de/research/simulation/download/get/scenarios/scenarioname/visualizer/visualizer_config.xsd">
+    <output id="fileoutput" enabled="true" update="5" loader="org.eclipse.mosaic.fed.output.generator.file.FileOutputLoader">
+        <filename>visualizer.csv</filename>
+        <directory>.</directory>
+        <separator>;</separator>
+        <subscriptions>
+            <subscription id="VehicleUpdates">
+                <entries>
+                    <entry>"VEHICLE_UPDATES"</entry>
+                    <entry>Time</entry>
+                    <entry>Updated:Name</entry>
+                    <entry>Updated:Position.Latitude</entry>
+                    <entry>Updated:Position.Longitude</entry>
+                    <entry>Updated:Speed</entry>
+                    <entry>Updated:Heading</entry>
+                </entries>
+            </subscription>
+            <subscription id="VehicleRegistration" enabled="true">
+                <entries>
+                    <entry>"VEHICLE_REGISTRATION"</entry>
+                    <entry>Time</entry>
+                    <entry>Mapping.Name</entry>
+                    <entry>Mapping.Applications</entry>
+                    <entry>Mapping.VehicleType.Name</entry>
+                </entries>
+            </subscription>
+        </subscriptions>
+    </output>
+
+    <output id="websocket" enabled="true" loader="org.eclipse.mosaic.fed.output.generator.websocket.WebsocketVisualizerLoader">
+        <synchronized>true</synchronized>
+        <port>46587</port>
+        <subscriptions>
+            <subscription id="VehicleUpdates" enabled="true"/>
+            <subscription id="V2xMessageReception" enabled="true"/>
+            <subscription id="V2xMessageTransmission" enabled="true"/>
+            <subscription id="VehicleRegistration" enabled="true"/>
+            <subscription id="RsuRegistration" enabled="true"/>
+        </subscriptions>
+    </output>
+</configuration>
+
