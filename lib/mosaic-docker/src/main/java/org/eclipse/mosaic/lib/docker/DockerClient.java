@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,7 +58,7 @@ public class DockerClient {
     }
 
     /**
-     * Close all containers which has been started by this container.
+     * Close all containers which have been started by this container.
      */
     public void close() {
         for (DockerContainer container : runningContainers) {
@@ -72,7 +73,7 @@ public class DockerClient {
             options.add("-P");
         }
         // set name of container to default value if it hasn't been set
-        containerName = StringUtils.defaultString(containerName, image);
+        containerName = Objects.toString(containerName, image);
         if (!options.contains("--name")) {
             options.add("--name");
             options.add(containerName);

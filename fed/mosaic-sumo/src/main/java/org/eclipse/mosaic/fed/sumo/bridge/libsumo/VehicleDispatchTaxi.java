@@ -28,6 +28,6 @@ public class VehicleDispatchTaxi implements org.eclipse.mosaic.fed.sumo.bridge.a
 	@Override
 	public void execute(Bridge bridge, String vehicleId, List<String> reservations)
 		throws CommandException, InternalFederateException {
-		Vehicle.dispatchTaxi(Bridge.VEHICLE_ID_TRANSFORMER.toExternalId(vehicleId), new StringVector(reservations));
+		Vehicle.dispatchTaxi(vehicleId, new StringVector(reservations));
 	}
 }

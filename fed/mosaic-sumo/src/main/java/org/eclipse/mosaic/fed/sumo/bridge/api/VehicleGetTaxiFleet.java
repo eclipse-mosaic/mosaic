@@ -26,7 +26,7 @@ import java.util.List;
  */
 public interface VehicleGetTaxiFleet {
 	/**
-	 * This method executes the command with the given arguments in order to get all taxis based on a state.
+	 * This method executes the command with the given arguments in order to retrieve taxis based on a state.
 	 * States:
 	 * <ul>
 	 *     <li>-1: all</li>

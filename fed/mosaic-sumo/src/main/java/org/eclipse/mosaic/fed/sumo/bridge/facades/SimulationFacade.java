@@ -31,6 +31,7 @@ import org.eclipse.mosaic.lib.enums.VehicleStopMode;
 import org.eclipse.mosaic.lib.objects.pt.PtVehicleData;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.road.SimpleRoadPosition;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 import org.eclipse.mosaic.lib.objects.traffic.InductionLoopInfo;
 import org.eclipse.mosaic.lib.objects.traffic.LaneAreaDetectorInfo;
@@ -74,6 +75,8 @@ public class SimulationFacade {
     private final LaneAreaSubscribe laneAreaSubscribe;
     private final TrafficLightSubscribe trafficLightSubscribe;
 
+    private final PersonGetTaxiReservations personGetTaxiReservations;
+
     private final LaneSetAllow laneSetAllow;
     private final LaneSetDisallow laneSetDisallow;
     private final LaneSetMaxSpeed laneSetMaxSpeed;
@@ -89,6 +92,7 @@ public class SimulationFacade {
      * and reset to {@code null} after each time step.
      */
     private List<String> currentTeleportingList;
+    private List<TaxiReservation> customerReservationsList = new ArrayList<>();
 
     private static class SumoVehicleState {
         private final String id;
@@ -145,6 +149,8 @@ public class SimulationFacade {
         this.laneAreaSubscribe = bridge.getCommandRegister().getOrCreate(LaneAreaSubscribe.class);
         this.vehicleSubscribe = bridge.getCommandRegister().getOrCreate(VehicleSubscribe.class);
         this.trafficLightSubscribe = bridge.getCommandRegister().getOrCreate(TrafficLightSubscribe.class);
+
+        this.personGetTaxiReservations = bridge.getCommandRegister().getOrCreate(PersonGetTaxiReservations.class);
 
         this.laneSetAllow = bridge.getCommandRegister().getOrCreate(LaneSetAllow.class);
         this.laneSetDisallow = bridge.getCommandRegister().getOrCreate(LaneSetDisallow.class);
@@ -204,6 +210,15 @@ public class SimulationFacade {
             throw new InternalFederateException(String.format("Could not add vehicle %s", vehicleId), e);
         }
     }
+
+    public List<TaxiReservation> getTaxiReservations(int reservationState) throws InternalFederateException {
+        try {
+            return personGetTaxiReservations.execute(bridge, reservationState);
+        }
+		catch(CommandException e) {
+			throw new InternalFederateException(String.format("Could not retrieve taxi reservations for state %s", reservationState), e);
+		}
+	}
 
     /**
      * Subscribes for the given vehicle. It will then be included in the VehicleUpdates result of {@link #simulateStep}.
@@ -515,18 +530,24 @@ public class SimulationFacade {
                     .stopped(vehicleStopMode)
                     .sensors(createSensorData(sumoVehicle, veh.leadingVehicle, veh.followerVehicle, veh.minGap))
                     .laneArea(vehicleSegmentInfo.get(veh.id));
+
             if (sumoConfiguration.subscriptions != null && sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_TRAINS)) {
                 vehicleDataBuilder.additional(extractTrainData(veh));
             }
 
+            // Set taxi data as additional data
             if ("TaxiVeh".equals(bridge.getVehicleControl().getVehicleTypeId(veh.id))) {
                 TaxiVehicleData taxiVehicleData = extractTaxiData(veh);
                 vehicleDataBuilder.additional(taxiVehicleData);
+            }
 
-                if (!isNewVehicle) {
-                    List<String> taxiFleet = bridge.getVehicleControl().getTaxiFleet(0);
-                    log.info("TaxiFleet result: {}", taxiFleet);
-                }
+            // Check for available reservations and dispatch taxi, if available
+            customerReservationsList.addAll(getTaxiReservations(TaxiReservation.ONLY_NEW_RESERVATIONS));
+            List<String> taxiFleet = bridge.getVehicleControl().getTaxiFleet(TaxiVehicleData.EMPTY_TAXIS);
+
+            if (!taxiFleet.isEmpty() && !customerReservationsList.isEmpty()) {
+                bridge.getVehicleControl().dispatchTaxi(taxiFleet.get(0), List.of(customerReservationsList.get(0).getId()));
+                customerReservationsList.remove(0);
             }
 
             if (isParking) {

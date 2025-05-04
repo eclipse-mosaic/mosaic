@@ -69,6 +69,7 @@ public class VehicleFacade {
     private final VehicleSetSpeedMode setSpeedMode;
     private final VehicleSetParameter setParameter;
     private final VehicleGetTaxiFleet getTaxiFleet;
+    private final VehicleDispatchTaxi vehicleDispatchTaxi;
 
     private final VehicleTypeGetLength getVehicleTypeLength;
     private final VehicleTypeGetWidth getVehicleTypeWidth;
@@ -118,6 +119,7 @@ public class VehicleFacade {
         setSpeedMode = bridge.getCommandRegister().getOrCreate(VehicleSetSpeedMode.class);
         setParameter = bridge.getCommandRegister().getOrCreate(VehicleSetParameter.class);
         getTaxiFleet = bridge.getCommandRegister().getOrCreate(VehicleGetTaxiFleet.class);
+        vehicleDispatchTaxi = bridge.getCommandRegister().getOrCreate(VehicleDispatchTaxi.class);
 
         getVehicleTypeLength = bridge.getCommandRegister().getOrCreate(VehicleTypeGetLength.class);
         getVehicleTypeWidth = bridge.getCommandRegister().getOrCreate(VehicleTypeGetWidth.class);
@@ -473,6 +475,14 @@ public class VehicleFacade {
         }
     }
 
+    /**
+     * Getter for taxis depending on the requested state.
+     * @see VehicleGetTaxiFleet#execute(Bridge, int)
+     *
+     * @param taxiState The state in which the taxi should be.
+     * @return A list with the available taxis in the given state.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
+     */
     public List<String> getTaxiFleet(int taxiState) throws InternalFederateException {
         List<String> taxiFleet = new ArrayList<>();
 
@@ -484,6 +494,28 @@ public class VehicleFacade {
 
         return taxiFleet;
     }
+
+    /**
+     * Dispatches taxi to pick up and drop off customers in a specific order.<br>
+     * Valid example for the reservation list:
+     * <ul>
+     *     <li>[a,b,c,d] - picks up and drops off in this order</li>
+     *     <li>[a, b, a, c, b, d, c, d] - picks first a and b, then drops off a,
+     *     then picks up c, drops off b, etc.</li>
+     * </ul>
+     *
+     * @param taxiId The Id of the taxi to be dispatched.
+     * @param reservations A list of the reservations in which the customers should be picked up and dropped off.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
+     */
+    public void dispatchTaxi(String taxiId, List<String> reservations) throws InternalFederateException {
+        try {
+            vehicleDispatchTaxi.execute(bridge, taxiId, reservations);
+        }
+		catch(IllegalArgumentException | CommandException e) {
+			log.warn("Could not dispatch taxi with vehicle Id {}", taxiId);
+		}
+	}
 
     /**
      * Sets a vehicle parameter for the vehicle.

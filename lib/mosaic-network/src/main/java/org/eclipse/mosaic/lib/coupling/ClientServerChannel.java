@@ -40,8 +40,6 @@ import org.eclipse.mosaic.lib.util.objects.IdTransformer;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
