@@ -75,8 +75,6 @@ public class SimulationFacade {
     private final LaneAreaSubscribe laneAreaSubscribe;
     private final TrafficLightSubscribe trafficLightSubscribe;
 
-    private final PersonGetTaxiReservations personGetTaxiReservations;
-
     private final LaneSetAllow laneSetAllow;
     private final LaneSetDisallow laneSetDisallow;
     private final LaneSetMaxSpeed laneSetMaxSpeed;
@@ -92,7 +90,7 @@ public class SimulationFacade {
      * and reset to {@code null} after each time step.
      */
     private List<String> currentTeleportingList;
-    private List<TaxiReservation> customerReservationsList = new ArrayList<>();
+    private final List<TaxiReservation> customerReservationsList = new ArrayList<>();
 
     private static class SumoVehicleState {
         private final String id;
@@ -149,8 +147,6 @@ public class SimulationFacade {
         this.laneAreaSubscribe = bridge.getCommandRegister().getOrCreate(LaneAreaSubscribe.class);
         this.vehicleSubscribe = bridge.getCommandRegister().getOrCreate(VehicleSubscribe.class);
         this.trafficLightSubscribe = bridge.getCommandRegister().getOrCreate(TrafficLightSubscribe.class);
-
-        this.personGetTaxiReservations = bridge.getCommandRegister().getOrCreate(PersonGetTaxiReservations.class);
 
         this.laneSetAllow = bridge.getCommandRegister().getOrCreate(LaneSetAllow.class);
         this.laneSetDisallow = bridge.getCommandRegister().getOrCreate(LaneSetDisallow.class);
@@ -210,15 +206,6 @@ public class SimulationFacade {
             throw new InternalFederateException(String.format("Could not add vehicle %s", vehicleId), e);
         }
     }
-
-    public List<TaxiReservation> getTaxiReservations(int reservationState) throws InternalFederateException {
-        try {
-            return personGetTaxiReservations.execute(bridge, reservationState);
-        }
-		catch(CommandException e) {
-			throw new InternalFederateException(String.format("Could not retrieve taxi reservations for state %s", reservationState), e);
-		}
-	}
 
     /**
      * Subscribes for the given vehicle. It will then be included in the VehicleUpdates result of {@link #simulateStep}.
@@ -542,7 +529,7 @@ public class SimulationFacade {
             }
 
             // Check for available reservations and dispatch taxi, if available
-            customerReservationsList.addAll(getTaxiReservations(TaxiReservation.ONLY_NEW_RESERVATIONS));
+            customerReservationsList.addAll(bridge.getPersonControl().getTaxiReservations(TaxiReservation.ONLY_NEW_RESERVATIONS));
             List<String> taxiFleet = bridge.getVehicleControl().getTaxiFleet(TaxiVehicleData.EMPTY_TAXIS);
 
             if (!taxiFleet.isEmpty() && !customerReservationsList.isEmpty()) {

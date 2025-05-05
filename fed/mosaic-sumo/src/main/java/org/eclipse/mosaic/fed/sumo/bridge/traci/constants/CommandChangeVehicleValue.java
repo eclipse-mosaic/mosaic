@@ -137,5 +137,10 @@ public class CommandChangeVehicleValue {
      * Highlighting the vehicle in the GUI.
      */
     public final static int VAR_HIGHLIGHT = 0x6c;
+
+    /**
+     * Dispatch of taxis to get reservations.
+     */
+    public final static int VAR_TAXI_DISPATCH = 0x21;
 }
 

@@ -22,7 +22,7 @@ import java.util.List;
 
 public class TaxiReservation {
 
-	public static final int STATE_ALL_RESERVATIONS = 0;
+	public static final int ALL_RESERVATIONS = 0;
 	public static final int ONLY_NEW_RESERVATIONS = 1;
 	public static final int ALREADY_RETRIEVED_RESERVATIONS = 2;
 	public static final int ALREADY_ASSIGNED_RESERVATIONS = 4;
@@ -37,9 +37,10 @@ public class TaxiReservation {
 	private final double arrivalPos;
 	private final double depart;
 	private final double reservationTime;
+	private final int state;
 
 	private TaxiReservation(String id, List<String> personList, String group, String fromEdge,
-		String toEdge, double departPos, double arrivalPos, double depart, double reservationTime) {
+		String toEdge, double departPos, double arrivalPos, double depart, double reservationTime, int state) {
 		this.id = id;
 		this.personList = personList;
 		this.group = group;
@@ -49,6 +50,7 @@ public class TaxiReservation {
 		this.arrivalPos = arrivalPos;
 		this.depart = depart;
 		this.reservationTime = reservationTime;
+		this.state = state;
 	}
 
 	public String getId() {
@@ -87,6 +89,10 @@ public class TaxiReservation {
 		return reservationTime;
 	}
 
+	public int getState() {
+		return state;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null) {
@@ -111,6 +117,7 @@ public class TaxiReservation {
 			.append(this.arrivalPos, other.arrivalPos)
 			.append(this.depart, other.depart)
 			.append(this.reservationTime, other.reservationTime)
+			.append(this.state, other.state)
 			.isEquals();
 	}
 
@@ -127,6 +134,7 @@ public class TaxiReservation {
 			.append(arrivalPos)
 			.append(depart)
 			.append(reservationTime)
+			.append(state)
 			.toHashCode();
 	}
 
@@ -140,6 +148,7 @@ public class TaxiReservation {
 		private double arrivalPos;
 		private double depart;
 		private double reservationTime;
+		private int state;
 
 		public Builder withId(String id) {
 			this.id = id;
@@ -186,9 +195,14 @@ public class TaxiReservation {
 			return this;
 		}
 
+		public Builder withState(int state) {
+			this.state = state;
+			return this;
+		}
+
 		public TaxiReservation build() {
 			return new TaxiReservation(id, personList, group, fromEdge, toEdge, departPos,
-				arrivalPos, depart, reservationTime);
+				arrivalPos, depart, reservationTime, state);
 		}
 	}
 }

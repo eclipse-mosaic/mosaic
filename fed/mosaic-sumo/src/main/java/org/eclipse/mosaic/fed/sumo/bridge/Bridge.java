@@ -15,11 +15,7 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge;
 
-import org.eclipse.mosaic.fed.sumo.bridge.facades.PoiFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.RouteFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.SimulationFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.TrafficLightFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.VehicleFacade;
+import org.eclipse.mosaic.fed.sumo.bridge.facades.*;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.AbstractTraciCommand;
 import org.eclipse.mosaic.fed.sumo.util.MosaicConformVehicleIdTransformer;
 import org.eclipse.mosaic.lib.util.objects.IdTransformer;
@@ -90,9 +86,14 @@ public interface Bridge {
     RouteFacade getRouteControl();
 
     /**
-     * Returns a facade which offers methods to control routes taken by vehicles in the simulation.
+     * Returns a facade which offers methods to add POIs to the SUMO GUI and change its properties.
      */
     PoiFacade getPoiControl();
+
+    /**
+     * Returns a facade which offers methods to control person objects in the simulation.
+     */
+    PersonFacade getPersonControl();
 
     /**
      * Closes the simulation.

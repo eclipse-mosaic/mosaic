@@ -20,7 +20,6 @@ import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.fed.sumo.bridge.TraciVersion;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.Status;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrievePersonState;
-import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.TraciDatatypes;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.ListTraciReader;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.TaxiReservationTraciReader;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;

@@ -41,7 +41,7 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
         final double arrivalPos = readTypedDouble(in);
         final double depart = readTypedDouble(in);
         final double reservationTime = readTypedDouble(in);
-        final int reservationState = readTypedInt(in); //TODO
+        final int state = readTypedInt(in);
 
         return new TaxiReservation.Builder().withId(reservationId)
                 .withPersonList(personList)
@@ -52,10 +52,9 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
                 .withArrivalPos(arrivalPos)
                 .withDepart(depart)
                 .withReservationTime(reservationTime)
+                .withState(state)
                 .build();
     }
-
-
 
     private int readTypedInt(DataInputStream in) throws IOException {
         readByte(in);
@@ -77,7 +76,7 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
         List<String> result = new ArrayList<>();
         int len = readInt(in);
         for (int i = 0; i < len; i++) {
-            readString(in);
+            result.add(readString(in));
         }
         return result;
     }

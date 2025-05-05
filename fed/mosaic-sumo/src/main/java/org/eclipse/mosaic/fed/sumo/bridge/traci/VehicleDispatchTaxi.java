@@ -19,14 +19,10 @@ import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.fed.sumo.bridge.TraciVersion;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.Status;
-import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState;
-import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.TraciDatatypes;
-import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.ListTraciReader;
-import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.StringTraciReader;
+import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandChangeVehicleValue;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 import java.util.List;
-import java.util.Locale;
 
 public class VehicleDispatchTaxi extends AbstractTraciCommand<String>
         implements org.eclipse.mosaic.fed.sumo.bridge.api.VehicleDispatchTaxi {
@@ -42,8 +38,8 @@ public class VehicleDispatchTaxi extends AbstractTraciCommand<String>
         super(TraciVersion.LOWEST);
 
         write()
-                .command(CommandRetrieveVehicleState.COMMAND)
-                .variable(CommandRetrieveVehicleState.VAR_TAXI_FLEET)
+                .command(CommandChangeVehicleValue.COMMAND)
+                .variable(CommandChangeVehicleValue.VAR_TAXI_DISPATCH)
                 .writeVehicleIdParam()
                 .writeStringListParamWithType();
     }

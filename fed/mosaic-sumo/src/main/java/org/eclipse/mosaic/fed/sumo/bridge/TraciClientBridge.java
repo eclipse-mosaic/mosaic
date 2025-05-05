@@ -18,11 +18,7 @@ package org.eclipse.mosaic.fed.sumo.bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationClose;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetVersion;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationTraciRequest;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.PoiFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.RouteFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.SimulationFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.TrafficLightFacade;
-import org.eclipse.mosaic.fed.sumo.bridge.facades.VehicleFacade;
+import org.eclipse.mosaic.fed.sumo.bridge.facades.*;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.lib.objects.traffic.SumoTraciResult;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
@@ -61,6 +57,7 @@ public class TraciClientBridge implements Bridge {
     private final TrafficLightFacade trafficLightControl;
     private final RouteFacade routeControl;
     private final PoiFacade poiControl;
+    private final PersonFacade personControl;
 
     private final SimulationTraciRequest simulationTraciRequest;
 
@@ -115,6 +112,7 @@ public class TraciClientBridge implements Bridge {
         this.trafficLightControl = new TrafficLightFacade(this);
         this.routeControl = new RouteFacade(this);
         this.poiControl = new PoiFacade(this);
+        this.personControl = new PersonFacade(this);
 
         this.simulationTraciRequest = commandRegister.getOrCreate(SimulationTraciRequest.class);
     }
@@ -152,6 +150,13 @@ public class TraciClientBridge implements Bridge {
      */
     public PoiFacade getPoiControl() {
         return poiControl;
+    }
+
+    /**
+     * Returns a facade which offers methods to control person objects in the simulation.
+     */
+    public PersonFacade getPersonControl() {
+        return personControl;
     }
 
     /**

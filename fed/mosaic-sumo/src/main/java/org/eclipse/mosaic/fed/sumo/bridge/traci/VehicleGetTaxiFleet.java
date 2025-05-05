@@ -22,7 +22,6 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.Status;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.TraciDatatypes;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.ListTraciReader;
-import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.StringTraciReader;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.VehicleIdTraciReader;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
