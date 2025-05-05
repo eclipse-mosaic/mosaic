@@ -60,6 +60,7 @@ import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.PMap;
 import com.graphhopper.util.Parameters;
 import com.graphhopper.util.PointList;
+import com.graphhopper.util.TurnCostsConfig;
 import com.graphhopper.util.shapes.GHPoint;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.commons.lang3.ObjectUtils;
@@ -79,9 +80,9 @@ public class GraphHopperRouting {
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphHopperRouting.class);
 
-    public static final Profile PROFILE_CAR = new Profile("car").setVehicle("car").setTurnCosts(true);
+    public static final Profile PROFILE_CAR = new Profile("car").setTurnCostsConfig(new TurnCostsConfig());
 
-    public static final Profile PROFILE_BIKE = new Profile("bike").setVehicle("bike").setTurnCosts(false);
+    public static final Profile PROFILE_BIKE = new Profile("bike").setTurnCostsConfig(null);
 
     public static final List<Profile> PROFILES = Collections.unmodifiableList(Lists.newArrayList(
             PROFILE_CAR, PROFILE_BIKE
@@ -190,7 +191,7 @@ public class GraphHopperRouting {
         List<PrepareRoutingSubnetworks.PrepareJob> jobs = new ArrayList<>();
         for (Profile profile : encoding.getAllProfiles()) {
             Weighting weighting = createWeighting(profile, RoutingCostFunction.Fastest, false);
-            jobs.add(new PrepareRoutingSubnetworks.PrepareJob(encoding.getVehicleEncoding(profile.getVehicle()).subnetwork(), weighting));
+            jobs.add(new PrepareRoutingSubnetworks.PrepareJob(encoding.getVehicleEncoding(profile.getName()).subnetwork(), weighting));
         }
         return jobs;
     }
@@ -206,7 +207,7 @@ public class GraphHopperRouting {
         } else {
             profile = PROFILE_CAR;
         }
-        final VehicleEncoding vehicleEncoding = encoding.getVehicleEncoding(profile.getVehicle());
+        final VehicleEncoding vehicleEncoding = encoding.getVehicleEncoding(profile.getName());
 
         final RoutingPosition source = routingRequest.getSource();
         final RoutingPosition target = routingRequest.getTarget();
@@ -262,7 +263,7 @@ public class GraphHopperRouting {
     }
 
     private Weighting createWeighting(Profile profile, RoutingCostFunction costFunction, boolean withTurnCosts) {
-        final VehicleEncoding vehicleEncoding = encoding.getVehicleEncoding(profile.getVehicle());
+        final VehicleEncoding vehicleEncoding = encoding.getVehicleEncoding(profile.getName());
         final OptionalTurnCostProvider turnCostProvider = new OptionalTurnCostProvider(vehicleEncoding, graph.getTurnCostStorage());
         if (!withTurnCosts) {
             turnCostProvider.disableTurnCosts();

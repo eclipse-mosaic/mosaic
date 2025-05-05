@@ -16,6 +16,12 @@
 package org.eclipse.mosaic.lib.routing.graphhopper.util;
 
 import com.graphhopper.config.Profile;
+import com.graphhopper.routing.ev.FerrySpeed;
+import com.graphhopper.routing.ev.MaxSpeed;
+import com.graphhopper.routing.ev.RoadClass;
+import com.graphhopper.routing.ev.RoadClassLink;
+import com.graphhopper.routing.ev.Roundabout;
+import com.graphhopper.routing.ev.Smoothness;
 import com.graphhopper.routing.util.EncodingManager;
 
 import java.util.ArrayList;
@@ -43,10 +49,17 @@ public class VehicleEncodingManager {
         this.waytypeEncoder = WayTypeEncoder.create();
         this.profiles = new ArrayList<>(profiles);
 
-        EncodingManager.Builder builder = new EncodingManager.Builder().add(waytypeEncoder);
+        EncodingManager.Builder builder = new EncodingManager.Builder()
+                .add(waytypeEncoder)
+                .add(Roundabout.create())
+                .add(RoadClass.create())
+                .add(RoadClassLink.create())
+                .add(FerrySpeed.create())
+                .add(Smoothness.create())
+                .add(MaxSpeed.create());
         for (Profile profile : this.profiles) {
             final VehicleEncoding encoding = new VehicleEncoding(profile);
-            vehicleEncodings.put(profile.getVehicle(), encoding);
+            vehicleEncodings.put(profile.getName(), encoding);
             builder.add(encoding.access())
                     .add(encoding.speed())
                     .addTurnCostEncodedValue(encoding.turnRestriction())

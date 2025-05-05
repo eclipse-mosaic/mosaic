@@ -23,9 +23,11 @@ import org.eclipse.mosaic.lib.database.road.Way;
 import org.eclipse.mosaic.lib.routing.graphhopper.GraphHopperRouting;
 
 import com.graphhopper.reader.ReaderWay;
+import com.graphhopper.routing.ev.DefaultImportRegistry;
 import com.graphhopper.routing.ev.EdgeIntAccess;
-import com.graphhopper.routing.util.DefaultVehicleTagParserFactory;
-import com.graphhopper.routing.util.VehicleTagParsers;
+import com.graphhopper.routing.ev.ImportRegistry;
+import com.graphhopper.routing.ev.VehicleAccess;
+import com.graphhopper.routing.ev.VehicleSpeed;
 import com.graphhopper.routing.util.parsers.TagParser;
 import com.graphhopper.storage.BaseGraph;
 import com.graphhopper.storage.IntsRef;
@@ -71,11 +73,12 @@ public class DatabaseGraphLoader {
 
         wayParsers.clear();
 
+        ImportRegistry registry = new DefaultImportRegistry();
         for (String vehicle : encodingManager.getAllProfileVehicles()) {
-            VehicleTagParsers parsers = new DefaultVehicleTagParserFactory()
-                    .createParsers(encodingManager.getEncodingManager(), vehicle, new PMap());
-            wayParsers.add(parsers.getAccessParser());
-            wayParsers.add(parsers.getSpeedParser());
+            wayParsers.add(registry.createImportUnit(VehicleAccess.key(vehicle))
+                    .getCreateTagParser().apply(encodingManager.getEncodingManager(), new PMap()));
+            wayParsers.add(registry.createImportUnit(VehicleSpeed.key(vehicle))
+                    .getCreateTagParser().apply(encodingManager.getEncodingManager(), new PMap()));
         }
     }
 
@@ -88,7 +91,7 @@ public class DatabaseGraphLoader {
         final Set<Node> mainGraph = searchForMainGraph();
 
         graphStorage.create(Math.max(mainGraph.size() / 30, 100));
-        edgeAccess = graphStorage.createEdgeIntAccess();
+        edgeAccess = graphStorage.getEdgeAccess();
 
         WayTypeEncoder wayTypeEncoder = encodingManager.wayType();
 
@@ -125,8 +128,8 @@ public class DatabaseGraphLoader {
             graphMapper.setConnection(con, edgeIt.getEdge());
         }
 
-        VehicleEncoding car = encodingManager.getVehicleEncoding(GraphHopperRouting.PROFILE_CAR.getVehicle());
-        VehicleEncoding bike = encodingManager.getVehicleEncoding(GraphHopperRouting.PROFILE_BIKE.getVehicle());
+        VehicleEncoding car = encodingManager.getVehicleEncoding(GraphHopperRouting.PROFILE_CAR.getName());
+        VehicleEncoding bike = encodingManager.getVehicleEncoding(GraphHopperRouting.PROFILE_BIKE.getName());
 
         // add turn restrictions
         for (Connection conFrom : database.getConnections()) {

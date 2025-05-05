@@ -18,11 +18,15 @@ package org.eclipse.mosaic.lib.routing.graphhopper.util;
 import com.graphhopper.config.Profile;
 import com.graphhopper.routing.ev.BooleanEncodedValue;
 import com.graphhopper.routing.ev.DecimalEncodedValue;
+import com.graphhopper.routing.ev.DefaultImportRegistry;
+import com.graphhopper.routing.ev.ImportRegistry;
+import com.graphhopper.routing.ev.ImportUnit;
 import com.graphhopper.routing.ev.Subnetwork;
 import com.graphhopper.routing.ev.TurnCost;
 import com.graphhopper.routing.ev.TurnRestriction;
-import com.graphhopper.routing.util.DefaultVehicleEncodedValuesFactory;
-import com.graphhopper.routing.util.VehicleEncodedValues;
+import com.graphhopper.routing.ev.VehicleAccess;
+import com.graphhopper.routing.ev.VehiclePriority;
+import com.graphhopper.routing.ev.VehicleSpeed;
 import com.graphhopper.util.PMap;
 
 /**
@@ -45,14 +49,17 @@ public class VehicleEncoding {
     private final BooleanEncodedValue subnetworkEnc;
 
     VehicleEncoding(Profile profile) {
-        VehicleEncodedValues vehicle = new DefaultVehicleEncodedValuesFactory()
-                .createVehicleEncodedValues(profile.getVehicle(), new PMap());
-        this.accessEnc = vehicle.getAccessEnc();
-        this.speedEnc = vehicle.getAverageSpeedEnc();
-        this.priorityEnc = vehicle.getPriorityEnc();
-        this.turnRestrictionEnc = TurnRestriction.create(profile.getVehicle());
-        this.turnCostEnc = TurnCost.create(profile.getVehicle(), 255);
-        this.subnetworkEnc = Subnetwork.create(profile.getVehicle());
+        final ImportRegistry registry = new DefaultImportRegistry();
+
+        this.accessEnc = (BooleanEncodedValue) registry.createImportUnit(VehicleAccess.key(profile.getName())).getCreateEncodedValue().apply(new PMap());
+        this.speedEnc = (DecimalEncodedValue) registry.createImportUnit(VehicleSpeed.key(profile.getName())).getCreateEncodedValue().apply(new PMap());
+
+        ImportUnit priorityImportUnit = registry.createImportUnit(VehiclePriority.key(profile.getName()));
+        this.priorityEnc = priorityImportUnit != null ? (DecimalEncodedValue) priorityImportUnit.getCreateEncodedValue().apply(new PMap()) : null;
+
+        this.turnRestrictionEnc = TurnRestriction.create(profile.getName());
+        this.turnCostEnc = TurnCost.create(profile.getName(), 255);
+        this.subnetworkEnc = Subnetwork.create(profile.getName());
     }
 
     public BooleanEncodedValue access() {
