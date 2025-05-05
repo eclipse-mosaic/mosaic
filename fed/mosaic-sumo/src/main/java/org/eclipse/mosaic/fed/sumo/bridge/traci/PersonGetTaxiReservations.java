@@ -31,46 +31,46 @@ import java.util.List;
 import java.util.Locale;
 
 public class PersonGetTaxiReservations extends AbstractTraciCommand<List<TaxiReservation>>
-	implements org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTaxiReservations {
+        implements org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTaxiReservations {
 
-	/**
-	 * Creates a new {@link PersonGetTaxiReservations} traci command, which will return all taxi reservations
-	 * for the requested state.
-	 * Access needs to be public, because command is called using Reflection.
-	 *
-	 * @see <a href="https://sumo.dlr.de/docs/TraCI/Person_Value_Retrieval.html">Person Value Retrieval</a>
-	 */
-	@SuppressWarnings("WeakerAccess")
-	public PersonGetTaxiReservations() {
-		super(TraciVersion.LOWEST);
+    /**
+     * Creates a new {@link PersonGetTaxiReservations} traci command, which will return all taxi reservations
+     * for the requested state.
+     * Access needs to be public, because command is called using Reflection.
+     *
+     * @see <a href="https://sumo.dlr.de/docs/TraCI/Person_Value_Retrieval.html">Person Value Retrieval</a>
+     */
+    @SuppressWarnings("WeakerAccess")
+    public PersonGetTaxiReservations() {
+        super(TraciVersion.LOWEST);
 
-		write()
-			.command(CommandRetrievePersonState.COMMAND)
-			.variable(CommandRetrievePersonState.VAR_TAXI_RESERVATIONS)
-			.writeIntParamWithType();
+        write()
+                .command(CommandRetrievePersonState.COMMAND)
+                .variable(CommandRetrievePersonState.VAR_TAXI_RESERVATIONS)
+                .writeString("") // command does not refer to a specific person
+                .writeIntParamWithType();
 
-		read()
-			.skipBytes(2)
-			.skipString()
-			.expectByte(TraciDatatypes.COMPOUND)
-			.readComplex(new ListTraciReader<>(new TaxiReservationTraciReader()));
-	}
+        read()
+                .skipBytes(2)
+                .skipString()
+                .readComplex(new ListTraciReader<>(new TaxiReservationTraciReader(), true));
+    }
 
-	public List<TaxiReservation> execute(Bridge bridge, int reservationState) throws CommandException, InternalFederateException {
-		return executeAndReturn(bridge, reservationState).orElseThrow(() -> new CommandException(
-			String.format(Locale.ENGLISH, "Could not return taxi reservation for the state %d", reservationState)));
-	}
+    public List<TaxiReservation> execute(Bridge bridge, int reservationState) throws CommandException, InternalFederateException {
+        return executeAndReturn(bridge, reservationState).orElseThrow(() -> new CommandException(
+                String.format(Locale.ENGLISH, "Could not return taxi reservation for the state %d", reservationState)));
+    }
 
-	@Override
-	protected List<TaxiReservation> constructResult(Status status, Object... objects) {
-		List<?> intermediateResult = (List<?>) objects[0];
-		List<TaxiReservation> result = new ArrayList<>();
-		for (Object element : intermediateResult) {
-			// testing all elements for proper types
-			if (element instanceof TaxiReservation taxiReservation) {
-				result.add(taxiReservation);
-			}
-		}
-		return result;
-	}
+    @Override
+    protected List<TaxiReservation> constructResult(Status status, Object... objects) {
+        List<?> intermediateResult = (List<?>) objects[0];
+        List<TaxiReservation> result = new ArrayList<>();
+        for (Object element : intermediateResult) {
+            // testing all elements for proper types
+            if (element instanceof TaxiReservation taxiReservation) {
+                result.add(taxiReservation);
+            }
+        }
+        return result;
+    }
 }

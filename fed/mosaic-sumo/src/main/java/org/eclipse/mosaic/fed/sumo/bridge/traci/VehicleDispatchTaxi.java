@@ -29,37 +29,31 @@ import java.util.List;
 import java.util.Locale;
 
 public class VehicleDispatchTaxi extends AbstractTraciCommand<String>
-	implements org.eclipse.mosaic.fed.sumo.bridge.api.VehicleDispatchTaxi {
+        implements org.eclipse.mosaic.fed.sumo.bridge.api.VehicleDispatchTaxi {
 
-	/**
-	 * Creates a new {@link VehicleDispatchTaxi} traci command, which will return all taxis for the requested state.
-	 * Access needs to be public, because command is called using Reflection.
-	 *
-	 * @see <a href="https://sumo.dlr.de/docs/TraCI/VehicleType_Value_Retrieval.html">VehicleType Value Retrieval</a>
-	 */
-	@SuppressWarnings("WeakerAccess")
-	public VehicleDispatchTaxi() {
-		super(TraciVersion.LOWEST);
+    /**
+     * Creates a new {@link VehicleDispatchTaxi} traci command, which will return all taxis for the requested state.
+     * Access needs to be public, because command is called using Reflection.
+     *
+     * @see <a href="https://sumo.dlr.de/docs/TraCI/VehicleType_Value_Retrieval.html">VehicleType Value Retrieval</a>
+     */
+    @SuppressWarnings("WeakerAccess")
+    public VehicleDispatchTaxi() {
+        super(TraciVersion.LOWEST);
 
-		write()
-			.command(CommandRetrieveVehicleState.COMMAND)
-			.variable(CommandRetrieveVehicleState.VAR_TAXI_FLEET)
-			.writeIntParam();
+        write()
+                .command(CommandRetrieveVehicleState.COMMAND)
+                .variable(CommandRetrieveVehicleState.VAR_TAXI_FLEET)
+                .writeVehicleIdParam()
+                .writeStringListParamWithType();
+    }
 
-		read()
-			.skipBytes(2)
-			.skipString()
-			.expectByte(TraciDatatypes.STRING_LIST)
-			.readComplex(new ListTraciReader<>(new StringTraciReader()));
-	}
+    public void execute(Bridge bridge, String vehicleId, List<String> reservations) throws CommandException, InternalFederateException {
+        super.execute(bridge, vehicleId, reservations);
+    }
 
-	public void execute(Bridge bridge, String vehicleId, List<String> reservations) throws CommandException, InternalFederateException {
-		executeAndReturn(bridge, vehicleId, reservations).orElseThrow(() -> new CommandException(
-			String.format(Locale.ENGLISH, "Could not dispatch taxi for the reservations %s", reservations)));
-	}
-
-	@Override
-	protected String constructResult(Status status, Object... objects) {
-		return (String) objects[0];
-	}
+    @Override
+    protected String constructResult(Status status, Object... objects) {
+        return null;
+    }
 }

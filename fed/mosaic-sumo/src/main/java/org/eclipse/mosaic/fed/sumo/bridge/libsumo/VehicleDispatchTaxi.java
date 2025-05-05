@@ -18,6 +18,7 @@ package org.eclipse.mosaic.fed.sumo.bridge.libsumo;
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
+
 import org.eclipse.sumo.libsumo.StringVector;
 import org.eclipse.sumo.libsumo.Vehicle;
 
@@ -25,9 +26,9 @@ import java.util.List;
 
 public class VehicleDispatchTaxi implements org.eclipse.mosaic.fed.sumo.bridge.api.VehicleDispatchTaxi {
 
-	@Override
-	public void execute(Bridge bridge, String vehicleId, List<String> reservations)
-		throws CommandException, InternalFederateException {
-		Vehicle.dispatchTaxi(vehicleId, new StringVector(reservations));
-	}
+    @Override
+    public void execute(Bridge bridge, String vehicleId, List<String> reservations)
+            throws CommandException, InternalFederateException {
+        Vehicle.dispatchTaxi(Bridge.VEHICLE_ID_TRANSFORMER.fromExternalId(vehicleId), new StringVector(reservations));
+    }
 }

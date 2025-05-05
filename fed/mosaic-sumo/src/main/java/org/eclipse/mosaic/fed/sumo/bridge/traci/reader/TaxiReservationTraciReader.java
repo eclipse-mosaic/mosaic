@@ -19,6 +19,7 @@ import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiReservation> {
@@ -29,25 +30,55 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
 
     @Override
     protected TaxiReservation readFromStream(DataInputStream in) throws IOException {
-        final String reservationId = readString(in);
-        final String personList = readString(in);
-        final String group = readString(in);
-        final String fromEdge = readString(in);
-        final String toEdge = readString(in);
-        final double departPos = readDouble(in);
-        final double arrivalPos = readDouble(in);
-        final double depart = readDouble(in);
-        final double reservationTime = readDouble(in);
+        readTypedInt(in); //COMPOUND type of 10 items
+
+        final String reservationId = readTypedString(in);
+        final List<String> personList = readTypedStringList(in);
+        final String group = readTypedString(in);
+        final String fromEdge = readTypedString(in);
+        final String toEdge = readTypedString(in);
+        final double departPos = readTypedDouble(in);
+        final double arrivalPos = readTypedDouble(in);
+        final double depart = readTypedDouble(in);
+        final double reservationTime = readTypedDouble(in);
+        final int reservationState = readTypedInt(in); //TODO
 
         return new TaxiReservation.Builder().withId(reservationId)
-            .withPersonList(List.of(personList))
-            .withGroup(group)
-            .withFromEdge(fromEdge)
-            .withToEdge(toEdge)
-            .withDepartPos(departPos)
-            .withArrivalPos(arrivalPos)
-            .withDepart(depart)
-            .withReservationTime(reservationTime)
-            .build();
+                .withPersonList(personList)
+                .withGroup(group)
+                .withFromEdge(fromEdge)
+                .withToEdge(toEdge)
+                .withDepartPos(departPos)
+                .withArrivalPos(arrivalPos)
+                .withDepart(depart)
+                .withReservationTime(reservationTime)
+                .build();
+    }
+
+
+
+    private int readTypedInt(DataInputStream in) throws IOException {
+        readByte(in);
+        return readInt(in);
+    }
+
+    private double readTypedDouble(DataInputStream in) throws IOException {
+        readByte(in);
+        return readDouble(in);
+    }
+
+    private String readTypedString(DataInputStream in) throws IOException {
+        readByte(in);
+        return readString(in);
+    }
+
+    private List<String> readTypedStringList(DataInputStream in) throws IOException {
+        readByte(in);
+        List<String> result = new ArrayList<>();
+        int len = readInt(in);
+        for (int i = 0; i < len; i++) {
+            readString(in);
+        }
+        return result;
     }
 }
