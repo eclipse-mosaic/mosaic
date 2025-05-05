@@ -17,6 +17,7 @@ package org.eclipse.mosaic.lib.routing.graphhopper.algorithm;
 
 import static org.junit.Assert.assertEquals;
 
+import org.eclipse.mosaic.lib.routing.graphhopper.GraphHopperWeighting;
 import org.eclipse.mosaic.lib.routing.graphhopper.junit.TestGraphRule;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.GHListHelper;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.OptionalTurnCostProvider;
@@ -24,7 +25,6 @@ import org.eclipse.mosaic.lib.routing.graphhopper.util.VehicleEncoding;
 
 import com.graphhopper.routing.Path;
 import com.graphhopper.routing.RoutingAlgorithm;
-import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.storage.BaseGraph;
 import com.graphhopper.util.PMap;
@@ -46,7 +46,7 @@ public class AlternativeRoutesRoutingTest {
     public void calculateAlternativePaths_withTurnCost() {
         BaseGraph g = testGraph.getGraph();
         VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
-        Weighting w = new FastestWeighting(enc.access(), enc.speed(), new OptionalTurnCostProvider(enc, g.getTurnCostStorage()));
+        Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null);
 
         //100 seconds turn costs for turn  (0-1)->(1-2)
         g.getTurnCostStorage().set(enc.turnCost(), 0, 1, 2, 100);
@@ -82,7 +82,7 @@ public class AlternativeRoutesRoutingTest {
     public void calculateAlternativePaths() {
         BaseGraph g = testGraph.getGraph();
         VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
-        Weighting w = new FastestWeighting(enc.access(), enc.speed(), new OptionalTurnCostProvider(enc, g.getTurnCostStorage()));
+        Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null);
 
         RoutingAlgorithm algo = RoutingAlgorithmFactory.DEFAULT.createAlgorithm(g, w,
                 new PMap().putObject(Parameters.Algorithms.AltRoute.MAX_PATHS, 3)
@@ -114,7 +114,7 @@ public class AlternativeRoutesRoutingTest {
     public void calculateBestPath() {
         BaseGraph g = testGraph.getGraph();
         VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
-        Weighting w = new FastestWeighting(enc.access(), enc.speed(), new OptionalTurnCostProvider(enc, g.getTurnCostStorage()));
+        Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null);
 
         RoutingAlgorithm algo = RoutingAlgorithmFactory.DEFAULT.createAlgorithm(g, w, new PMap());
 

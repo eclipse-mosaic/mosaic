@@ -17,14 +17,15 @@ package org.eclipse.mosaic.lib.routing.graphhopper.algorithm;
 
 import static org.junit.Assert.assertEquals;
 
+import org.eclipse.mosaic.lib.routing.RoutingCostFunction;
+import org.eclipse.mosaic.lib.routing.graphhopper.GraphHopperWeighting;
 import org.eclipse.mosaic.lib.routing.graphhopper.junit.TestGraphRule;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.GHListHelper;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.OptionalTurnCostProvider;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.VehicleEncoding;
 
 import com.graphhopper.routing.Path;
-import com.graphhopper.routing.weighting.FastestWeighting;
-import com.graphhopper.routing.weighting.ShortestWeighting;
+import com.graphhopper.routing.weighting.TurnCostProvider;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.storage.BaseGraph;
 import com.graphhopper.util.PMap;
@@ -41,7 +42,8 @@ public class BellmanFordRoutingTest {
     public void calculateFastestPath() {
         BaseGraph g = testGraph.getGraph();
         VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
-        Weighting w = new FastestWeighting(enc.access(), enc.speed());
+        Weighting w = new GraphHopperWeighting(enc, null, TurnCostProvider.NO_TURN_COST_PROVIDER, null)
+                .setRoutingCostFunction(RoutingCostFunction.Fastest);
 
         //run
         Path p = new BellmanFordRouting(g, w, new PMap()).calcPath(0, 10);
@@ -55,7 +57,8 @@ public class BellmanFordRoutingTest {
     public void calculateFastestPath_turnCosts() {
         BaseGraph g = testGraph.getGraph();
         VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
-        Weighting w = new FastestWeighting(enc.access(), enc.speed(), new OptionalTurnCostProvider(enc, g.getTurnCostStorage()));
+        Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null)
+                .setRoutingCostFunction(RoutingCostFunction.Fastest);
 
         //add expensive turn at (0-1)->(1,5)
         g.getTurnCostStorage().set(enc.turnCost(), 0, 1, 3, 124);
@@ -72,7 +75,8 @@ public class BellmanFordRoutingTest {
     public void calculateShortestPath() {
         BaseGraph g = testGraph.getGraph();
         VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
-        Weighting w = new ShortestWeighting(enc.access(), enc.speed());
+        Weighting w = new GraphHopperWeighting(enc, null, TurnCostProvider.NO_TURN_COST_PROVIDER, null)
+                .setRoutingCostFunction(RoutingCostFunction.Shortest);
 
         //run
         Path p = new BellmanFordRouting(g, w, new PMap()).calcPath(0, 10);
