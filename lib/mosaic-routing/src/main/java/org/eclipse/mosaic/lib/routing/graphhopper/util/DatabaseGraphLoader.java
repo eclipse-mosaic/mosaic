@@ -20,20 +20,17 @@ import org.eclipse.mosaic.lib.database.DatabaseUtils;
 import org.eclipse.mosaic.lib.database.road.Connection;
 import org.eclipse.mosaic.lib.database.road.Node;
 import org.eclipse.mosaic.lib.database.road.Way;
-import org.eclipse.mosaic.lib.routing.graphhopper.GraphHopperRouting;
+import org.eclipse.mosaic.lib.routing.graphhopper.profile.BikeProfile;
+import org.eclipse.mosaic.lib.routing.graphhopper.profile.CarProfile;
+import org.eclipse.mosaic.lib.routing.graphhopper.profile.RoutingProfile;
 
 import com.graphhopper.reader.ReaderWay;
-import com.graphhopper.routing.ev.DefaultImportRegistry;
 import com.graphhopper.routing.ev.EdgeIntAccess;
-import com.graphhopper.routing.ev.ImportRegistry;
-import com.graphhopper.routing.ev.VehicleAccess;
-import com.graphhopper.routing.ev.VehicleSpeed;
 import com.graphhopper.routing.util.parsers.TagParser;
 import com.graphhopper.storage.BaseGraph;
 import com.graphhopper.storage.IntsRef;
 import com.graphhopper.storage.TurnCostStorage;
 import com.graphhopper.util.EdgeIteratorState;
-import com.graphhopper.util.PMap;
 import com.graphhopper.util.PointList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +50,7 @@ public class DatabaseGraphLoader {
     private final Database database;
     private final List<TagParser> wayParsers = new ArrayList<>();
     private BaseGraph graphStorage;
-    private VehicleEncodingManager encodingManager;
+    private RoutingProfileManager profileManager;
     private GraphhopperToDatabaseMapper graphMapper;
     private TurnCostStorage turnCostStorage;
     private EdgeIntAccess edgeAccess;
@@ -63,22 +60,18 @@ public class DatabaseGraphLoader {
     }
 
     public void initialize(BaseGraph graph,
-                           VehicleEncodingManager encodingManager,
+                           RoutingProfileManager profileManager,
                            GraphhopperToDatabaseMapper mapper
     ) {
         this.graphStorage = graph;
         this.graphMapper = mapper;
-        this.encodingManager = encodingManager;
+        this.profileManager = profileManager;
         this.turnCostStorage = graph.getTurnCostStorage();
 
         wayParsers.clear();
 
-        ImportRegistry registry = new DefaultImportRegistry();
-        for (String vehicle : encodingManager.getAllProfileVehicles()) {
-            wayParsers.add(registry.createImportUnit(VehicleAccess.key(vehicle))
-                    .getCreateTagParser().apply(encodingManager.getEncodingManager(), new PMap()));
-            wayParsers.add(registry.createImportUnit(VehicleSpeed.key(vehicle))
-                    .getCreateTagParser().apply(encodingManager.getEncodingManager(), new PMap()));
+        for (RoutingProfile profile : profileManager.getAllProfiles()) {
+            wayParsers.addAll(profile.createTagParsers(profileManager.getEncodingManager()));
         }
     }
 
@@ -93,7 +86,7 @@ public class DatabaseGraphLoader {
         graphStorage.create(Math.max(mainGraph.size() / 30, 100));
         edgeAccess = graphStorage.getEdgeAccess();
 
-        WayTypeEncoder wayTypeEncoder = encodingManager.wayType();
+        WayTypeEncoder wayTypeEncoder = profileManager.getEncodingManager().getEncodedValue(WayTypeEncoder.KEY, WayTypeEncoder.class);
 
         // add nodes and connections
         for (Connection con : database.getConnections()) {
@@ -128,8 +121,8 @@ public class DatabaseGraphLoader {
             graphMapper.setConnection(con, edgeIt.getEdge());
         }
 
-        VehicleEncoding car = encodingManager.getVehicleEncoding(GraphHopperRouting.PROFILE_CAR.getName());
-        VehicleEncoding bike = encodingManager.getVehicleEncoding(GraphHopperRouting.PROFILE_BIKE.getName());
+        VehicleEncoding car = profileManager.getRoutingProfile(CarProfile.NAME).getVehicleEncoding();
+        VehicleEncoding bike = profileManager.getRoutingProfile(BikeProfile.NAME).getVehicleEncoding();
 
         // add turn restrictions
         for (Connection conFrom : database.getConnections()) {

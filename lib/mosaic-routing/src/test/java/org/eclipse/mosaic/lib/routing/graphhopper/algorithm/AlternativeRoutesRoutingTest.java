@@ -45,7 +45,7 @@ public class AlternativeRoutesRoutingTest {
     @Test
     public void calculateAlternativePaths_withTurnCost() {
         BaseGraph g = testGraph.getGraph();
-        VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
+        VehicleEncoding enc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding();
         Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null);
 
         //100 seconds turn costs for turn  (0-1)->(1-2)
@@ -81,7 +81,7 @@ public class AlternativeRoutesRoutingTest {
     @Test
     public void calculateAlternativePaths() {
         BaseGraph g = testGraph.getGraph();
-        VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
+        VehicleEncoding enc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding();
         Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null);
 
         RoutingAlgorithm algo = RoutingAlgorithmFactory.DEFAULT.createAlgorithm(g, w,
@@ -113,7 +113,7 @@ public class AlternativeRoutesRoutingTest {
     @Test
     public void calculateBestPath() {
         BaseGraph g = testGraph.getGraph();
-        VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
+        VehicleEncoding enc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding();
         Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null);
 
         RoutingAlgorithm algo = RoutingAlgorithmFactory.DEFAULT.createAlgorithm(g, w, new PMap());

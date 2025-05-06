@@ -15,7 +15,8 @@
 
 package org.eclipse.mosaic.lib.routing.graphhopper.util;
 
-import com.graphhopper.config.Profile;
+import org.eclipse.mosaic.lib.routing.graphhopper.profile.RoutingProfile;
+
 import com.graphhopper.routing.ev.FerrySpeed;
 import com.graphhopper.routing.ev.MaxSpeed;
 import com.graphhopper.routing.ev.RoadClass;
@@ -24,12 +25,11 @@ import com.graphhopper.routing.ev.Roundabout;
 import com.graphhopper.routing.ev.Smoothness;
 import com.graphhopper.routing.util.EncodingManager;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * In GraphHopper, any data for edges, nodes, and turns, are stored with as low overhead
@@ -37,29 +37,27 @@ import java.util.Map;
  * to encode and decode any data. This class, encapsulates the initialization and access to single
  * {@link com.graphhopper.routing.ev.EncodedValue}s, making it easier to use them in code.
  */
-public class VehicleEncodingManager {
+public class RoutingProfileManager {
 
-    private final WayTypeEncoder waytypeEncoder;
     private final EncodingManager encodingManager;
 
-    private final Map<String, VehicleEncoding> vehicleEncodings = new HashMap<>();
-    private final List<Profile> profiles;
+    private final Map<String, RoutingProfile> routingProfiles = new HashMap<>();
 
-    public VehicleEncodingManager(List<Profile> profiles) {
-        this.waytypeEncoder = WayTypeEncoder.create();
-        this.profiles = new ArrayList<>(profiles);
-
+    public RoutingProfileManager(Collection<Supplier<RoutingProfile>> profiles) {
         EncodingManager.Builder builder = new EncodingManager.Builder()
-                .add(waytypeEncoder)
+                .add(WayTypeEncoder.create())
                 .add(Roundabout.create())
                 .add(RoadClass.create())
                 .add(RoadClassLink.create())
-                .add(FerrySpeed.create())
                 .add(Smoothness.create())
+                .add(FerrySpeed.create())
                 .add(MaxSpeed.create());
-        for (Profile profile : this.profiles) {
-            final VehicleEncoding encoding = new VehicleEncoding(profile);
-            vehicleEncodings.put(profile.getName(), encoding);
+        for (Supplier<RoutingProfile> profileSupplier : profiles) {
+            final RoutingProfile profile = profileSupplier.get();
+
+            routingProfiles.put(profile.getName(), profile);
+
+            final VehicleEncoding encoding = profile.getVehicleEncoding();
             builder.add(encoding.access())
                     .add(encoding.speed())
                     .addTurnCostEncodedValue(encoding.turnRestriction())
@@ -72,30 +70,16 @@ public class VehicleEncodingManager {
         this.encodingManager = builder.build();
     }
 
-    public List<Profile> getAllProfiles() {
-        return Collections.unmodifiableList(profiles);
-    }
-
-    /**
-     * Returns a list of all possible transportation modes (e.g. "car", "bike").
-     */
-    public Collection<String> getAllProfileVehicles() {
-        return Collections.unmodifiableCollection(vehicleEncodings.keySet());
+    public Collection<RoutingProfile> getAllProfiles() {
+        return Collections.unmodifiableCollection(routingProfiles.values());
     }
 
     /**
      * Returns the specific wrapper of {@link com.graphhopper.routing.ev.EncodedValue}s required
      * for the given transportation mode (e.g. "car", "bike").
      */
-    public VehicleEncoding getVehicleEncoding(String vehicle) {
-        return vehicleEncodings.get(vehicle);
-    }
-
-    /**
-     * Returns an encoder, which is used to encode/decode precomputed flags for way types.
-     */
-    public WayTypeEncoder wayType() {
-        return waytypeEncoder;
+    public RoutingProfile getRoutingProfile(String vehicle) {
+        return routingProfiles.get(vehicle);
     }
 
     /**

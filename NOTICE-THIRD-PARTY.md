@@ -93,26 +93,26 @@ FindBugs-jsr305 (3.0.2)
  * Source: https://code.google.com/p/jsr-305/
 
 
-GraphHopper Core (8.0)
+GraphHopper Core (10.2)
 
  * License: Apache-2.0
- * Maven artifact: `com.graphhopper:graphhopper-core:8.0`
+ * Maven artifact: `com.graphhopper:graphhopper-core:10.2`
  * Project: https://www.graphhopper.com/graphhopper-core
  * Source: https://github.com/graphhopper/graphhopper/graphhopper-core
 
 
-GraphHopper Reader for Gtfs Data (8.0)
+GraphHopper Reader for Gtfs Data (10.2)
 
  * License: Apache-2.0
- * Maven artifact: `com.graphhopper:graphhopper-reader-gtfs:8.0`
+ * Maven artifact: `com.graphhopper:graphhopper-reader-gtfs:10.2`
  * Project: https://www.graphhopper.com/graphhopper-reader-gtfs
  * Source: https://github.com/graphhopper/graphhopper/graphhopper-reader-gtfs
 
 
-GraphHopper Web API (8.0)
+GraphHopper Web API (10.2)
 
  * License: Apache-2.0
- * Maven artifact: `com.graphhopper:graphhopper-web-api:8.0`
+ * Maven artifact: `com.graphhopper:graphhopper-web-api:10.2`
  * Project: https://www.graphhopper.com/graphhopper-web-api
  * Source: https://github.com/graphhopper/graphhopper/graphhopper-web-api
 
