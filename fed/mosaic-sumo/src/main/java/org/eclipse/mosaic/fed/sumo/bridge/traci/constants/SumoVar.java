@@ -63,11 +63,11 @@ public class SumoVar {
                 && (deprecatedSince == null || currentVersion.getApiVersion() < deprecatedSince.getApiVersion());
     }
 
-    public static class WithParam extends SumoVar {
+    public static class WithDoubleParam extends SumoVar {
 
         private Double value;
 
-        private WithParam(int var, Double value, TraciVersion since, TraciVersion deprecatedSince) {
+        private WithDoubleParam(int var, Double value, TraciVersion since, TraciVersion deprecatedSince) {
             super(var, since, deprecatedSince);
             this.value = value;
         }
@@ -76,8 +76,8 @@ public class SumoVar {
             return value;
         }
 
-        static SumoVar.WithParam var(int var, double value) {
-            return new WithParam(var, value, TraciVersion.LOWEST, null);
+        static WithDoubleParam var(int var, double value) {
+            return new WithDoubleParam(var, value, TraciVersion.LOWEST, null);
         }
     }
 

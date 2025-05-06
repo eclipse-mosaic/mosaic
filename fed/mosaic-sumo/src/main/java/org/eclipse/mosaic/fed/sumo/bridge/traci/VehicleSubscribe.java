@@ -183,12 +183,12 @@ public class VehicleSubscribe
 
                     write.writeByte(subscriptionVar.var);
 
-                    if (subscriptionVar instanceof SumoVar.WithParam) {
+                    if (subscriptionVar instanceof SumoVar.WithDoubleParam doubleParam) {
                         write.writeByte(TraciDatatypes.DOUBLE);
-                        write.writeDouble(((SumoVar.WithParam) subscriptionVar).getValue());
-                    } else if (subscriptionVar instanceof SumoVar.WithIntParam) {
+                        write.writeDouble(doubleParam.getValue());
+                    } else if (subscriptionVar instanceof SumoVar.WithIntParam intParam) {
                         write.writeByte(TraciDatatypes.INTEGER);
-                        write.writeInt(((SumoVar.WithIntParam) subscriptionVar).getValue());
+                        write.writeInt(intParam.getValue());
                     }
                 });
 

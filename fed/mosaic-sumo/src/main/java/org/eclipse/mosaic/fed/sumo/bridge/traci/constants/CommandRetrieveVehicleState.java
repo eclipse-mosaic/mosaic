@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.traci.constants;
 
+import static org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscribe.FETCH_NUM_NEXT_STOPS;
+
 import org.eclipse.mosaic.fed.sumo.bridge.TraciVersion;
 
 public class CommandRetrieveVehicleState {
@@ -47,9 +49,9 @@ public class CommandRetrieveVehicleState {
 
     public final static SumoVar VAR_LATERAL_LANE_POSITION = SumoVar.var(0xb8);
 
-    public static final SumoVar VAR_LEADER = SumoVar.WithParam.var(0x68, 100d);
+    public static final SumoVar VAR_LEADER = SumoVar.WithDoubleParam.var(0x68, 100d);
 
-    public static final SumoVar VAR_FOLLOWER = SumoVar.WithParam.var(0x78, 100d);
+    public static final SumoVar VAR_FOLLOWER = SumoVar.WithDoubleParam.var(0x78, 100d);
 
     public final static SumoVar VAR_DISTANCE = SumoVar.var(0x84);
 
@@ -70,7 +72,7 @@ public class CommandRetrieveVehicleState {
     public final static SumoVar VAR_EMISSIONS_ELECTRICITY = SumoVar.var(0x71);
 
     public final static SumoVar VAR_NEXT_STOPS = SumoVar.varDeprecated(0x73, TraciVersion.API_22);
-    public final static SumoVar VAR_STOPS = SumoVar.WithIntParam.varSince(0x74, 10, TraciVersion.API_22);
+    public final static SumoVar VAR_STOPS = SumoVar.WithIntParam.varSince(0x74, FETCH_NUM_NEXT_STOPS, TraciVersion.API_22);
     public final static SumoVar VAR_LINE = SumoVar.var(0xbd);
 
     public final static SumoVar VAR_STOP_STATE = SumoVar.var(0xb5);
