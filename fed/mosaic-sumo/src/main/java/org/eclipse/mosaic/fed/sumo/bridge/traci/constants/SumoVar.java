@@ -97,5 +97,9 @@ public class SumoVar {
         static SumoVar.WithIntParam var(int var, int value) {
             return new WithIntParam(var, value, TraciVersion.LOWEST, null);
         }
+
+        static SumoVar.WithIntParam varSince(int var, int value, TraciVersion since) {
+            return new WithIntParam(var, value, since, null);
+        }
     }
 }

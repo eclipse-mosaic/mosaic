@@ -26,19 +26,20 @@ import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieve
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_EMISSIONS_NOX;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_EMISSIONS_PMX;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_FOLLOWER;
-import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_LINE;
-import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_NEXT_STOPS;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_LANE_INDEX;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_LANE_POSITION;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_LATERAL_LANE_POSITION;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_LEADER;
+import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_LINE;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_MIN_GAP;
+import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_NEXT_STOPS;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_POSITION_3D;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_ROAD_ID;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_ROUTE_ID;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_SIGNAL_STATES;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_SLOPE;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_SPEED;
+import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_STOPS;
 import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieveVehicleState.VAR_STOP_STATE;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
@@ -124,6 +125,7 @@ public class VehicleSubscribe
 
         if (subscriptionCategories.contains(CSumo.SUBSCRIPTION_TRAINS)) {
             Collections.addAll(subscriptionCodes, VAR_NEXT_STOPS);
+            Collections.addAll(subscriptionCodes, VAR_STOPS);
             Collections.addAll(subscriptionCodes, VAR_LINE);
         }
         return subscriptionCodes;
@@ -184,6 +186,9 @@ public class VehicleSubscribe
                     if (subscriptionVar instanceof SumoVar.WithParam) {
                         write.writeByte(TraciDatatypes.DOUBLE);
                         write.writeDouble(((SumoVar.WithParam) subscriptionVar).getValue());
+                    } else if (subscriptionVar instanceof SumoVar.WithIntParam) {
+                        write.writeByte(TraciDatatypes.INTEGER);
+                        write.writeInt(((SumoVar.WithIntParam) subscriptionVar).getValue());
                     }
                 });
 

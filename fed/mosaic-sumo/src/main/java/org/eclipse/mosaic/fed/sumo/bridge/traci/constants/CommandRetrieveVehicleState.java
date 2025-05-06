@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.traci.constants;
 
+import org.eclipse.mosaic.fed.sumo.bridge.TraciVersion;
+
 public class CommandRetrieveVehicleState {
 
     public final static int COMMAND = 0xa4;
@@ -67,7 +69,8 @@ public class CommandRetrieveVehicleState {
 
     public final static SumoVar VAR_EMISSIONS_ELECTRICITY = SumoVar.var(0x71);
 
-    public final static SumoVar VAR_NEXT_STOPS = SumoVar.var(0x73);
+    public final static SumoVar VAR_NEXT_STOPS = SumoVar.varDeprecated(0x73, TraciVersion.API_22);
+    public final static SumoVar VAR_STOPS = SumoVar.WithIntParam.varSince(0x74, 10, TraciVersion.API_22);
     public final static SumoVar VAR_LINE = SumoVar.var(0xbd);
 
     public final static SumoVar VAR_STOP_STATE = SumoVar.var(0xb5);
