@@ -41,7 +41,7 @@ public class BellmanFordRoutingTest {
     @Test
     public void calculateFastestPath() {
         BaseGraph g = testGraph.getGraph();
-        VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
+        VehicleEncoding enc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding();
         Weighting w = new GraphHopperWeighting(enc, null, TurnCostProvider.NO_TURN_COST_PROVIDER, null)
                 .setRoutingCostFunction(RoutingCostFunction.Fastest);
 
@@ -56,7 +56,7 @@ public class BellmanFordRoutingTest {
     @Test
     public void calculateFastestPath_turnCosts() {
         BaseGraph g = testGraph.getGraph();
-        VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
+        VehicleEncoding enc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding();
         Weighting w = new GraphHopperWeighting(enc, null, new OptionalTurnCostProvider(enc, g.getTurnCostStorage()), null)
                 .setRoutingCostFunction(RoutingCostFunction.Fastest);
 
@@ -74,7 +74,7 @@ public class BellmanFordRoutingTest {
     @Test
     public void calculateShortestPath() {
         BaseGraph g = testGraph.getGraph();
-        VehicleEncoding enc = testGraph.getEncodingManager().getVehicleEncoding("car");
+        VehicleEncoding enc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding();
         Weighting w = new GraphHopperWeighting(enc, null, TurnCostProvider.NO_TURN_COST_PROVIDER, null)
                 .setRoutingCostFunction(RoutingCostFunction.Shortest);
 

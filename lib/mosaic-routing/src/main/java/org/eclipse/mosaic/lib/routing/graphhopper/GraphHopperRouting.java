@@ -29,15 +29,18 @@ import org.eclipse.mosaic.lib.routing.RoutingCostFunction;
 import org.eclipse.mosaic.lib.routing.RoutingPosition;
 import org.eclipse.mosaic.lib.routing.RoutingRequest;
 import org.eclipse.mosaic.lib.routing.graphhopper.algorithm.RoutingAlgorithmFactory;
+import org.eclipse.mosaic.lib.routing.graphhopper.profile.BikeProfile;
+import org.eclipse.mosaic.lib.routing.graphhopper.profile.CarProfile;
+import org.eclipse.mosaic.lib.routing.graphhopper.profile.RoutingProfile;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.DatabaseGraphLoader;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.GraphhopperToDatabaseMapper;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.OptionalTurnCostProvider;
+import org.eclipse.mosaic.lib.routing.graphhopper.util.RoutingProfileManager;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.VehicleEncoding;
-import org.eclipse.mosaic.lib.routing.graphhopper.util.VehicleEncodingManager;
+import org.eclipse.mosaic.lib.routing.graphhopper.util.WayTypeEncoder;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.graphhopper.config.Profile;
 import com.graphhopper.routing.Path;
 import com.graphhopper.routing.RoutingAlgorithm;
 import com.graphhopper.routing.ev.BooleanEncodedValue;
@@ -60,7 +63,6 @@ import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.PMap;
 import com.graphhopper.util.Parameters;
 import com.graphhopper.util.PointList;
-import com.graphhopper.util.TurnCostsConfig;
 import com.graphhopper.util.shapes.GHPoint;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.commons.lang3.ObjectUtils;
@@ -69,24 +71,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @SuppressWarnings(value = "MS_SHOULD_BE_FINAL", justification = "Static fields kept public and adjustable for user customization")
 public class GraphHopperRouting {
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphHopperRouting.class);
 
-    public static final Profile PROFILE_CAR = new Profile("car").setTurnCostsConfig(new TurnCostsConfig());
-
-    public static final Profile PROFILE_BIKE = new Profile("bike").setTurnCostsConfig(null);
-
-    public static final List<Profile> PROFILES = Collections.unmodifiableList(Lists.newArrayList(
-            PROFILE_CAR, PROFILE_BIKE
-    ));
+    public static final Collection<Supplier<RoutingProfile>> PROFILES = List.of(
+            CarProfile::new,
+            BikeProfile::new
+    );
 
     /**
      * The minimum number of alternatives to calculate when alternative routes have been requested.
@@ -140,7 +140,7 @@ public class GraphHopperRouting {
 
     private final GraphhopperToDatabaseMapper graphMapper;
     private final Database db;
-    private final VehicleEncodingManager encoding;
+    private final RoutingProfileManager profileManager;
     private final BaseGraph graph;
     private final LocationIndex locationIndex;
 
@@ -148,7 +148,7 @@ public class GraphHopperRouting {
         this.db = db;
 
         graphMapper = new GraphhopperToDatabaseMapper();
-        encoding = new VehicleEncodingManager(PROFILES);
+        profileManager = new RoutingProfileManager(PROFILES);
 
         graph = createGraphFromDatabase(db);
         locationIndex = createLocationIndex();
@@ -159,15 +159,15 @@ public class GraphHopperRouting {
 
     private BaseGraph createGraphFromDatabase(Database db) {
         final BaseGraph graph = new BaseGraph
-                .Builder(encoding.getEncodingManager())
+                .Builder(profileManager.getEncodingManager())
                 .setDir(new RAMDirectory())
                 .set3D(true)
-                .withTurnCosts(encoding.getEncodingManager().needsTurnCostsSupport())
+                .withTurnCosts(profileManager.getEncodingManager().needsTurnCostsSupport())
                 .setSegmentSize(-1)
                 .build();
 
         final DatabaseGraphLoader reader = new DatabaseGraphLoader(db);
-        reader.initialize(graph, encoding, graphMapper);
+        reader.initialize(graph, profileManager, graphMapper);
         reader.loadGraph();
         LOG.info("nodes: {}, edges: {}", graph.getNodes(), graph.getEdges());
         return graph;
@@ -189,9 +189,9 @@ public class GraphHopperRouting {
 
     private List<PrepareRoutingSubnetworks.PrepareJob> buildSubnetworkRemovalJobs() {
         List<PrepareRoutingSubnetworks.PrepareJob> jobs = new ArrayList<>();
-        for (Profile profile : encoding.getAllProfiles()) {
+        for (RoutingProfile profile : profileManager.getAllProfiles()) {
             Weighting weighting = createWeighting(profile, RoutingCostFunction.Fastest, false);
-            jobs.add(new PrepareRoutingSubnetworks.PrepareJob(encoding.getVehicleEncoding(profile.getName()).subnetwork(), weighting));
+            jobs.add(new PrepareRoutingSubnetworks.PrepareJob(profile.getVehicleEncoding().subnetwork(), weighting));
         }
         return jobs;
     }
@@ -201,13 +201,13 @@ public class GraphHopperRouting {
             throw new IllegalStateException("Load database at first");
         }
 
-        final Profile profile;
+        final RoutingProfile profile;
         if (routingRequest.getRoutingParameters().getVehicleClass() == VehicleClass.Bicycle) {
-            profile = PROFILE_BIKE;
+            profile = profileManager.getRoutingProfile(BikeProfile.NAME);
         } else {
-            profile = PROFILE_CAR;
+            profile = profileManager.getRoutingProfile(CarProfile.NAME);
         }
-        final VehicleEncoding vehicleEncoding = encoding.getVehicleEncoding(profile.getName());
+        final VehicleEncoding vehicleEncoding = profile.getVehicleEncoding();
 
         final RoutingPosition source = routingRequest.getSource();
         final RoutingPosition target = routingRequest.getTarget();
@@ -262,13 +262,14 @@ public class GraphHopperRouting {
         return result;
     }
 
-    private Weighting createWeighting(Profile profile, RoutingCostFunction costFunction, boolean withTurnCosts) {
-        final VehicleEncoding vehicleEncoding = encoding.getVehicleEncoding(profile.getName());
+    private Weighting createWeighting(RoutingProfile profile, RoutingCostFunction costFunction, boolean withTurnCosts) {
+        final VehicleEncoding vehicleEncoding = profile.getVehicleEncoding();
         final OptionalTurnCostProvider turnCostProvider = new OptionalTurnCostProvider(vehicleEncoding, graph.getTurnCostStorage());
         if (!withTurnCosts) {
             turnCostProvider.disableTurnCosts();
         }
-        return new GraphHopperWeighting(vehicleEncoding, encoding.wayType(), turnCostProvider, graphMapper)
+        WayTypeEncoder wayTypeEncoder = profileManager.getEncodingManager().getEncodedValue(WayTypeEncoder.KEY, WayTypeEncoder.class);
+        return new GraphHopperWeighting(vehicleEncoding, wayTypeEncoder, turnCostProvider, graphMapper)
                 .setRoutingCostFunction(ObjectUtils.defaultIfNull(costFunction, RoutingCostFunction.Default));
     }
 
