@@ -26,9 +26,9 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 public interface VehicleSubscribe {
 
     /**
-     * Number of next stops to fetch via subscription.
+     * Number of next stops to fetch via subscription. (0 == unlimited)
      */
-    int FETCH_NUM_NEXT_STOPS = 1;
+    int FETCH_NUM_NEXT_STOPS = 0;
 
     /**
      * This method executes the command with the given arguments in order to subscribe the vehicle to the application.
