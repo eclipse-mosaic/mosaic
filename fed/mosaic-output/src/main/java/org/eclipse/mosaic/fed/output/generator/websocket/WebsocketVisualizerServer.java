@@ -108,7 +108,7 @@ public class WebsocketVisualizerServer extends WebSocketServer implements Runnab
         sendAgentUpdates(socket);
         sendUnitsToBeRemoved(socket);
 
-        sendInteractions(socket, sentV2xMessages);
+        sendV2xMessageTransmissions(socket);
         sendInteractions(socket, receivedV2xMessages);
 
         sendInteractions(socket, chargingStationUpdates);
@@ -129,6 +129,7 @@ public class WebsocketVisualizerServer extends WebSocketServer implements Runnab
         for (VehicleData veh : original.getUpdated()) {
             reducedUpdates.add(new VehicleData.Builder(veh.getTime(), veh.getName())
                     .position(veh.getPosition(), veh.getProjectedPosition())
+                    .stopped(veh.getVehicleStopMode())
                     .create());
         }
         return new VehicleUpdates(original.getTime(), Collections.EMPTY_LIST, reducedUpdates, Collections.EMPTY_LIST);
@@ -171,6 +172,25 @@ public class WebsocketVisualizerServer extends WebSocketServer implements Runnab
             JsonObject jsonObject = new JsonObject();
             jsonObject.add(UNITS_REMOVE, jsonElement);
             socket.send(jsonObject.toString());
+        }
+    }
+
+    private void sendV2xMessageTransmissions(WebSocket socket) {
+        record TransmissionInfo(long time, int messageId, String sourceName) {}
+
+        for (Iterator<V2xMessageTransmission> iterator = sentV2xMessages.iterator(); iterator.hasNext(); ) {
+            V2xMessageTransmission transmission = iterator.next();
+
+            Gson gson = new Gson();
+            JsonElement jsonElement = gson.toJsonTree(
+                    // reduce info to avoid expensive/erroneous json-serialization of custom V2xMessages
+                    new TransmissionInfo(transmission.getTime(), transmission.getMessageId(), transmission.getSourceName())
+            );
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.add(V2xMessageTransmission.TYPE_ID, jsonElement);
+            socket.send(jsonObject.toString());
+
+            iterator.remove();
         }
     }
 
