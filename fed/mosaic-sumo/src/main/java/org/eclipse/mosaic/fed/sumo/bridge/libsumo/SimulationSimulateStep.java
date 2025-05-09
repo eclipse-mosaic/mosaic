@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.libsumo;
 
+import static org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscribe.FETCH_NUM_NEXT_STOPS;
+
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.AbstractSubscriptionResult;
@@ -41,7 +43,7 @@ import org.eclipse.sumo.libsumo.Simulation;
 import org.eclipse.sumo.libsumo.StringDoublePair;
 import org.eclipse.sumo.libsumo.StringVector;
 import org.eclipse.sumo.libsumo.TraCINextStopData;
-import org.eclipse.sumo.libsumo.TraCINextStopDataVector2;
+import org.eclipse.sumo.libsumo.TraCINextStopDataVector;
 import org.eclipse.sumo.libsumo.TraCIPosition;
 import org.eclipse.sumo.libsumo.TraCIVehicleData;
 import org.eclipse.sumo.libsumo.TrafficLight;
@@ -67,6 +69,7 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
     private final boolean fetchEmissions;
     private final boolean fetchLeaderAndFollower;
     private final boolean fetchSignals;
+    private final boolean fetchTrainData;
 
     public SimulationSimulateStep(Bridge ignored, CSumo sumoConfiguration) {
         VEHICLE_SUBSCRIPTIONS.clear();
@@ -78,6 +81,7 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
         fetchEmissions = sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_EMISSIONS);
         fetchSignals = sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_SIGNALS);
         fetchLeaderAndFollower = sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_LEADER);
+        fetchTrainData = sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_TRAINS);
     }
 
     public SimulationSimulateStep() {
@@ -90,6 +94,7 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
         fetchEmissions = true;
         fetchSignals = true;
         fetchLeaderAndFollower = true;
+        fetchTrainData = true;
     }
 
     public List<AbstractSubscriptionResult> execute(Bridge bridge, long time) throws CommandException, InternalFederateException {
@@ -168,13 +173,16 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
                 result.followerVehicle = LeadFollowVehicle.NONE;
             }
 
-            result.nextStops = getNextStop(Vehicle.getStops(sumoVehicleId, 1));
+            if (fetchTrainData) {
+                result.line = Vehicle.getLine(sumoVehicleId);
+                result.nextStops = getNextStop(Vehicle.getStops(sumoVehicleId, FETCH_NUM_NEXT_STOPS));
+            }
 
             results.add(result);
         }
     }
 
-    private List<PtVehicleData.StoppingPlace> getNextStop(TraCINextStopDataVector2 stops) {
+    private List<PtVehicleData.StoppingPlace> getNextStop(TraCINextStopDataVector stops) {
         if (stops.isEmpty()) {
             return null;
         }
