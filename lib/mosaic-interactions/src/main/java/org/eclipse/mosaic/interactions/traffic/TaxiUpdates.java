@@ -1,0 +1,101 @@
+/*
+ * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contact: mosaic@fokus.fraunhofer.de
+ */
+
+package org.eclipse.mosaic.interactions.traffic;
+
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
+import org.eclipse.mosaic.lib.objects.UnitData;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
+import org.eclipse.mosaic.rti.api.Interaction;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public final class TaxiUpdates extends Interaction {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * String identifying the type of this interaction.
+     */
+    public final static String TYPE_ID = createTypeIdentifier(TaxiUpdates.class);
+
+    private final List<TaxiVehicleData> taxis;
+    private final List<TaxiReservation> reservations;
+
+    /**
+     * Constructor using fields.
+     *
+     * @param time         Timestamp of this interaction, unit: [ns]
+     * @param taxis        Taxis that are available.
+     */
+    public TaxiUpdates(long time, List<TaxiVehicleData> taxis, List<TaxiReservation> reservations) {
+        super(time);
+        this.taxis = taxis;
+        this.reservations = reservations;
+    }
+
+    public List<TaxiVehicleData> getTaxis() {
+        return taxis;
+    }
+
+    public List<TaxiReservation> getReservations() {
+        return reservations;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(5, 17)
+                .append(taxis)
+                .append(reservations)
+                .toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+
+        TaxiUpdates other = (TaxiUpdates) obj;
+        return new EqualsBuilder()
+                .append(this.taxis, other.taxis)
+                .append(this.reservations, other.reservations)
+                .isEquals();
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, SHORT_PREFIX_STYLE)
+                .appendSuper(super.toString())
+                .append("taxis", taxis.stream().map(t -> t.getVehicleData().getName()).collect(Collectors.joining(",")))
+                .append("reservations", reservations.stream().map(TaxiReservation::getId).collect(Collectors.joining(",")))
+                .toString();
+    }
+
+}

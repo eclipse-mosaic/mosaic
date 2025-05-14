@@ -65,5 +65,11 @@
       "pos": 0,
       "route": "3"
     }
+  ],
+  "servers" : [
+    {
+      "name": "TaxiDispatcher",
+      "applications": [ "org.eclipse.mosaic.app.taxi.ExampleTaxiDispatchingServer" ]
+    }
   ]
 }

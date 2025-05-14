@@ -44,6 +44,7 @@ import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
 import org.eclipse.mosaic.fed.sumo.util.TrafficSignManager;
 import org.eclipse.mosaic.interactions.application.SumoTraciRequest;
 import org.eclipse.mosaic.interactions.application.SumoTraciResponse;
+import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioTrafficLightRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
 import org.eclipse.mosaic.interactions.traffic.InductionLoopDetectorSubscription;
@@ -523,6 +524,8 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             this.receiveInteraction((TrafficSignSpeedLimitChange) interaction);
         } else if (interaction.getTypeId().equals(TrafficSignLaneAssignmentChange.TYPE_ID)) {
             this.receiveInteraction((TrafficSignLaneAssignmentChange) interaction);
+        } else if (interaction.getTypeId().equals(TaxiDispatch.TYPE_ID)) {
+            this.receiveInteraction((TaxiDispatch) interaction);
         } else {
             log.warn(UNKNOWN_INTERACTION + interaction.getTypeId());
         }
@@ -1116,6 +1119,10 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
         );
     }
 
+    private void receiveInteraction(TaxiDispatch taxiDispatch) throws InternalFederateException {
+        bridge.getVehicleControl().dispatchTaxi(taxiDispatch.getTaxiId(), taxiDispatch.getReservations());
+    }
+
     /**
      * Tries to stop the vehicle at the given edge and offset. However, if the offset is larger
      * than the edge's length, the stop command will fail. In such cases, the offset will decrease,
@@ -1238,7 +1245,8 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
 
             rti.triggerInteraction(vehicleUpdates);
             rti.triggerInteraction(simulationStepResult.getTrafficDetectorUpdates());
-            this.rti.triggerInteraction(simulationStepResult.getTrafficLightUpdates());
+            rti.triggerInteraction(simulationStepResult.getTrafficLightUpdates());
+            rti.triggerInteraction(simulationStepResult.getTaxiUpdates());
 
             rti.requestAdvanceTime(nextTimeStep, 0, FederatePriority.higher(descriptor.getPriority()));
 

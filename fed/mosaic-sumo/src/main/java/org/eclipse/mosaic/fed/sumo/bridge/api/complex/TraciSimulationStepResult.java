@@ -15,6 +15,7 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.api.complex;
 
+import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
@@ -24,15 +25,18 @@ public class TraciSimulationStepResult {
     private final VehicleUpdates vehicleUpdates;
     private final TrafficDetectorUpdates trafficDetectorUpdates;
     private final TrafficLightUpdates trafficLightUpdates;
+    private final TaxiUpdates taxiUpdates;
 
     public TraciSimulationStepResult(
             VehicleUpdates vehicleUpdates,
             TrafficDetectorUpdates trafficDetectorUpdates,
-            TrafficLightUpdates trafficLightUpdates
+            TrafficLightUpdates trafficLightUpdates,
+            TaxiUpdates taxiUpdates
     ) {
         this.vehicleUpdates = vehicleUpdates;
         this.trafficDetectorUpdates = trafficDetectorUpdates;
         this.trafficLightUpdates = trafficLightUpdates;
+        this.taxiUpdates = taxiUpdates;
     }
 
     public VehicleUpdates getVehicleUpdates() {
@@ -45,5 +49,9 @@ public class TraciSimulationStepResult {
 
     public TrafficLightUpdates getTrafficLightUpdates() {
         return trafficLightUpdates;
+    }
+
+    public TaxiUpdates getTaxiUpdates() {
+        return taxiUpdates;
     }
 }

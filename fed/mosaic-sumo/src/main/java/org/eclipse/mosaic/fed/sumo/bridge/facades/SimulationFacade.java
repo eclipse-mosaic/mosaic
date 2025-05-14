@@ -23,6 +23,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.*;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.InductionLoop;
 import org.eclipse.mosaic.fed.sumo.util.TrafficLightStateDecoder;
+import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
@@ -74,6 +75,9 @@ public class SimulationFacade {
     private final InductionLoopSubscribe inductionloopSubscribe;
     private final LaneAreaSubscribe laneAreaSubscribe;
     private final TrafficLightSubscribe trafficLightSubscribe;
+
+    private final VehicleGetTaxiFleet vehicleGetTaxiFleet;
+    private final PersonGetTaxiReservations personGetTaxiReservations;
 
     private final LaneSetAllow laneSetAllow;
     private final LaneSetDisallow laneSetDisallow;
@@ -148,6 +152,10 @@ public class SimulationFacade {
         this.vehicleSubscribe = bridge.getCommandRegister().getOrCreate(VehicleSubscribe.class);
         this.trafficLightSubscribe = bridge.getCommandRegister().getOrCreate(TrafficLightSubscribe.class);
 
+
+        this.vehicleGetTaxiFleet = bridge.getCommandRegister().getOrCreate(VehicleGetTaxiFleet.class);
+        this.personGetTaxiReservations = bridge.getCommandRegister().getOrCreate(PersonGetTaxiReservations.class);
+
         this.laneSetAllow = bridge.getCommandRegister().getOrCreate(LaneSetAllow.class);
         this.laneSetDisallow = bridge.getCommandRegister().getOrCreate(LaneSetDisallow.class);
         this.laneSetMaxSpeed = bridge.getCommandRegister().getOrCreate(LaneSetMaxSpeed.class);
@@ -206,6 +214,15 @@ public class SimulationFacade {
             throw new InternalFederateException(String.format("Could not add vehicle %s", vehicleId), e);
         }
     }
+
+    public List<TaxiReservation> getTaxiReservations(int reservationState) throws InternalFederateException {
+        try {
+            return personGetTaxiReservations.execute(bridge, reservationState);
+        }
+		catch(CommandException e) {
+			throw new InternalFederateException(String.format("Could not retrieve taxi reservations for state %s", reservationState), e);
+		}
+	}
 
     /**
      * Subscribes for the given vehicle. It will then be included in the VehicleUpdates result of {@link #simulateStep}.
@@ -448,10 +465,11 @@ public class SimulationFacade {
             final VehicleUpdates vehicleUpdates = new VehicleUpdates(time, addedVehicles, updatedVehicles, removedVehicles);
             final TrafficDetectorUpdates trafficDetectorUpdates = new TrafficDetectorUpdates(time, updatedLaneAreas, updatedInductionLoops);
             final TrafficLightUpdates trafficLightUpdates = new TrafficLightUpdates(time, trafficLightGroupInfos);
+            final TaxiUpdates taxiUpdates = new TaxiUpdates(time, collectTaxiData(), collectTaxiReservations());
 
             currentTeleportingList = null; // reset cached teleporting list for this time step
 
-            return new TraciSimulationStepResult(vehicleUpdates, trafficDetectorUpdates, trafficLightUpdates);
+            return new TraciSimulationStepResult(vehicleUpdates, trafficDetectorUpdates, trafficLightUpdates, taxiUpdates);
         } catch (CommandException e) {
             throw new InternalFederateException("Could not properly simulate step and read subscriptions", e);
         }
@@ -522,20 +540,6 @@ public class SimulationFacade {
                 vehicleDataBuilder.additional(extractTrainData(veh));
             }
 
-            // Set taxi data as additional data
-            if ("TaxiVeh".equals(bridge.getVehicleControl().getVehicleTypeId(veh.id))) {
-                TaxiVehicleData taxiVehicleData = extractTaxiData(veh);
-                vehicleDataBuilder.additional(taxiVehicleData);
-            }
-
-            // Check for available reservations and dispatch taxi, if available
-            customerReservationsList.addAll(bridge.getPersonControl().getTaxiReservations(TaxiReservation.ONLY_NEW_RESERVATIONS));
-            List<String> taxiFleet = bridge.getVehicleControl().getTaxiFleet(TaxiVehicleData.EMPTY_TAXIS);
-
-            if (!taxiFleet.isEmpty() && !customerReservationsList.isEmpty()) {
-                bridge.getVehicleControl().dispatchTaxi(taxiFleet.get(0), List.of(customerReservationsList.get(0).getId()));
-                customerReservationsList.remove(0);
-            }
 
             if (isParking) {
                 if (!sumoVehicle.lastVehicleData.isStopped()) {
@@ -563,17 +567,6 @@ public class SimulationFacade {
 
     private PtVehicleData extractTrainData(VehicleSubscriptionResult veh) {
         return new PtVehicleData.Builder().withLineId(veh.line).nextStops(veh.nextStops).build();
-    }
-
-    private TaxiVehicleData extractTaxiData(VehicleSubscriptionResult veh) throws InternalFederateException {
-        String taxiState = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.state");
-        String numberOfServedCustomers = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.customers");
-        String occupiedDistance = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.occupiedDistance");
-        String occupiedTime = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.occupiedTime");
-        String currentCustomers = bridge.getVehicleControl().getParameter(veh.id, "device.taxi.currentCustomers");
-
-        return new TaxiVehicleData.Builder().withState(taxiState).withCustomersServed(numberOfServedCustomers).withTotalOccupiedDistanceInMeters(occupiedDistance)
-            .withTotalOccupiedTimeInSeconds(occupiedTime).withCustomersToPickUpOrOnBoard(currentCustomers).build();
     }
 
     private List<String> findRemovedVehicles(long time) throws CommandException {
@@ -670,6 +663,59 @@ public class SimulationFacade {
         return new TrafficLightGroupInfo(
                 trafficLightGroupId, currentProgram, currentPhaseIndex, assumedTimeOfNextSwitch, trafficLightState
         );
+    }
+
+
+
+    private List<TaxiVehicleData> collectTaxiData() throws InternalFederateException {
+        final List<String> allTaxis = getTaxiFleet(TaxiVehicleData.ALL_TAXIS);
+        final List<TaxiVehicleData> taxiData = new ArrayList<>();
+
+        for (String id: allTaxis) {
+            taxiData.add(getTaxiData(id));
+        }
+        return taxiData;
+    }
+
+    /**
+     * Getter for taxis depending on the requested state.
+     * @see VehicleGetTaxiFleet#execute(Bridge, int)
+     *
+     * @param taxiState The state in which the taxi should be.
+     * @return A list with the available taxis in the given state.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
+     */
+    private List<String> getTaxiFleet(int taxiState) throws InternalFederateException {
+        List<String> taxiFleet = new ArrayList<>();
+
+        try {
+            taxiFleet = vehicleGetTaxiFleet.execute(bridge, taxiState);
+        } catch (IllegalArgumentException | CommandException e) {
+            log.warn("Could not get taxi fleet for state {}", taxiState);
+        }
+
+        return taxiFleet;
+    }
+
+    private TaxiVehicleData getTaxiData(String id) throws InternalFederateException {
+        int taxiState = Integer.parseInt(bridge.getVehicleControl().getParameter(id, "device.taxi.state"));
+        String numberOfServedCustomers = bridge.getVehicleControl().getParameter(id, "device.taxi.customers");
+        String occupiedDistance = bridge.getVehicleControl().getParameter(id, "device.taxi.occupiedDistance");
+        String occupiedTime = bridge.getVehicleControl().getParameter(id, "device.taxi.occupiedTime");
+        String currentCustomers = bridge.getVehicleControl().getParameter(id, "device.taxi.currentCustomers");
+
+        return new TaxiVehicleData.Builder()
+                .withId(id)
+                .withVehicleData(getLastKnownVehicleData(id))
+                .withState(taxiState)
+                .withCustomersServed(numberOfServedCustomers)
+                .withTotalOccupiedDistanceInMeters(occupiedDistance)
+                .withTotalOccupiedTimeInSeconds(occupiedTime)
+                .withCustomersToPickUpOrOnBoard(currentCustomers).build();
+    }
+
+    private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {
+        return new ArrayList<>(getTaxiReservations(TaxiReservation.STATE_ALL_RESERVATIONS));
     }
 
 

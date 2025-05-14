@@ -17,6 +17,7 @@ package org.eclipse.mosaic.fed.application.ambassador;
 
 import org.eclipse.mosaic.fed.application.ambassador.eventresources.RemoveUnits;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.AbstractSimulationUnit;
+import org.eclipse.mosaic.fed.application.ambassador.simulation.ServerUnit;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.TrafficLightGroupUnit;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.TrafficManagementCenterUnit;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.communication.ReceivedV2xMessage;
@@ -27,6 +28,7 @@ import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.Defau
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.EnvironmentBasicSensorModule;
 import org.eclipse.mosaic.fed.application.ambassador.util.EventNicenessPriorityRegister;
 import org.eclipse.mosaic.fed.application.app.api.MosaicApplication;
+import org.eclipse.mosaic.fed.application.app.api.TaxiServerApplication;
 import org.eclipse.mosaic.fed.application.app.api.TrafficSignAwareApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.modules.Perceptive;
 import org.eclipse.mosaic.fed.application.config.CApplicationAmbassador;
@@ -50,6 +52,7 @@ import org.eclipse.mosaic.interactions.mapping.TrafficLightRegistration;
 import org.eclipse.mosaic.interactions.mapping.VehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.RoutelessVehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
+import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleRoutesInitialization;
@@ -306,6 +309,8 @@ public class ApplicationAmbassador extends AbstractFederateAmbassador implements
                 this.process((TrafficDetectorUpdates) interaction);
             } else if (interaction.getTypeId().equals(VehicleSeenTrafficSignsUpdate.TYPE_ID)) {
                 this.process((VehicleSeenTrafficSignsUpdate) interaction);
+            } else if (interaction.getTypeId().equals(TaxiUpdates.TYPE_ID)) {
+                this.process((TaxiUpdates) interaction);
             } else if (interaction.getTypeId().equals(SumoTraciResponse.TYPE_ID)) {
                 this.process((SumoTraciResponse) interaction);
             } else if (interaction.getTypeId().equals(V2xMessageAcknowledgement.TYPE_ID)) {
@@ -454,6 +459,18 @@ public class ApplicationAmbassador extends AbstractFederateAmbassador implements
                             EventNicenessPriorityRegister.UPDATE_SEEN_TRAFFIC_SIGN
                     ));
                 }
+            }
+        }
+    }
+
+    private void process(final TaxiUpdates taxiUpdates) {
+        for (ServerUnit serverUnit : UnitSimulator.UnitSimulator.getServers().values()) {
+            for (TaxiServerApplication application : serverUnit.getApplicationsIterator(TaxiServerApplication.class)) {
+                addEvent(new Event(
+                        taxiUpdates.getTime(),
+                        e -> application.onTaxiDataUpdate(taxiUpdates.getTaxis(), taxiUpdates.getReservations()),
+                        EventNicenessPriorityRegister.UPDATE_SEEN_TRAFFIC_SIGN
+                ));
             }
         }
     }

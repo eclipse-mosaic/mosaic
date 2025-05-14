@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.lib.objects.taxi;
 
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -24,120 +26,146 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TaxiVehicleData implements Serializable {
-	@Serial
-	private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-	public static final int ALL_TAXIS = -1;
-	public static final int EMPTY_TAXIS = 0;
-	public static final int EMPTY_TO_PICK_UP_TAXIS = 1;
-	public static final int OCCUPIED_TAXIS = 2;
-	public static final int OCCUPIED_TO_PICK_UP_TAXIS = 3;
+    public static final int ALL_TAXIS = -1;
+    public static final int EMPTY_TAXIS = 0;
+    public static final int EMPTY_TO_PICK_UP_TAXIS = 1;
+    public static final int OCCUPIED_TAXIS = 2;
+    public static final int OCCUPIED_TO_PICK_UP_TAXIS = 3;
 
-	private final String state;
-	private final String numberOfCustomersServed;
-	private final String totalOccupiedDistanceInMeters;
-	private final String totalOccupiedTimeInSeconds;
-	private final List<String> customersToPickUpOrOnBoard;
+    private final String id;
+    private final int state;
+    private final VehicleData vehicleData;
+    private final String numberOfCustomersServed;
+    private final String totalOccupiedDistanceInMeters;
+    private final String totalOccupiedTimeInSeconds;
+    private final List<String> customersToPickUpOrOnBoard;
 
-	private TaxiVehicleData(String state, String numberOfCustomersServed, String totalOccupiedDistanceInMeters,
-		String totalOccupiedTimeInSeconds, List<String> customersToPickUpOrOnBoard) {
-		this.state = state;
-		this.numberOfCustomersServed = numberOfCustomersServed;
-		this.totalOccupiedDistanceInMeters = totalOccupiedDistanceInMeters;
-		this.totalOccupiedTimeInSeconds = totalOccupiedTimeInSeconds;
-		this.customersToPickUpOrOnBoard = customersToPickUpOrOnBoard;
-	}
+    private TaxiVehicleData(String id, int state, VehicleData vehicleData, String numberOfCustomersServed, String totalOccupiedDistanceInMeters,
+                            String totalOccupiedTimeInSeconds, List<String> customersToPickUpOrOnBoard) {
+        this.id = id;
+        this.state = state;
+        this.vehicleData = vehicleData;
+        this.numberOfCustomersServed = numberOfCustomersServed;
+        this.totalOccupiedDistanceInMeters = totalOccupiedDistanceInMeters;
+        this.totalOccupiedTimeInSeconds = totalOccupiedTimeInSeconds;
+        this.customersToPickUpOrOnBoard = customersToPickUpOrOnBoard;
+    }
 
-	public String getState() {
-		return state;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getNumberOfCustomersServed() {
-		return numberOfCustomersServed;
-	}
+    public int getState() {
+        return state;
+    }
 
-	public String getTotalOccupiedDistanceInMeters() {
-		return totalOccupiedDistanceInMeters;
-	}
+    public VehicleData getVehicleData() {
+        return vehicleData;
+    }
 
-	public String getTotalOccupiedTimeInSeconds() {
-		return totalOccupiedTimeInSeconds;
-	}
+    public String getNumberOfCustomersServed() {
+        return numberOfCustomersServed;
+    }
 
-	public List<String> getCustomersToPickUpOrOnBoard() {
-		return customersToPickUpOrOnBoard;
-	}
+    public String getTotalOccupiedDistanceInMeters() {
+        return totalOccupiedDistanceInMeters;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-		if (obj == this) {
-			return true;
-		}
-		if (obj.getClass() != getClass()) {
-			return false;
-		}
+    public String getTotalOccupiedTimeInSeconds() {
+        return totalOccupiedTimeInSeconds;
+    }
 
-		TaxiVehicleData other = (TaxiVehicleData) obj;
-		return new EqualsBuilder()
-			.appendSuper(super.equals(obj))
-			.append(this.state, other.state)
-			.append(this.numberOfCustomersServed, other.numberOfCustomersServed)
-			.append(this.totalOccupiedDistanceInMeters, other.totalOccupiedDistanceInMeters)
-			.append(this.totalOccupiedTimeInSeconds, other.totalOccupiedTimeInSeconds)
-			.append(this.customersToPickUpOrOnBoard, other.customersToPickUpOrOnBoard)
-			.isEquals();
-	}
+    public List<String> getCustomersToPickUpOrOnBoard() {
+        return customersToPickUpOrOnBoard;
+    }
 
-	@Override
-	public int hashCode() {
-		return new HashCodeBuilder(3, 89)
-			.appendSuper(super.hashCode())
-			.append(state)
-			.append(numberOfCustomersServed)
-			.append(totalOccupiedDistanceInMeters)
-			.append(totalOccupiedTimeInSeconds)
-			.append(customersToPickUpOrOnBoard)
-			.toHashCode();
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
 
-	public static class Builder {
-		private String state;
-		private String customersServed;
-		private String totalOccupiedDistanceInMeters;
-		private String totalOccupiedTimeInSeconds;
-		private List<String> customersToPickUpOrOnBoard;
+        TaxiVehicleData other = (TaxiVehicleData) obj;
+        return new EqualsBuilder()
+                .appendSuper(super.equals(obj))
+                .append(this.id, other.id)
+                .append(this.state, other.state)
+                .append(this.numberOfCustomersServed, other.numberOfCustomersServed)
+                .append(this.totalOccupiedDistanceInMeters, other.totalOccupiedDistanceInMeters)
+                .append(this.totalOccupiedTimeInSeconds, other.totalOccupiedTimeInSeconds)
+                .append(this.customersToPickUpOrOnBoard, other.customersToPickUpOrOnBoard)
+                .isEquals();
+    }
 
-		public Builder withState(String state) {
-			this.state = state;
-			return this;
-		}
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(3, 89)
+                .appendSuper(super.hashCode())
+                .append(id)
+                .append(state)
+                .append(numberOfCustomersServed)
+                .append(totalOccupiedDistanceInMeters)
+                .append(totalOccupiedTimeInSeconds)
+                .append(customersToPickUpOrOnBoard)
+                .toHashCode();
+    }
 
-		public Builder withCustomersServed(String customersServed) {
-			this.customersServed = customersServed;
-			return this;
-		}
+    public static class Builder {
+        private String id;
+        private int state;
+        private VehicleData vehicleData;
+        private String customersServed;
+        private String totalOccupiedDistanceInMeters;
+        private String totalOccupiedTimeInSeconds;
+        private List<String> customersToPickUpOrOnBoard;
 
-		public Builder withTotalOccupiedDistanceInMeters(String totalOccupiedDistanceInMeters) {
-			this.totalOccupiedDistanceInMeters = totalOccupiedDistanceInMeters;
-			return this;
-		}
+        public Builder withId(String id) {
+            this.id = id;
+            return this;
+        }
 
-		public Builder withTotalOccupiedTimeInSeconds(String totalOccupiedTimeInSeconds) {
-			this.totalOccupiedTimeInSeconds = totalOccupiedTimeInSeconds;
-			return this;
-		}
+        public Builder withState(int state) {
+            this.state = state;
+            return this;
+        }
 
-		public Builder withCustomersToPickUpOrOnBoard(String customersToPickUpOrOnBoard) {
-			this.customersToPickUpOrOnBoard = Arrays.stream(customersToPickUpOrOnBoard.split(",")).toList();
-			return this;
-		}
+        public Builder withVehicleData(VehicleData vehicleData) {
+            this.vehicleData = vehicleData;
+            return this;
+        }
 
-		public TaxiVehicleData build() {
-			return new TaxiVehicleData(state, customersServed, totalOccupiedDistanceInMeters,
-				totalOccupiedTimeInSeconds, customersToPickUpOrOnBoard);
-		}
-	}
+        public Builder withCustomersServed(String customersServed) {
+            this.customersServed = customersServed;
+            return this;
+        }
+
+        public Builder withTotalOccupiedDistanceInMeters(String totalOccupiedDistanceInMeters) {
+            this.totalOccupiedDistanceInMeters = totalOccupiedDistanceInMeters;
+            return this;
+        }
+
+        public Builder withTotalOccupiedTimeInSeconds(String totalOccupiedTimeInSeconds) {
+            this.totalOccupiedTimeInSeconds = totalOccupiedTimeInSeconds;
+            return this;
+        }
+
+        public Builder withCustomersToPickUpOrOnBoard(String customersToPickUpOrOnBoard) {
+            this.customersToPickUpOrOnBoard = Arrays.stream(customersToPickUpOrOnBoard.split(",")).toList();
+            return this;
+        }
+
+        public TaxiVehicleData build() {
+            return new TaxiVehicleData(id, state, vehicleData, customersServed, totalOccupiedDistanceInMeters,
+                    totalOccupiedTimeInSeconds, customersToPickUpOrOnBoard);
+        }
+    }
 }

@@ -11,7 +11,7 @@
 
 	<vehicle id="first_taxi" type="TaxiVeh" route="1" depart="0.00" line="taxi"/>
 	<vehicle id="second_taxi" type="TaxiVeh" route="1" depart="5.00" line="taxi"/>
-	<vehicle id="third_taxi" type="TaxiVeh" route="2" depart="10.00" line="taxi"/>
+	<!--<vehicle id="third_taxi" type="TaxiVeh" route="2" depart="10.00" line="taxi"/>-->
 
 	<person id="personFirstTaxi" depart="0.00" color="green">
 		<ride from="1092670150_27559591_28997950" to="493264401_27559341_27559334" lines="taxi"/>
