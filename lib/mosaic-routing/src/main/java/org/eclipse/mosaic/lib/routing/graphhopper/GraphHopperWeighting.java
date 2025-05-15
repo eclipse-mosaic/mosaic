@@ -27,7 +27,6 @@ import com.graphhopper.routing.ev.DecimalEncodedValue;
 import com.graphhopper.routing.weighting.TurnCostProvider;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.util.EdgeIteratorState;
-import com.graphhopper.util.FetchMode;
 
 /**
  * A dynamic weight calculation. If an alternative travel time
@@ -76,17 +75,17 @@ public class GraphHopperWeighting implements Weighting {
 
     @Override
     public long calcEdgeMillis(EdgeIteratorState edgeState, boolean reverse) {
-        if (reverse && !edgeState.getReverse(accessEnc) || !reverse && !edgeState.get(accessEnc))
-            throw new IllegalStateException("Calculating time should not require to read speed from edge in wrong direction. " +
-                    "(" + edgeState.getBaseNode() + " - " + edgeState.getAdjNode() + ") "
-                    + edgeState.fetchWayGeometry(FetchMode.ALL) + ", dist: " + edgeState.getDistance() + " "
-                    + "Reverse:" + reverse + ", fwd:" + edgeState.get(accessEnc) + ", bwd:" + edgeState.getReverse(accessEnc) + ", fwd-speed: " + edgeState.get(speedEnc) + ", bwd-speed: " + edgeState.getReverse(speedEnc));
+        if (reverse && !edgeState.getReverse(accessEnc) || !reverse && !edgeState.get(accessEnc)) {
+            throw new IllegalStateException("Could not calculate speed for inaccessible edge.");
+        }
 
         double speed = reverse ? edgeState.getReverse(speedEnc) : edgeState.get(speedEnc);
-        if (Double.isInfinite(speed) || Double.isNaN(speed) || speed < 0)
-            throw new IllegalStateException("Invalid speed stored in edge! " + speed);
-        if (speed == 0)
-            throw new IllegalStateException("Speed cannot be 0 for unblocked edge, use access properties to mark edge blocked! Should only occur for shortest path calculation. See #242.");
+        if (Double.isInfinite(speed) || Double.isNaN(speed) || speed < 0) {
+            throw new IllegalStateException("Invalid speed " + speed + " stored in edge.");
+        }
+        if (speed == 0) {
+            throw new IllegalStateException("Speed cannot be 0 for unblocked edge");
+        }
 
         return Math.round(edgeState.getDistance() / speed * 3.6 * 1000);
     }
@@ -104,10 +103,6 @@ public class GraphHopperWeighting implements Weighting {
     @Override
     public boolean hasTurnCosts() {
         return turnCostProvider != NO_TURN_COST_PROVIDER;
-    }
-
-    public TurnCostProvider getTurnCostProvider() {
-        return turnCostProvider;
     }
 
     @Override
