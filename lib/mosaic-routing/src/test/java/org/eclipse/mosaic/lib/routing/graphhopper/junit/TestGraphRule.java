@@ -16,8 +16,8 @@
 package org.eclipse.mosaic.lib.routing.graphhopper.junit;
 
 import org.eclipse.mosaic.lib.routing.graphhopper.GraphHopperRouting;
+import org.eclipse.mosaic.lib.routing.graphhopper.util.RoutingProfileManager;
 import org.eclipse.mosaic.lib.routing.graphhopper.util.VehicleEncoding;
-import org.eclipse.mosaic.lib.routing.graphhopper.util.VehicleEncodingManager;
 
 import com.graphhopper.routing.util.AllEdgesIterator;
 import com.graphhopper.storage.BaseGraph;
@@ -26,7 +26,7 @@ import org.junit.rules.ExternalResource;
 public class TestGraphRule extends ExternalResource {
 
     private BaseGraph graph;
-    private final VehicleEncodingManager encodingManager;
+    private final RoutingProfileManager profileManager;
 
     private final boolean emptyGraph;
 
@@ -35,18 +35,18 @@ public class TestGraphRule extends ExternalResource {
     }
 
     public TestGraphRule(boolean emptyGraph) {
-        this.encodingManager = new VehicleEncodingManager(GraphHopperRouting.PROFILES);
+        this.profileManager = new RoutingProfileManager(GraphHopperRouting.PROFILES);
         this.emptyGraph = emptyGraph;
     }
 
-    public VehicleEncodingManager getEncodingManager() {
-        return encodingManager;
+    public RoutingProfileManager getProfileManager() {
+        return profileManager;
     }
 
     @Override
     protected void before() throws Throwable {
 
-        graph = new BaseGraph.Builder(encodingManager.getEncodingManager())
+        graph = new BaseGraph.Builder(profileManager.getEncodingManager())
                 .withTurnCosts(true)
                 .build();
 
@@ -108,7 +108,7 @@ public class TestGraphRule extends ExternalResource {
         graph.edge(12, 13).setDistance(1000); //21
 
 
-        VehicleEncoding enc = encodingManager.getVehicleEncoding("car");
+        VehicleEncoding enc = profileManager.getRoutingProfile("car").getVehicleEncoding();
         AllEdgesIterator it = graph.getAllEdges();
         while (it.next()) {
             it.set(enc.access(), true);

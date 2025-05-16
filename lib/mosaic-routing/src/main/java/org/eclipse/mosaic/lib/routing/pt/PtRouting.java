@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.lib.routing.pt;
 
+import static com.graphhopper.json.Statement.If;
+
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.math.SpeedUtils;
 import org.eclipse.mosaic.lib.objects.pt.PtStop;
@@ -33,6 +35,8 @@ import com.graphhopper.gtfs.GraphHopperGtfs;
 import com.graphhopper.gtfs.PtRouter;
 import com.graphhopper.gtfs.PtRouterImpl;
 import com.graphhopper.gtfs.Request;
+import com.graphhopper.json.Statement;
+import com.graphhopper.util.CustomModel;
 import com.graphhopper.util.StopWatch;
 import com.graphhopper.util.TranslationMap;
 import org.apache.commons.lang3.Validate;
@@ -96,7 +100,11 @@ public class PtRouting {
                 .putObject("graph.location", baseDirectory.resolve("ptgraph").toAbsolutePath().toString()) //
                 .putObject("datareader.file", baseDirectory.resolve(routingConfiguration.osmFile).toAbsolutePath().toString())
                 .putObject("gtfs.file", baseDirectory.resolve(routingConfiguration.gtfsFile).toAbsolutePath().toString())
-                .setProfiles(Collections.singletonList(new Profile("foot").setVehicle("foot")));
+                .putObject("graph.encoded_values", "foot_access, foot_priority, foot_average_speed")
+                .setProfiles(Collections.singletonList(new Profile("foot").setCustomModel(new CustomModel()
+                                .addToPriority(If("!foot_access", Statement.Op.MULTIPLY, "0"))
+                                .addToSpeed(If("true", Statement.Op.LIMIT, "foot_average_speed"))))
+                );
 
         final StopWatch sw = new StopWatch();
         sw.start();
