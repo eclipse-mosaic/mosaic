@@ -24,7 +24,7 @@ const Rsu = {
         this.longitude = longitude
         this.marker = new Feature({
             type: 'rsu',
-            geometry: new Point(fromLonLat([ longitude, latitude ]))
+            geometry: new Point(fromLonLat([longitude, latitude]))
         })
         this.marker.setProperties(['name'])
         this.marker.set('name', name)
@@ -59,7 +59,7 @@ const Rsu = {
      */
     updateView() {
         // Location
-        this.marker.setGeometry(new Point(fromLonLat([ this.longitude, this.latitude ])))
+        this.marker.setGeometry(new Point(fromLonLat([this.longitude, this.latitude])))
 
         // Update style
         const style = this.createStyle()
@@ -68,7 +68,7 @@ const Rsu = {
         if ((Date.now() - this.timeStateChange) > 500) {
             // Clear sending/receiving states
             this.state.sending = false
-            this.state.receiving =  false
+            this.state.receiving = false
         }
 
     },
@@ -90,7 +90,7 @@ const Rsu = {
         return new Style({
             image: new Icon({
                 anchor: [0.5, 1],
-                src: `markers/${ style }.png`
+                src: `markers/${style}.png`
             })
         })
     }
@@ -153,7 +153,7 @@ const Vehicle = {
     updateView() {
         // Location
         if (this.latitude !== undefined && this.longitude !== undefined) {
-                this.marker.setGeometry(new Point(fromLonLat([ this.longitude, this.latitude ])))
+            this.marker.setGeometry(new Point(fromLonLat([this.longitude, this.latitude])))
         }
 
         // Update style
@@ -163,7 +163,7 @@ const Vehicle = {
         if ((Date.now() - this.timeStateChange) > 500) {
             // Clear sending/receiving states
             this.state.sending = false
-            this.state.receiving =  false
+            this.state.receiving = false
         }
 
     },
@@ -172,57 +172,37 @@ const Vehicle = {
      * Creates the style of the vehicle marker based on the vehicles state.
      */
     createStyle() {
-        let style = 'unknown'
-        if (this.vehicleClass === 'Car'
-            || this.vehicleClass === 'ElectricVehicle'
-            || this.vehicleClass === 'AutomatedVehicle'
-            || this.vehicleClass === 'Taxi'
-            || this.vehicleClass === 'HighOccupancyVehicle'
-        ) {
-            style = 'car'
-            if (this.state.equipped) {
-                style = 'car-equipped'
-            }
-            if (this.state.parking) {
-                style = 'car-parking'
-            }
-            if (this.state.charging) {
-                style = 'car-charging'
-            }
-            if (this.state.sending) {
-                style = 'car-sending'
-            }
-            if (this.state.receiving) {
-                style = 'car-receiving'
-            }
-        }
-        else if (this.vehicleClass === 'PublicTransportVehicle') {
+        let style;
+        if (this.vehicleClass === 'PublicTransportVehicle') {
             style = 'bus'
-            if (this.state.equipped) {
-                style = 'bus-equipped'
-            }
-            if (this.state.sending) {
-                style = 'bus-sending'
-            }
-            if (this.state.receiving) {
-                style = 'bus-receiving'
-            }
         } else if (this.vehicleClass === 'Bicycle') {
             style = 'bicycle'
-            if (this.state.equipped) {
-                style = 'bicycle-equipped'
-            }
-            if (this.state.sending) {
-                style = 'bicycle-sending'
-            }
-            if (this.state.receiving) {
-                style = 'bicycle-receiving'
-            }
+        } else if (this.vehicleClass === 'Taxi') {
+            style = 'taxi'
+        } else if (this.vehicleClass === 'HeavyGoodsVehicle' || this.vehicleClass === 'ExceptionalSizeVehicle' || this.vehicleClass === 'VehicleWithTrailer') {
+            style = 'truck'
+        } else if (this.vehicleClass === 'EmergencyVehicle') {
+            style = 'car-emergency'
+        } else if (this.vehicleClass === 'WorksVehicle') {
+            style = 'car-works'
+        } else {
+            style = 'car'
+        }
+        if (this.state.sending) {
+            style += '-sending'
+        } else if (this.state.receiving) {
+            style += '-receiving'
+        } else if (this.state.charging) {
+            style += '-charging'
+        } else if (this.state.parking) {
+            style += '-parking'
+        } else if (this.state.equipped) {
+            style += '-equipped'
         }
         return new Style({
             image: new Icon({
                 anchor: [0.5, 1],
-                src: `markers/${ style }.png`
+                src: `markers/${style}.png`
             })
         })
     }
@@ -270,7 +250,7 @@ const Agent = {
     updateView() {
         // Location
         if (this.latitude !== undefined && this.longitude !== undefined) {
-            this.marker.setGeometry(new Point(fromLonLat([ this.longitude, this.latitude ])))
+            this.marker.setGeometry(new Point(fromLonLat([this.longitude, this.latitude])))
         }
 
         // Update style
@@ -304,7 +284,7 @@ const Agent = {
         return new Style({
             image: new Icon({
                 anchor: [0.5, 1],
-                src: `markers/${ style }.png`
+                src: `markers/${style}.png`
             })
         })
     }
@@ -327,7 +307,7 @@ const TrafficLight = {
         this.longitude = longitude
         this.marker = new Feature({
             type: 'trafficLight',
-            geometry: new Point(fromLonLat([ longitude, latitude ]))
+            geometry: new Point(fromLonLat([longitude, latitude]))
         })
         this.marker.setProperties(['name'])
         this.marker.set('name', name)
@@ -362,7 +342,7 @@ const TrafficLight = {
      */
     updateView() {
         // Location
-        this.marker.setGeometry(new Point(fromLonLat([ this.longitude, this.latitude ])))
+        this.marker.setGeometry(new Point(fromLonLat([this.longitude, this.latitude])))
 
         // Update style
         const style = this.createStyle()
@@ -371,7 +351,7 @@ const TrafficLight = {
         if ((Date.now() - this.timeStateChange) > 500) {
             // Clear sending/receiving states
             this.state.sending = false
-            this.state.receiving =  false
+            this.state.receiving = false
         }
     },
 
@@ -392,7 +372,7 @@ const TrafficLight = {
         return new Style({
             image: new Icon({
                 anchor: [0.5, 1],
-                src: `markers/${ style }.png`
+                src: `markers/${style}.png`
             })
         })
     }
@@ -415,7 +395,7 @@ const ChargingStation = {
         this.longitude = longitude
         this.marker = new Feature({
             type: 'charging-station',
-            geometry: new Point(fromLonLat([ longitude, latitude ]))
+            geometry: new Point(fromLonLat([longitude, latitude]))
         })
         this.marker.setProperties(['name'])
         this.marker.set('name', name)
@@ -450,7 +430,7 @@ const ChargingStation = {
      */
     updateView() {
         // Location
-        this.marker.setGeometry(new Point(fromLonLat([ this.longitude, this.latitude ])))
+        this.marker.setGeometry(new Point(fromLonLat([this.longitude, this.latitude])))
 
         // Update style
         const style = this.createStyle()
@@ -459,7 +439,7 @@ const ChargingStation = {
         if ((Date.now() - this.timeStateChange) > 500) {
             // Clear sending/receiving states
             this.state.sending = false
-            this.state.receiving =  false
+            this.state.receiving = false
         }
     },
 
@@ -480,7 +460,7 @@ const ChargingStation = {
         return new Style({
             image: new Icon({
                 anchor: [0.5, 1],
-                src: `markers/${ style }.png`
+                src: `markers/${style}.png`
             })
         })
     }
@@ -490,7 +470,7 @@ const ChargingStation = {
 /**
  * Controls the map and its unit markers.
  */
-const map = (function() {
+const map = (function () {
 
     var isCentered = new Boolean(false);
     /**
@@ -543,10 +523,10 @@ const map = (function() {
         target: 'map',
         loadTilesWhileAnimating: true,
         layers: [
-                new TileLayer({
-                        source: new OSM()
-                }),
-                vectorLayer
+            new TileLayer({
+                source: new OSM()
+            }),
+            vectorLayer
         ],
         view: new View({
             center: fromLonLat([
@@ -557,7 +537,7 @@ const map = (function() {
         })
     })
 
-    
+
     /**
      * Adds a new marker to the map.
      * @param {Feature} marker The marker to be added.
@@ -667,15 +647,18 @@ const map = (function() {
      * @param {string} vehicleName Name of the vehicle
      * @param {number} latitude Latitude value of the geo position
      * @param {number} longitude Longitude value of the geo position
+     * @param {boolean} is_parking Defines if the vehicle is parking
      */
-    function setVehiclePosition(vehicleName, latitude, longitude) {
+    function setVehiclePosition(vehicleName, latitude, longitude, is_parking) {
         if (vehicles[vehicleName]) {
-            vehicles[vehicleName].setLocation(latitude, longitude) 
+            vehicles[vehicleName].setLocation(latitude, longitude)
+            // we don't use setState here, as this would influence the timeOfChange
+            vehicles[vehicleName].state['parking'] = is_parking
         } else {
             console.error("Try to set location for non-existing vehicle", vehicleName)
         }
-        if (isCentered == false){
-            ol_map.getView().setCenter(fromLonLat([ longitude, latitude ]));
+        if (isCentered == false) {
+            ol_map.getView().setCenter(fromLonLat([longitude, latitude]));
             ol_map.getView().setZoom(18);
             isCentered = true;
         }
@@ -696,8 +679,8 @@ const map = (function() {
         } else {
             console.error("Try to set location for non-existing agent", agentName)
         }
-        if (isCentered == false){
-            ol_map.getView().setCenter(fromLonLat([ longitude, latitude ]));
+        if (isCentered == false) {
+            ol_map.getView().setCenter(fromLonLat([longitude, latitude]));
             ol_map.getView().setZoom(18);
             isCentered = true;
         }
@@ -717,7 +700,7 @@ const map = (function() {
                 rsus[unitName].updateView()
             } else if (trafficLights[unitName]) {
                 trafficLights[unitName].updateView()
-            }  else if (chargingStations[unitName]) {
+            } else if (chargingStations[unitName]) {
                 chargingStations[unitName].updateView()
             }
         }
@@ -783,7 +766,7 @@ const map = (function() {
 /**
  * Websocket
  */
-const WebSocketClient = (function() {
+const WebSocketClient = (function () {
     let websocketEstablishedConnection = false
     let webSocket
     let tries = 0
@@ -856,7 +839,7 @@ const WebSocketClient = (function() {
     function socketOnOpen() {
         setStatus('connected')
         websocketEstablishedConnection = true
-        setInterval(function() {
+        setInterval(function () {
             if (websocketEstablishedConnection) {
                 webSocket.send("pull")
             }
@@ -879,7 +862,8 @@ const WebSocketClient = (function() {
                 if (data.VehicleUpdates.updated) {
                     // Update vehicle locations
                     data.VehicleUpdates.updated.forEach(vehicle => {
-                        map.setVehiclePosition(vehicle.name, vehicle.position.latitude, vehicle.position.longitude)
+                        let is_parking = vehicle.vehicleStopMode === 'PARK_ON_ROADSIDE'
+                        map.setVehiclePosition(vehicle.name, vehicle.position.latitude, vehicle.position.longitude, is_parking)
                         updatedUnits.push(vehicle.name)
                     })
                 }
@@ -905,7 +889,7 @@ const WebSocketClient = (function() {
                 map.addAgent(data.AgentRegistration.agentMapping.name, agentOrigin.latitude, agentOrigin.longitude)
             } else if (data.V2xMessageTransmission) {
                 // Mark vehicles that are sending right now
-                unitName = data.V2xMessageTransmission.message.routing.source.sourceName
+                unitName = data.V2xMessageTransmission.sourceName
                 map.setUnitState(unitName, 'sending')
                 updatedUnits.push(unitName)
             } else if (data.V2xMessageReception) {
@@ -979,7 +963,7 @@ const WebSocketClient = (function() {
 })()
 
 // eslint-disable-next-line no-undef
-$(function(){
+$(function () {
     // At this point all necessary data of the whole page has been loaded.
     // Now the WebSocket can be initialized.
     WebSocketClient.initialize()
