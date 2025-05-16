@@ -51,6 +51,11 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuppressWarnings("UnstableApiUsage")
 public class WebsocketVisualizerServer extends WebSocketServer implements Runnable {
 
+    /**
+     * Helper class to reduce fields for V2xMessageTransmission interaction.
+     */
+    record V2xMessageTransmissionInfo(long time, int messageId, String sourceName) {}
+
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final int MAX_MESSAGES_LIST = 1000;
@@ -176,15 +181,13 @@ public class WebsocketVisualizerServer extends WebSocketServer implements Runnab
     }
 
     private void sendV2xMessageTransmissions(WebSocket socket) {
-        record TransmissionInfo(long time, int messageId, String sourceName) {}
-
         for (Iterator<V2xMessageTransmission> iterator = sentV2xMessages.iterator(); iterator.hasNext(); ) {
             V2xMessageTransmission transmission = iterator.next();
 
             Gson gson = new Gson();
             JsonElement jsonElement = gson.toJsonTree(
                     // reduce info to avoid expensive/erroneous json-serialization of custom V2xMessages
-                    new TransmissionInfo(transmission.getTime(), transmission.getMessageId(), transmission.getSourceName())
+                    new V2xMessageTransmissionInfo(transmission.getTime(), transmission.getMessageId(), transmission.getSourceName())
             );
             JsonObject jsonObject = new JsonObject();
             jsonObject.add(V2xMessageTransmission.TYPE_ID, jsonElement);
