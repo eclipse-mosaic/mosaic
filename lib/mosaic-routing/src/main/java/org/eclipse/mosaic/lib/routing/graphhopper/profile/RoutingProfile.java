@@ -23,24 +23,40 @@ import com.graphhopper.routing.util.parsers.TagParser;
 
 import java.util.List;
 
+/**
+ * Provides quick access to parsers and the specific {@link VehicleEncoding} instance
+ * related to a specific vehicle profile (e.g., bike or car)
+ *
+ * @see BikeProfile
+ * @see CarProfile
+ */
 public abstract class RoutingProfile {
 
     private final VehicleEncoding vehicleEncoding;
     private final String name;
 
-    protected RoutingProfile(String name, DecimalEncodedValue speedEncoding, DecimalEncodedValue priorityEncoding) {
+    protected RoutingProfile(String name, DecimalEncodedValue speedEncoding) {
         this.name = name;
-        this.vehicleEncoding = new VehicleEncoding(name, speedEncoding, priorityEncoding);
+        this.vehicleEncoding = new VehicleEncoding(name, speedEncoding);
     }
 
+    /**
+     * The name of the {@link RoutingProfile}.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Access to the {@link com.graphhopper.routing.ev.EncodedValue} instances used specifically by this {@link RoutingProfile}.
+     */
     public VehicleEncoding getVehicleEncoding() {
         return vehicleEncoding;
     }
 
+    /**
+     * A list of parsers used to fill {@link com.graphhopper.routing.ev.EncodedValue} instances from road data.
+     */
     public abstract List<TagParser> createTagParsers(EncodedValueLookup lookup);
 
 }

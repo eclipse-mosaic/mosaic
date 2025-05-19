@@ -28,6 +28,8 @@ import com.graphhopper.routing.weighting.TurnCostProvider;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.util.EdgeIteratorState;
 
+import java.util.Objects;
+
 /**
  * A dynamic weight calculation. If an alternative travel time
  * on an edge is known, then this travel time will be used to weight
@@ -65,11 +67,8 @@ public class GraphHopperWeighting implements Weighting {
         }
         synchronized (edgePropertiesState) {
             edgePropertiesState.setCurrentEdgeIterator(edge, reverse);
-            if (routingCostFunction == null) {
-                return edge.getDistance() / edgePropertiesState.getSpeed();
-            } else {
-                return routingCostFunction.calculateCosts(edgePropertiesState);
-            }
+            return Objects.requireNonNullElse(routingCostFunction, RoutingCostFunction.Fastest)
+                    .calculateCosts(edgePropertiesState);
         }
     }
 

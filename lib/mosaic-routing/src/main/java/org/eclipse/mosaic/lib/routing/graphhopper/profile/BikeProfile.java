@@ -17,9 +17,7 @@ package org.eclipse.mosaic.lib.routing.graphhopper.profile;
 
 import com.google.common.collect.Lists;
 import com.graphhopper.routing.ev.EncodedValueLookup;
-import com.graphhopper.routing.ev.VehiclePriority;
 import com.graphhopper.routing.ev.VehicleSpeed;
-import com.graphhopper.routing.util.PriorityCode;
 import com.graphhopper.routing.util.parsers.BikeAccessParser;
 import com.graphhopper.routing.util.parsers.BikeAverageSpeedParser;
 import com.graphhopper.routing.util.parsers.TagParser;
@@ -33,8 +31,13 @@ public class BikeProfile extends RoutingProfile {
 
     public BikeProfile() {
         super(NAME,
-                VehicleSpeed.create(NAME, 4, 2.0, false),
-                VehiclePriority.create(NAME, 4, PriorityCode.getFactor(1), false)
+                /*
+                 * Defines an encoding for speed limits. It uses just 4 bits to store the actual speed limit defined on an edge.
+                 * It divides the actual speed limit by 2 before encoding it, reducing accuracy, but increasing the maximum storable
+                 * speed limit. Therefore, the maximum speed limit to be stored is 30 km/h. (2^4-1 = 15 * 2 = 30)
+                 * These are the default values used by GraphHopper, e.g., see DefaultImportRegistry.
+                 */
+                VehicleSpeed.create(NAME, 4, 2.0, false)
         );
     }
 

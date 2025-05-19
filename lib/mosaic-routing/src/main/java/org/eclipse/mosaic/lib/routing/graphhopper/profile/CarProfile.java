@@ -31,8 +31,14 @@ public class CarProfile extends RoutingProfile {
 
     public CarProfile() {
         super(NAME,
-                VehicleSpeed.create(NAME, 7, 2.0, true),
-                null
+                /*
+                 * Defines an encoding for speed limits. It uses 7 bits to store the actual speed limit defined on an edge.
+                 * It divides the actual speed limit by 2 before encoding it, reducing accuracy, but increasing the maximum storable
+                 * speed limit. Therefore, the maximum speed limit to be stored is 254 km/h. (2^7-1 = 127 * 2 = 254).
+                 * It can store different speed limits for each direction, doubling the required number of bits per edge.
+                 * These are the default values used by GraphHopper, e.g., see DefaultImportRegistry.
+                 */
+                VehicleSpeed.create(NAME, 7, 2.0, true)
         );
     }
 

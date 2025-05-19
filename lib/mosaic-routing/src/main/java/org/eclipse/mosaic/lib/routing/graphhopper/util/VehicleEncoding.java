@@ -38,12 +38,10 @@ public class VehicleEncoding {
     private final DecimalEncodedValue speedEnc;
     private final BooleanEncodedValue turnRestrictionEnc;
     private final DecimalEncodedValue turnCostEnc;
-    private final DecimalEncodedValue priorityEnc;
     private final BooleanEncodedValue subnetworkEnc;
 
-    public VehicleEncoding(String vehicleName, DecimalEncodedValue speedEnc, DecimalEncodedValue priorityEnc) {
+    public VehicleEncoding(String vehicleName, DecimalEncodedValue speedEnc) {
         this.speedEnc = speedEnc;
-        this.priorityEnc = priorityEnc;
         this.accessEnc = VehicleAccess.create(vehicleName);
         this.turnRestrictionEnc = TurnRestriction.create(vehicleName);
         this.turnCostEnc = TurnCost.create(vehicleName, 255);
@@ -56,10 +54,6 @@ public class VehicleEncoding {
 
     public DecimalEncodedValue speed() {
         return speedEnc;
-    }
-
-    public DecimalEncodedValue priority() {
-        return priorityEnc;
     }
 
     public BooleanEncodedValue turnRestriction() {

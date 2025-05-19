@@ -35,7 +35,10 @@ import java.util.function.Supplier;
  * In GraphHopper, any data for edges, nodes, and turns, are stored with as low overhead
  * as possible. To achieve this, {@link com.graphhopper.routing.ev.EncodedValue}s
  * to encode and decode any data. This class, encapsulates the initialization and access to single
- * {@link com.graphhopper.routing.ev.EncodedValue}s, making it easier to use them in code.
+ * {@link com.graphhopper.routing.ev.EncodedValue}s, making it easier to use them in code. Each
+ * vehicle has a different set of {@link com.graphhopper.routing.ev.EncodedValue} instances, thus
+ * they are bundled in each {@link RoutingProfile} which this class manages. It also provides
+ * access to the {@link EncodingManager} in general, which GraphHopper needs at several places.
  */
 public class RoutingProfileManager {
 
@@ -63,19 +66,20 @@ public class RoutingProfileManager {
                     .addTurnCostEncodedValue(encoding.turnRestriction())
                     .addTurnCostEncodedValue(encoding.turnCost())
                     .add(encoding.subnetwork());
-            if (encoding.priority() != null) {
-                builder.add(encoding.priority());
-            }
         }
         this.encodingManager = builder.build();
     }
 
+    /**
+     * Returns all available {@link RoutingProfile}s.
+     */
     public Collection<RoutingProfile> getAllProfiles() {
         return Collections.unmodifiableCollection(routingProfiles.values());
     }
 
     /**
-     * Returns the specific wrapper of {@link com.graphhopper.routing.ev.EncodedValue}s required
+     * Returns the specific {@link RoutingProfile} wrapper of
+     * {@link com.graphhopper.routing.ev.EncodedValue}s required
      * for the given transportation mode (e.g. "car", "bike").
      */
     public RoutingProfile getRoutingProfile(String vehicle) {
@@ -83,7 +87,7 @@ public class RoutingProfileManager {
     }
 
     /**
-     * Returns the actual encoding manager used in GraphHopper.
+     * Returns the actual encoding manager used by GraphHopper.
      */
     public EncodingManager getEncodingManager() {
         return encodingManager;
