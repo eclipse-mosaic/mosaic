@@ -19,8 +19,12 @@ import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.TaxiServerApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.ServerOperatingSystem;
 import org.eclipse.mosaic.interactions.application.TaxiDispatch;
+import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
+import org.eclipse.mosaic.lib.routing.RoutingParameters;
+import org.eclipse.mosaic.lib.routing.RoutingPosition;
+import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import com.google.common.collect.Lists;
@@ -71,6 +75,17 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                     new TaxiDispatch(getOs().getSimulationTime(), emptyTaxi, Lists.newArrayList(unassignedReservation))
             );
         }
+
+        /**
+         * RoutingResponse response = getOs().getRoutingModule().calculateRoutes(
+         *                 new RoutingPosition(GeoPoint.latLon(0, 0)),
+         *                 new RoutingPosition(GeoPoint.latLon(0, 0)),
+         *                 new RoutingParameters()
+         *         );
+         *         double length = response.getBestRoute().getLength();
+         *         double time = response.getBestRoute().getTime();
+         */
+
 
     }
 
