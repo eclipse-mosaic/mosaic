@@ -68,7 +68,6 @@ public class VehicleFacade {
     private final VehicleSetLaneChangeMode setLaneChangeMode;
     private final VehicleSetSpeedMode setSpeedMode;
     private final VehicleSetParameter setParameter;
-    private final VehicleGetTaxiFleet getTaxiFleet;
     private final VehicleDispatchTaxi vehicleDispatchTaxi;
 
     private final VehicleTypeGetLength getVehicleTypeLength;
@@ -118,7 +117,6 @@ public class VehicleFacade {
         setLaneChangeMode = bridge.getCommandRegister().getOrCreate(VehicleSetLaneChangeMode.class);
         setSpeedMode = bridge.getCommandRegister().getOrCreate(VehicleSetSpeedMode.class);
         setParameter = bridge.getCommandRegister().getOrCreate(VehicleSetParameter.class);
-        getTaxiFleet = bridge.getCommandRegister().getOrCreate(VehicleGetTaxiFleet.class);
         vehicleDispatchTaxi = bridge.getCommandRegister().getOrCreate(VehicleDispatchTaxi.class);
 
         getVehicleTypeLength = bridge.getCommandRegister().getOrCreate(VehicleTypeGetLength.class);
@@ -473,26 +471,6 @@ public class VehicleFacade {
         } catch (IllegalArgumentException | CommandException e) {
             log.warn("Could not set speed for vehicle {}", vehicleId);
         }
-    }
-
-    /**
-     * Getter for taxis depending on the requested state.
-     * @see VehicleGetTaxiFleet#execute(Bridge, int)
-     *
-     * @param taxiState The state in which the taxi should be.
-     * @return A list with the available taxis in the given state.
-     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
-     */
-    public List<String> getTaxiFleet(int taxiState) throws InternalFederateException {
-        List<String> taxiFleet = new ArrayList<>();
-
-        try {
-            taxiFleet = getTaxiFleet.execute(bridge, taxiState);
-        } catch (IllegalArgumentException | CommandException e) {
-            log.warn("Could not get taxi fleet for state {}", taxiState);
-        }
-
-        return taxiFleet;
     }
 
     /**

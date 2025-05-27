@@ -138,9 +138,8 @@ public class CommandChangeVehicleValue {
      */
     public final static int VAR_HIGHLIGHT = 0x6c;
 
-    /**
-     * Dispatch of taxis to get reservations.
-     */
-    public final static int VAR_TAXI_DISPATCH = 0x21;
+
+
+    public final static SumoVar VAR_TAXI_DISPATCH = SumoVar.var(0x21);
 }
 

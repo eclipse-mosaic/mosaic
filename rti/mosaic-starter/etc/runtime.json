@@ -35,7 +35,8 @@
                 "VehicleUpdates",
                 "VehicleRoutesInitialization",
                 "VehicleTypesInitialization",
-                "VehicleSeenTrafficSignsUpdate"
+                "VehicleSeenTrafficSignsUpdate",
+                "TaxiUpdates"
             ],
             "javaClasspathEntries": []
         },
@@ -154,7 +155,7 @@
         },
         {
             "id": "sumo",
-            "classname": "org.eclipse.mosaic.fed.sumo.ambassador.SumoAmbassador",
+            "classname": "org.eclipse.mosaic.fed.sumo.ambassador.SumoGuiAmbassador",
             "configuration": "sumo_config.json",
             "priority": 50,
             "host": "local",
@@ -182,7 +183,8 @@
                 "InductionLoopDetectorSubscription",
                 "LaneAreaDetectorSubscription",
                 "TrafficLightSubscription",
-                "VehicleSightDistanceConfiguration"
+                "VehicleSightDistanceConfiguration",
+                "TaxiDispatch"
             ],
             "javaClasspathEntries": []
         },

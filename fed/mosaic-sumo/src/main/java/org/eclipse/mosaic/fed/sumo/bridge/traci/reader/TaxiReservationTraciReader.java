@@ -41,9 +41,10 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
         final double arrivalPos = readTypedDouble(in);
         final double depart = readTypedDouble(in);
         final double reservationTime = readTypedDouble(in);
-        final int state = readTypedInt(in);
+        final int reservationState = readTypedInt(in);
 
         return new TaxiReservation.Builder().withId(reservationId)
+                .withReservationState(reservationState)
                 .withPersonList(personList)
                 .withGroup(group)
                 .withFromEdge(fromEdge)
@@ -52,7 +53,6 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
                 .withArrivalPos(arrivalPos)
                 .withDepart(depart)
                 .withReservationTime(reservationTime)
-                .withState(state)
                 .build();
     }
 
