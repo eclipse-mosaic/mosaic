@@ -22,16 +22,21 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 
 public class StoppingPlaceReader extends AbstractTraciResultReader<List<PtVehicleData.StoppingPlace>> {
 
+    /**
+     * Use this mode to read "next stops" from SUMO versions <= 1.22.0.
+     */
+    private final boolean legacyMode;
+
     public StoppingPlaceReader() {
-        this(null);
+        this(false);
     }
 
-    protected StoppingPlaceReader(@Nullable Matcher<List<PtVehicleData.StoppingPlace>> matcher) {
-        super(matcher);
+    public StoppingPlaceReader(boolean legacyMode) {
+        super(null);
+        this.legacyMode = legacyMode;
     }
 
     @Override
@@ -40,20 +45,31 @@ public class StoppingPlaceReader extends AbstractTraciResultReader<List<PtVehicl
         List<PtVehicleData.StoppingPlace> stoppingPlaces = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             PtVehicleData.StoppingPlace.Builder stoppingPlaceBuilder = new PtVehicleData.StoppingPlace.Builder();
-            stoppingPlaceBuilder.laneId(readStringWitType(in));
+            stoppingPlaceBuilder.laneId(readStringWithType(in));
             stoppingPlaceBuilder.endPos(readDoubleWithType(in));
-            stoppingPlaceBuilder.stoppingPlaceId(readStringWitType(in));
+            stoppingPlaceBuilder.stoppingPlaceId(readStringWithType(in));
             stoppingPlaceBuilder.stopFlags(VehicleStopMode.fromSumoInt(readIntWithType(in)));
             stoppingPlaceBuilder.stopDuration(readDoubleWithType(in));
             stoppingPlaceBuilder.stoppedUntil(readDoubleWithType(in));
-            // startPos of the stop is currently not available in the TraCI subscription result
-            // (see https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html, variable 0x73)
+
+            if (!legacyMode) { // since SUMO 1.23.0, more stop data is returned
+                stoppingPlaceBuilder.startPos(readDoubleWithType(in)); // startpos
+                readDoubleWithType(in); // intended arrival
+                readDoubleWithType(in); // arrival
+                readDoubleWithType(in); // depart
+                readStringWithType(in); // split
+                readStringWithType(in); // join
+                readStringWithType(in); // actType
+                readStringWithType(in); // tripId
+                readStringWithType(in); // lineId
+                readDoubleWithType(in); // speed
+            }
             stoppingPlaces.add(stoppingPlaceBuilder.build());
         }
         return stoppingPlaces;
     }
 
-    private String readStringWitType(DataInputStream in) throws IOException {
+    private String readStringWithType(DataInputStream in) throws IOException {
         readByte(in);
         return readString(in);
     }

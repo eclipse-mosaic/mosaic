@@ -286,7 +286,12 @@ public class TraciTest {
         traci.getVehicleControl().slowDown("veh_0", 3d, 4 * TIME.SECOND);
 
         // ASSERT (by checking if slow down speed is reached after given duration)
-        traci.getSimulationControl().simulateUntil(9 * TIME.SECOND);
+        if (traci.getCurrentVersion().isGreaterOrEqualThan(SumoVersion.SUMO_1_23_x)) {
+            traci.getSimulationControl().simulateUntil(8 * TIME.SECOND);
+        } else {
+            // in previous SUMO versions, there was a bug which would require duration + stepsize to reach wanted speed.
+            traci.getSimulationControl().simulateUntil(9 * TIME.SECOND);
+        }
         assertEquals(3d, traci.getSimulationControl().getLastKnownVehicleData("veh_0").getSpeed(), 0.2d);
     }
 

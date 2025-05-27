@@ -33,8 +33,11 @@ public class TurnCostAnalyzerTest {
     @Test
     public void turnCostsCalculation() {
         //run
-        new TurnCostAnalyzer(testGraph.getGraph(), testGraph.getEncodingManager().wayType())
-                .createTurnCostsForVehicle(testGraph.getEncodingManager().getVehicleEncoding("car"));
+        RoutingProfileManager profileManager = testGraph.getProfileManager();
+        WayTypeEncoder wayTypeEncoder = profileManager.getEncodingManager().getEncodedValue(WayTypeEncoder.KEY, WayTypeEncoder.class);
+
+        new TurnCostAnalyzer(testGraph.getGraph(), wayTypeEncoder)
+                .createTurnCostsForVehicle(profileManager.getRoutingProfile("car").getVehicleEncoding());
 
         //assert
         assertEquals(4d, getTurnCosts(1, 0, 0), 0.4d); //4 seconds for 90deg right turn
@@ -49,8 +52,8 @@ public class TurnCostAnalyzerTest {
 
     private double getTurnCosts(int fromEdge, int viaNode, int toEdge) {
         TurnCostStorage tc = testGraph.getGraph().getTurnCostStorage();
-        BooleanEncodedValue turnRestrictionsEnc = testGraph.getEncodingManager().getVehicleEncoding("car").turnRestriction();
-        DecimalEncodedValue turnCostsEnc = testGraph.getEncodingManager().getVehicleEncoding("car").turnCost();
+        BooleanEncodedValue turnRestrictionsEnc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding().turnRestriction();
+        DecimalEncodedValue turnCostsEnc = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding().turnCost();
 
         boolean isRestricted = tc.get(turnRestrictionsEnc, fromEdge, viaNode, toEdge);
         if (isRestricted) {

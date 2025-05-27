@@ -15,15 +15,12 @@
 
 package org.eclipse.mosaic.lib.routing.graphhopper.util;
 
-import com.graphhopper.config.Profile;
 import com.graphhopper.routing.ev.BooleanEncodedValue;
 import com.graphhopper.routing.ev.DecimalEncodedValue;
 import com.graphhopper.routing.ev.Subnetwork;
 import com.graphhopper.routing.ev.TurnCost;
 import com.graphhopper.routing.ev.TurnRestriction;
-import com.graphhopper.routing.util.DefaultVehicleEncodedValuesFactory;
-import com.graphhopper.routing.util.VehicleEncodedValues;
-import com.graphhopper.util.PMap;
+import com.graphhopper.routing.ev.VehicleAccess;
 
 /**
  * Collection of all {@link com.graphhopper.routing.ev.EncodedValue} implementations
@@ -41,18 +38,14 @@ public class VehicleEncoding {
     private final DecimalEncodedValue speedEnc;
     private final BooleanEncodedValue turnRestrictionEnc;
     private final DecimalEncodedValue turnCostEnc;
-    private final DecimalEncodedValue priorityEnc;
     private final BooleanEncodedValue subnetworkEnc;
 
-    VehicleEncoding(Profile profile) {
-        VehicleEncodedValues vehicle = new DefaultVehicleEncodedValuesFactory()
-                .createVehicleEncodedValues(profile.getVehicle(), new PMap());
-        this.accessEnc = vehicle.getAccessEnc();
-        this.speedEnc = vehicle.getAverageSpeedEnc();
-        this.priorityEnc = vehicle.getPriorityEnc();
-        this.turnRestrictionEnc = TurnRestriction.create(profile.getVehicle());
-        this.turnCostEnc = TurnCost.create(profile.getVehicle(), 255);
-        this.subnetworkEnc = Subnetwork.create(profile.getVehicle());
+    public VehicleEncoding(String vehicleName, DecimalEncodedValue speedEnc) {
+        this.speedEnc = speedEnc;
+        this.accessEnc = VehicleAccess.create(vehicleName);
+        this.turnRestrictionEnc = TurnRestriction.create(vehicleName);
+        this.turnCostEnc = TurnCost.create(vehicleName, 255);
+        this.subnetworkEnc = Subnetwork.create(vehicleName);
     }
 
     public BooleanEncodedValue access() {
@@ -61,10 +54,6 @@ public class VehicleEncoding {
 
     public DecimalEncodedValue speed() {
         return speedEnc;
-    }
-
-    public DecimalEncodedValue priority() {
-        return priorityEnc;
     }
 
     public BooleanEncodedValue turnRestriction() {

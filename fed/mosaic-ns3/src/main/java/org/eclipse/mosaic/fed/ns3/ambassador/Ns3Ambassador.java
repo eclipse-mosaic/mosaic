@@ -69,8 +69,8 @@ public class Ns3Ambassador extends AbstractNetworkAmbassador {
     public DockerFederateExecutor createDockerFederateExecutor(String imageName, OperatingSystem os) {
         this.dockerFederateExecutor = new DockerFederateExecutor(
                 imageName,
-                "ns3/scratch",
-                "/home/mosaic/bin/fed/ns3/scratch"
+                "ns3config",
+                "/home/mosaic/bin/fed/ns3/ns3config"
         );
         return dockerFederateExecutor;
     }

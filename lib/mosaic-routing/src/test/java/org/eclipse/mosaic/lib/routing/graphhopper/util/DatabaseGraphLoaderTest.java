@@ -78,7 +78,7 @@ public class DatabaseGraphLoaderTest {
         assertEquals("#routes", 1, database.getRoutes().size());
 
         //run
-        reader.initialize(g, testGraph.getEncodingManager(), mapper);
+        reader.initialize(g, testGraph.getProfileManager(), mapper);
         reader.loadGraph();
 
         //assert
@@ -93,8 +93,8 @@ public class DatabaseGraphLoaderTest {
         int con3_2_3 = mapper.fromConnection(database.getConnection("3_2_3"));
         int con3_3_2 = mapper.fromConnection(database.getConnection("3_3_2"));
 
-        VehicleEncoding vehicleEncoding = testGraph.getEncodingManager().getVehicleEncoding("car");
-        WayTypeEncoder wayTypeEnc = testGraph.getEncodingManager().wayType();
+        VehicleEncoding vehicleEncoding = testGraph.getProfileManager().getRoutingProfile("car").getVehicleEncoding();
+        WayTypeEncoder wayTypeEnc = testGraph.getProfileManager().getEncodingManager().getEncodedValue(WayTypeEncoder.KEY, WayTypeEncoder.class);
 
         EdgeFilter outFilter = AccessFilter.outEdges(vehicleEncoding.access());
 
