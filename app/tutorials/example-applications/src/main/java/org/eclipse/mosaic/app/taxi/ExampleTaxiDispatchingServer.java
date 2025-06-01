@@ -48,24 +48,21 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     public void onTaxiDataUpdate(List<TaxiVehicleData> taxis, List<TaxiReservation> taxiReservations) {
 
         // select all empty taxis
-        List<String> emptyTaxis = new ArrayList<>();
-        for (TaxiVehicleData taxi : taxis) {
-            if (taxi.getState() == TaxiVehicleData.EMPTY_TAXIS) {
-                emptyTaxis.add(taxi.getId());
-            }
-        }
+        List<String> emptyTaxis = taxis.stream()
+            .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TAXIS)
+            .map(TaxiVehicleData::getId)
+            .collect(Collectors.toList());
 
         // select all unassigned reservations
-        List<String> unassignedReservations = new ArrayList<>();
-        for (TaxiReservation reservation : taxiReservations) {
-            if (reservation.getReservationState() == TaxiReservation.ONLY_NEW_RESERVATIONS || reservation.getReservationState() == TaxiReservation.ALREADY_RETRIEVED_RESERVATIONS) {
-                unassignedReservations.add(reservation.getId());
-            }
-        }
+        List<String> unassignedReservations = taxiReservations.stream()
+            .filter(taxiRes -> taxiRes.getReservationState() == TaxiReservation.ONLY_NEW_RESERVATIONS ||
+                taxiRes.getReservationState() == TaxiReservation.ALREADY_RETRIEVED_RESERVATIONS)
+            .map(TaxiReservation::getId)
+            .toList();
 
-        for (String unassignedReservation:  unassignedReservations) {
+        for (String unassignedReservation: unassignedReservations) {
             if (emptyTaxis.isEmpty()) {
-                continue;
+                break;
             }
             // for each unassigned reservation, just choose an empty taxi randomly
             String emptyTaxi = emptyTaxis.remove(getRandom().nextInt(emptyTaxis.size()));

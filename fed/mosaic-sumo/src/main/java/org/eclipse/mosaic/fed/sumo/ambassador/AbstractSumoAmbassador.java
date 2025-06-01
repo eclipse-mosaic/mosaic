@@ -131,7 +131,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * Implementation of a {@link AbstractFederateAmbassador} for the traffic simulator
- * SUMO. It allows to control the progress of the traffic simulation and
+ * SUMO. It allows controlling the progress of the traffic simulation and
  * publishes {@link VehicleUpdates}.
  */
 @NotThreadSafe

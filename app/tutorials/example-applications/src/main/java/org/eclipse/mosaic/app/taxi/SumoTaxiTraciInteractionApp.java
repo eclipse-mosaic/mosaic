@@ -13,7 +13,7 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.app.tutorial.traci;
+package org.eclipse.mosaic.app.taxi;
 
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
@@ -42,6 +42,9 @@ public class SumoTaxiTraciInteractionApp extends AbstractApplication<VehicleOper
 
 		if(additionalData instanceof TaxiVehicleData taxiVehicleData) {
 			getLog().info("Taxi {} state: {}", getOs().getId(), taxiVehicleData.getState());
+			getLog().info("Customers: {}", String.join(", ", taxiVehicleData.getCustomersToPickUpOrOnBoard()));
+			getLog().info("Occupied distance: {}m", taxiVehicleData.getTotalOccupiedDistanceInMeters());
+			getLog().info("Occupied time: {}s", taxiVehicleData.getTotalOccupiedTimeInSeconds());
 		}
 	}
 

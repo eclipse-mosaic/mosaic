@@ -1,8 +1,8 @@
 {
   "prototypes": [
     {
-      "name": "TaxiVeh",
-      "applications": [ "org.eclipse.mosaic.app.tutorial.traci.SumoTaxiTraciInteractionApp" ]
+      "name": "TaxiSumo",
+      "applications": [ "org.eclipse.mosaic.app.taxi.SumoTaxiTraciInteractionApp" ]
     },
     {
       "name": "RandomCar"

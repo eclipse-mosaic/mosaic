@@ -119,6 +119,7 @@
         <version.sqlite-jdbc>3.42.0.0</version.sqlite-jdbc><!-- 3.42.0.0 is approved in #9089 -->
         <!-- note, when upgrading, the field LibSumoAmbassador#VALID_LIBSUMO_VERSIONS needs to be changed too -->
         <version.libsumo>1.23.0</version.libsumo>
+        <version.spring-web>6.2.7</version.spring-web>
     </properties>
 
     <dependencies>

@@ -77,7 +77,6 @@ public class SimulationFacade {
     private final TrafficLightSubscribe trafficLightSubscribe;
 
     private final VehicleGetTaxiFleet vehicleGetTaxiFleet;
-    private final PersonGetTaxiReservations personGetTaxiReservations;
 
     private final LaneSetAllow laneSetAllow;
     private final LaneSetDisallow laneSetDisallow;
@@ -94,7 +93,6 @@ public class SimulationFacade {
      * and reset to {@code null} after each time step.
      */
     private List<String> currentTeleportingList;
-    private final List<TaxiReservation> customerReservationsList = new ArrayList<>();
 
     private static class SumoVehicleState {
         private final String id;
@@ -154,7 +152,6 @@ public class SimulationFacade {
 
 
         this.vehicleGetTaxiFleet = bridge.getCommandRegister().getOrCreate(VehicleGetTaxiFleet.class);
-        this.personGetTaxiReservations = bridge.getCommandRegister().getOrCreate(PersonGetTaxiReservations.class);
 
         this.laneSetAllow = bridge.getCommandRegister().getOrCreate(LaneSetAllow.class);
         this.laneSetDisallow = bridge.getCommandRegister().getOrCreate(LaneSetDisallow.class);
@@ -214,15 +211,6 @@ public class SimulationFacade {
             throw new InternalFederateException(String.format("Could not add vehicle %s", vehicleId), e);
         }
     }
-
-    public List<TaxiReservation> getTaxiReservations(int reservationState) throws InternalFederateException {
-        try {
-            return personGetTaxiReservations.execute(bridge, reservationState);
-        }
-		catch(CommandException e) {
-			throw new InternalFederateException(String.format("Could not retrieve taxi reservations for state %s", reservationState), e);
-		}
-	}
 
     /**
      * Subscribes for the given vehicle. It will then be included in the VehicleUpdates result of {@link #simulateStep}.
@@ -665,8 +653,6 @@ public class SimulationFacade {
         );
     }
 
-
-
     private List<TaxiVehicleData> collectTaxiData() throws InternalFederateException {
         final List<String> allTaxis = getTaxiFleet(TaxiVehicleData.ALL_TAXIS);
         final List<TaxiVehicleData> taxiData = new ArrayList<>();
@@ -715,9 +701,8 @@ public class SimulationFacade {
     }
 
     private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {
-        return new ArrayList<>(getTaxiReservations(TaxiReservation.STATE_ALL_RESERVATIONS));
+        return new ArrayList<>(bridge.getPersonControl().getTaxiReservations(TaxiReservation.STATE_ALL_RESERVATIONS));
     }
-
 
     /**
      * Creates an immutable object holding front and rear distance sensor data based on leading vehicle information.

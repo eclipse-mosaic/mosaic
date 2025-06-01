@@ -1,7 +1,7 @@
 {
     "simulation": {
         "id": "theodorHeuss",
-        "duration": "700s",
+        "duration": "400s",
         "randomSeed": 268965854,
         "projection": {
             "centerCoordinates": {
