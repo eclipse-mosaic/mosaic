@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class CommandLineParserTest {
+public class ParameterParserTest {
 
     @Test
     public void parseCLI() throws ParseException {
@@ -36,26 +36,26 @@ public class CommandLineParserTest {
         };
 
         //RUN
-        final TestParameters params = new CommandLineParser<>(TestParameters.class).parseArguments(args, new TestParameters());
+        final TestParameters params = new ParameterParser<>(TestParameters.class).parseArguments(args, new TestParameters());
 
         //ASSERT
         assertEquals("myUserId", params.userid);
         assertEquals("path/to/config", params.configurationPath);
-        assertEquals("0", params.watchdoginterval);
+        assertEquals(0, params.watchdogInterval);
         assertTrue(params.startVisualizer);
 
         assertNull(params.scenarioName);
     }
 
     @Test
-    public void transformToArguments() throws ParseException {
+    public void transformToArguments() {
         final TestParameters parameters = new TestParameters();
         parameters.configurationPath = "path/to/config";
-        parameters.watchdoginterval = "30";
+        parameters.watchdogInterval = 30;
         parameters.startVisualizer = true;
 
         //RUN
-        List<String> arguments = new CommandLineParser<>(TestParameters.class).transformToArguments(parameters);
+        List<String> arguments = new ParameterParser<>(TestParameters.class).transformToArguments(parameters);
 
         //ASSERT
         assertEquals("--config", arguments.get(0));

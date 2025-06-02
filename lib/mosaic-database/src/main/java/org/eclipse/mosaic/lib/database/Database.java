@@ -497,6 +497,16 @@ public class Database {
         }
 
         /**
+         * Removes all the buildings from database.
+         *
+         * @return the builder for easy cascading
+         */
+        public Builder clearBuildings() {
+            database.buildings.clear();
+            return this;
+        }
+
+        /**
          * Adds a new property to the database.
          * Adding a property whose key is already in the list will replace the previous value.
          *

@@ -1,0 +1,64 @@
+/*
+ * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contact: mosaic@fokus.fraunhofer.de
+ */
+
+package org.eclipse.mosaic.lib.util.cli;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Annotation to declare parameters for the command line.
+ */
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Parameter {
+
+    /**
+     * The short option name.
+     */
+    String shortOption() default "";
+
+    /**
+     * The long option name.
+     */
+    String longOption();
+
+    /**
+     * The description of the parameter used for help messages.
+     */
+    String description();
+
+    /**
+     * The name of the argument for this option. If not given, the argument of the parameter option will be ignored.
+     */
+    String argName() default "";
+
+    /**
+     * The default value set at the annotated field, if an argName is specified, but is optional.
+     */
+    String defaultArgValue() default "";
+
+    /**
+     * The group to which this parameter option belongs to. Within a group, only one option must be used at most.
+     */
+    String group() default "";
+
+    /**
+     * Defines, if this parameter (or group, if set) is a required parameter.
+     */
+    boolean isRequired() default false;
+}

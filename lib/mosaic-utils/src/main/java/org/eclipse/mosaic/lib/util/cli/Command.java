@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -21,22 +21,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to declare parameters for the command line.
+ * Annotation to declare commands to be selected via the command line.
  */
-@Target(ElementType.FIELD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CommandLineOption {
+public @interface Command {
 
-    String shortOption() default "";
+    /**
+     * The identifier of the command. Must match the pattern "command", or "command subcommand"
+     */
+    String command();
 
-    String longOption();
-
+    /**
+     * The description of the command used for help messages.
+     */
     String description();
-
-    String argName() default "";
-
-    String group() default "";
-
-    boolean isRequired() default false;
 
 }

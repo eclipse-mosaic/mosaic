@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.starter;
 
-import org.eclipse.mosaic.lib.util.cli.CommandLineParser;
+import org.eclipse.mosaic.lib.util.cli.ParameterParser;
 import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
 import org.eclipse.mosaic.rti.MosaicComponentProvider;
 import org.eclipse.mosaic.rti.api.MosaicVersion;
@@ -153,7 +153,7 @@ public class MosaicStarter {
     }
 
     protected MosaicParameters readParametersFromCli(String[] args) throws ExecutionException {
-        final CommandLineParser<MosaicParameters> cli = new CommandLineParser<>(MosaicParameters.class)
+        final ParameterParser<MosaicParameters> cli = new ParameterParser<>(MosaicParameters.class)
                 .usageHint("mosaic -c <CONFIG-FILE> \n       mosaic -s <SCENARIO> \n\n", null, null);
         try {
             final MosaicParameters params = cli.parseArguments(args, new MosaicParameters());
@@ -270,7 +270,7 @@ public class MosaicStarter {
      *
      * @param cli command line into a parameter object.
      */
-    protected void printUsage(CommandLineParser<?> cli, String error) {
+    protected void printUsage(ParameterParser<?> cli, String error) {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8))) {
             cli.printHelp(writer);
