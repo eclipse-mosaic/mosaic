@@ -171,7 +171,7 @@ public class CommandParser {
             return;
         }
 
-        StringBuilder generalUsage = new StringBuilder(this.usageHint).append(" command [ARGUMENTS] [OPTIONS]\n\nAvailable commands:");
+        StringBuilder generalUsage = new StringBuilder(this.usageHint).append(" command <ARGUMENT(S)> [OPTION(S)]\n\nAvailable commands:");
         commandExecutables.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(
                 e -> generalUsage.append("\n ").append(e.getValue().generateUsage())
         );
