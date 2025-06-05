@@ -62,8 +62,8 @@ def setup_db():
 
     # create new table
     create_table_query = ("CREATE TABLE stop (id bigint AUTO_INCREMENT PRIMARY KEY, bearing integer, "
-                          "latitude double precision NOT NULL, longitude double precision NOT NULL, name character varying(255), "
-                          "no character varying(255), type character varying(255), capacity integer NOT NULL)")
+                          "latitude double NOT NULL, longitude double NOT NULL, name varchar(255), "
+                          "no varchar(255), type varchar(255), capacity integer NOT NULL)")
     mycursor.execute(create_table_query)
 
     return mydb
