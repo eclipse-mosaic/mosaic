@@ -15,13 +15,13 @@
 	<vehicle id="second_taxi" type="TaxiSumo" route="2" depart="0.00" line="taxi"/>
 	<vehicle id="third_taxi" type="TaxiSumo" route="3" depart="5.00" line="taxi"/>
 
-	<person id="personFirstTaxi" depart="0.00" color="green">
-		<ride from="1092670150_27559591_28997950" busStop="busStopFirst" lines="taxi"/>
+	<person id="p1" depart="0.00" color="green">
+		<ride from="4515866_27560039_27559811" busStop="bs3" lines="taxi"/>
 	</person>
-	<person id="personSecondTaxi" depart="0.00" color="red">
+	<person id="p2" depart="0.00" color="red">
 		<ride from="38763678_27559628_27559627" to="493264401_27559341_27559334" lines="taxi"/>
 	</person>
-	<person id="personThirdTaxi" depart="5.00" color="blue">
+	<person id="p3" depart="5.00" color="blue">
 		<ride from="1092670137_28997950_28997949" to="4515882_27559329_459663522" lines="taxi"/>
 	</person>
 </routes>

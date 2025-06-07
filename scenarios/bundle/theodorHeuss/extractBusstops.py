@@ -1,7 +1,7 @@
 from lxml import etree
 from pyproj import Transformer, CRS
 import math
-import mysql.connector
+from setupTables import setup_db_connection
 
 # === Input files ===
 # Path to your files
@@ -45,33 +45,12 @@ def get_point_along_shape(shape, distance):
         distance -= seg_len
     return shape[-1]  # fallback to last point
 
-# === Connect to the DB and create table ===
-def setup_db():
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="kabina",
-        password="kaboot",
-        database="kabina"
-    )
-
-    mycursor = mydb.cursor()
-
-    # drop existing table
-    drop_table_query = "DROP TABLE IF EXISTS stop"
-    mycursor.execute(drop_table_query)
-
-    # create new table
-    create_table_query = ("CREATE TABLE stop (id bigint AUTO_INCREMENT PRIMARY KEY, bearing integer, "
-                          "latitude double NOT NULL, longitude double NOT NULL, name varchar(255), "
-                          "no varchar(255), type varchar(255), capacity integer NOT NULL)")
-    mycursor.execute(create_table_query)
-
-    return mydb
-
 # === Insert the bus stop into the DB ===
 def add_bus_stop_to_db(stop, lat, lon, mydb):
-    insert_values_query = "INSERT INTO stop (bearing, latitude, longitude, name, no, type, capacity) VALUES (0, %s, %s, %s, %s, NULL, %s)"
-    values = (lat, lon, stop.attrib["name"], stop.attrib["id"], stop.attrib["personCapacity"])
+    insert_values_query = ("INSERT INTO stop (bearing, latitude, longitude, name, type, capacity, sumo_edge) "
+                           "VALUES (0, %s, %s, %s, NULL, %s, %s)")
+    sumo_edge = stop.attrib["lane"]
+    values = (lat, lon, stop.attrib["name"], stop.attrib["personCapacity"], sumo_edge[:len(sumo_edge) - 2])
     mydb.cursor().execute(insert_values_query, values)
     mydb.commit()
 
@@ -79,7 +58,7 @@ def add_bus_stop_to_db(stop, lat, lon, mydb):
 add_tree = etree.parse(ADD_FILE)
 bus_stops = add_tree.findall(".//busStop")
 
-mydb = setup_db()
+mydb = setup_db_connection()
 print("=== Bus Stop Coordinates ===")
 for stop in bus_stops:
     stop_id = stop.attrib["id"]
@@ -98,3 +77,5 @@ for stop in bus_stops:
 
     print(f"Bus Stop ID: {stop_id} Lat/Lon: ({lat:.6f}, {lon:.6f})")
     add_bus_stop_to_db(stop, lat, lon, mydb)
+
+mydb.close()

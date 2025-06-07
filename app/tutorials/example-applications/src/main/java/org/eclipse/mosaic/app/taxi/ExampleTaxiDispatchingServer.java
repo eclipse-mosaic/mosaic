@@ -18,7 +18,6 @@ package org.eclipse.mosaic.app.taxi;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.TaxiServerApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.ServerOperatingSystem;
-import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
@@ -27,16 +26,20 @@ import org.eclipse.mosaic.lib.routing.RoutingPosition;
 import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
-import com.google.common.collect.Lists;
-
-import java.util.ArrayList;
+import java.sql.*;
 import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
+    public static final int MAX_DETOUR_DISPATCHER_CONFIG = 70;
+    public static final int MAX_WAIT_DISPATCHER_CONFIG = 15;
+    private static Connection dbConnection;
+
     @Override
     public void onStartup() {
-
+        connectToDatabase();
     }
 
     @Override
@@ -54,40 +57,131 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             .collect(Collectors.toList());
 
         // select all unassigned reservations
-        List<String> unassignedReservations = taxiReservations.stream()
+        List<TaxiReservation> unassignedReservations = taxiReservations.stream()
             .filter(taxiRes -> taxiRes.getReservationState() == TaxiReservation.ONLY_NEW_RESERVATIONS ||
                 taxiRes.getReservationState() == TaxiReservation.ALREADY_RETRIEVED_RESERVATIONS)
-            .map(TaxiReservation::getId)
             .toList();
 
-        for (String unassignedReservation: unassignedReservations) {
-            if (emptyTaxis.isEmpty()) {
-                break;
-            }
-            // for each unassigned reservation, just choose an empty taxi randomly
-            String emptyTaxi = emptyTaxis.remove(getRandom().nextInt(emptyTaxis.size()));
-
-            //  and send the dispatch command to SumoAmbassador via TaxiDispatch interaction
-            getOs().sendInteractionToRti(
-                    new TaxiDispatch(getOs().getSimulationTime(), emptyTaxi, Lists.newArrayList(unassignedReservation))
-            );
-        }
-
-        /**
-         * RoutingResponse response = getOs().getRoutingModule().calculateRoutes(
-         *                 new RoutingPosition(GeoPoint.latLon(0, 0)),
-         *                 new RoutingPosition(GeoPoint.latLon(0, 0)),
-         *                 new RoutingParameters()
-         *         );
-         *         double length = response.getBestRoute().getLength();
-         *         double time = response.getBestRoute().getTime();
-         */
-
-
+        saveReservationsInDb(unassignedReservations);
+//
+//        for (TaxiReservation unassignedReservation: unassignedReservations) {
+//            if (emptyTaxis.isEmpty()) {
+//                break;
+//            }
+//            // for each unassigned reservation, just choose an empty taxi randomly
+//            String emptyTaxi = emptyTaxis.remove(getRandom().nextInt(emptyTaxis.size()));
+//
+//            //  and send the dispatch command to SumoAmbassador via TaxiDispatch interaction
+//            getOs().sendInteractionToRti(
+//                    new TaxiDispatch(getOs().getSimulationTime(), emptyTaxi, Lists.newArrayList(unassignedReservation.getId()))
+//            );
+//
+//        }
     }
 
     @Override
     public void processEvent(Event event) throws Exception {
 
+    }
+
+    private void saveReservationsInDb(List<TaxiReservation> newTaxiReservations) {
+        try {
+            PreparedStatement insertReservations = dbConnection.prepareStatement(
+                "INSERT INTO taxi_order (from_stand, to_stand, max_loss, max_wait, shared," +
+                " status, received, distance, customer_id) VALUES (?,?,?,?,true,0,?,?,?)");
+
+            for(TaxiReservation reservation: newTaxiReservations) {
+                List<Integer> busStopsIndices = getBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
+                assert busStopsIndices.size() == 2;
+
+                insertReservations.setInt(1, busStopsIndices.get(0));
+                insertReservations.setInt(2, busStopsIndices.get(1));
+                insertReservations.setInt(3, MAX_DETOUR_DISPATCHER_CONFIG);
+                insertReservations.setInt(4, MAX_WAIT_DISPATCHER_CONFIG);
+                insertReservations.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+                insertReservations.setInt(6,
+                    calculateDistanceInSecondsBetweenTwoStops(reservation.getFromEdge(), reservation.getToEdge()));
+                insertReservations.setLong(7, parsePerson(reservation.getPersonList()));
+                insertReservations.addBatch();
+                insertReservations.clearParameters();
+            }
+
+            int[] result = insertReservations.executeBatch();
+        } catch (SQLException e) {
+            getLog().warn("Could not execute insert reservations query", e);
+        }
+    }
+
+    private List<Integer> getBusStopsIndicesByEdge(String fromEdgeId, String toEdgeId) {
+        try {
+            PreparedStatement selectStopsByEdgeId = dbConnection.prepareStatement(
+                "SELECT id, sumo_edge FROM stop WHERE sumo_edge IN (?, ?)");
+
+            selectStopsByEdgeId.setString(1, fromEdgeId);
+            selectStopsByEdgeId.setString(2, toEdgeId);
+            ResultSet selectedStops = selectStopsByEdgeId.executeQuery();
+            assert selectedStops.getFetchSize() == 2;
+
+            long fromStop = 0L;
+            long toStop = 0L;
+            if(selectedStops.next()) {
+                if(fromEdgeId.equals(selectedStops.getString("sumo_edge"))) {
+                    fromStop = selectedStops.getLong("id");
+                    selectedStops.next();
+                    toStop = selectedStops.getLong("id");
+                }
+                else {
+                    toStop = selectedStops.getLong("id");
+                    selectedStops.next();
+                    fromStop = selectedStops.getLong("id");
+                }
+            }
+
+            return List.of((int)fromStop, (int)toStop);
+        } catch (SQLException e) {
+            getLog().warn("Could not execute select stops query", e);
+        }
+
+        return List.of();
+    }
+
+    private long parsePerson(List<String> personList) {
+        String person = personList.getFirst();
+        person = person.substring(1);
+        return Long.parseLong(person);
+    }
+
+    // TODO check if this is good enough for the dispatcher
+    private int calculateDistanceInSecondsBetweenTwoStops(String fromStopEdge,  String toStopEdge) {
+        GeoPoint startPoint = getOs().getRoutingModule()
+            .getConnection(fromStopEdge)
+            .getStartNode()
+            .getPosition();
+        GeoPoint finalPoint = getOs().getRoutingModule()
+            .getConnection(toStopEdge)
+            .getEndNode()
+            .getPosition();
+
+        RoutingResponse response = getOs().getRoutingModule().calculateRoutes(
+            new RoutingPosition(startPoint),
+            new RoutingPosition(finalPoint),
+            new RoutingParameters());
+        double time = Math.ceil(response.getBestRoute().getTime());
+
+        return (int) time;
+    }
+
+    private void connectToDatabase() {
+        Properties properties = new Properties();
+        properties.setProperty("user", "kabina");
+        properties.setProperty("password", "kaboot");
+        properties.setProperty("connectTimeout", "5000");
+
+        try {
+            dbConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/kabina?serverTimezone=UTC", properties);
+            getLog().info("Connected to database successfully");
+        } catch (SQLException e) {
+            getLog().warn("Could not connect to database", e);
+        }
     }
 }

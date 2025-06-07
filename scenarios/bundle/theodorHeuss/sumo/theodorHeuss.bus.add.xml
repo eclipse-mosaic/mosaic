@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
-    <busStop id="busStopFirst" name="Reichsstrasse" lane="4515866_27560039_27559811_0" startPos="2" endPos="7" personCapacity="2"/>
+    <busStop id="bs1" name="Reichsstrasse" lane="4515866_27560039_27559811_0" startPos="2" endPos="7" personCapacity="2"/>
+    <busStop id="bs2" name="Eichenallee" lane="4515871_27559329_27559344_0" startPos="15" endPos="20" personCapacity="6"/>
+    <busStop id="bs3" name="Eschenallee" lane="4515876_27559583_27559588_0" startPos="30" endPos="35" personCapacity="4"/>
 </additional>
