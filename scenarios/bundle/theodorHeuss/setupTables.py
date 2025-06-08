@@ -2,7 +2,8 @@ import sys
 from mysql import connector
 from mysql.connector.pooling import PooledMySQLConnection
 
-TABLE_NAMES_ORDER = ['taxi_order', 'leg', 'route', 'cab', 'customer', 'freetaxi_order', 'stat', 'stop']
+DROP_TABLE_NAMES_ORDER = ['taxi_order', 'leg', 'route', 'cab', 'customer', 'freetaxi_order', 'stat', 'stop']
+DELETE_TABLE_NAMES_ORDER = ['taxi_order', 'leg', 'route', 'cab', 'customer', 'freetaxi_order', 'stop']
 my_db_connection: PooledMySQLConnection
 
 # === Connect to the DB and create table ===
@@ -22,7 +23,7 @@ def setup_db_connection():
 
 def drop_tables():
     cursor = my_db_connection.cursor()
-    for table_name in TABLE_NAMES_ORDER:
+    for table_name in DROP_TABLE_NAMES_ORDER:
         # drop existing table
         cursor.execute("DROP TABLE IF EXISTS {}".format(table_name))
 
@@ -70,73 +71,78 @@ def reset_tables():
     cursor.execute("UPDATE stat SET int_val=0")
     my_db_connection.commit()
 
-    for table_name in TABLE_NAMES_ORDER:
-        if table_name == 'stat':
-            continue
+    for table_name in DELETE_TABLE_NAMES_ORDER:
+        print("Current table {}".format(table_name))
         cursor.execute("DELETE FROM {}".format(table_name))
+        my_db_connection.commit()
+        cursor.execute("ALTER TABLE {} AUTO_INCREMENT = 1".format(table_name))
         my_db_connection.commit()
     print("All tables reset!")
 
-# === Start of script ===
-if len(sys.argv) != 2:
-    raise Exception("No or more than one argument given. Choose between '0' and '1'!")
+def main():
+    # === Start of script ===
+    if len(sys.argv) != 2:
+        raise Exception("No or more than one argument given. Choose between '0' and '1'!")
 
-setup_db_connection()
+    setup_db_connection()
 
-if sys.argv[1] == "0":
-    reset_tables()
-    sys.exit("Stopping script")
-elif sys.argv[1] == "1":
-    drop_tables()
-else:
-    raise Exception("Invalid argument given. Choose between '0' and '1'!")
+    if sys.argv[1] == "0":
+        reset_tables()
+        sys.exit(0)
+    elif sys.argv[1] == "1":
+        drop_tables()
+    else:
+        raise Exception("Invalid argument given. Choose between '0' and '1'!")
 
-# CAB_TABLE
-create_cab_table_query = ("CREATE TABLE cab (id BIGINT PRIMARY KEY, location INTEGER NOT NULL, name VARCHAR(255), "
-                          "status INTEGER NOT NULL, seats INTEGER NOT NULL)")
-create_table_by_query(create_cab_table_query, 'cab')
+    # CAB_TABLE
+    create_cab_table_query = ("CREATE TABLE cab (id BIGINT PRIMARY KEY AUTO_INCREMENT, location INTEGER NOT NULL, name VARCHAR(255), "
+                              "status INTEGER NOT NULL, seats INTEGER NOT NULL)")
+    create_table_by_query(create_cab_table_query, 'cab')
 
-# CUSTOMER_TABLE
-create_customer_table_query = "CREATE TABLE customer (id bigint AUTO_INCREMENT PRIMARY KEY, sumo_id varchar(255) NOT NULL)"
-create_table_by_query(create_customer_table_query, 'customer')
+    # CUSTOMER_TABLE
+    create_customer_table_query = "CREATE TABLE customer (id bigint AUTO_INCREMENT PRIMARY KEY, sumo_id varchar(255) NOT NULL)"
+    create_table_by_query(create_customer_table_query, 'customer')
 
-# ROUTE_TABLE
-create_route_table_query = ("CREATE TABLE route (id bigint PRIMARY KEY, status integer NOT NULL, cab_id bigint NOT NULL, "
-                            "locked boolean, FOREIGN KEY (cab_id) REFERENCES cab(id))")
-create_table_by_query(create_route_table_query, 'route')
+    # ROUTE_TABLE
+    create_route_table_query = ("CREATE TABLE route (id bigint PRIMARY KEY, status integer NOT NULL, cab_id bigint NOT NULL, "
+                                "locked boolean, FOREIGN KEY (cab_id) REFERENCES cab(id))")
+    create_table_by_query(create_route_table_query, 'route')
 
-# LEG_TABLE
-create_leg_table_query = ("CREATE TABLE leg (id bigint PRIMARY KEY, completed timestamp, distance integer NOT NULL, "
-                          "from_stand integer NOT NULL, place integer NOT NULL, started timestamp, status integer NOT NULL, "
-                          "reserve integer NOT NULL, passengers integer NOT NULL, to_stand integer NOT NULL, route_id bigint NOT NULL, "
-                          "FOREIGN KEY (route_id) REFERENCES route(id))")
-create_table_by_query(create_leg_table_query, 'leg')
+    # LEG_TABLE
+    create_leg_table_query = ("CREATE TABLE leg (id bigint PRIMARY KEY, completed timestamp, distance integer NOT NULL, "
+                              "from_stand integer NOT NULL, place integer NOT NULL, started timestamp, status integer NOT NULL, "
+                              "reserve integer NOT NULL, passengers integer NOT NULL, to_stand integer NOT NULL, route_id bigint NOT NULL, "
+                              "FOREIGN KEY (route_id) REFERENCES route(id))")
+    create_table_by_query(create_leg_table_query, 'leg')
 
-# TAXI_ORDER_TABLE
-create_taxi_order_table_query = ("CREATE TABLE taxi_order (id bigint PRIMARY KEY AUTO_INCREMENT, at_time timestamp, completed timestamp, "
-                                 "distance integer NOT NULL, eta integer, from_stand integer NOT NULL, in_pool boolean, max_loss integer NOT NULL, "
-                                 "max_wait integer NOT NULL, received timestamp, shared boolean NOT NULL, started timestamp, status integer, "
-                                 "to_stand integer NOT NULL, cab_id bigint, customer_id bigint, leg_id bigint, route_id bigint, "
-                                 "FOREIGN KEY (cab_id) REFERENCES cab(id), FOREIGN KEY (customer_id) REFERENCES customer(id), "
-                                 "FOREIGN KEY (leg_id) REFERENCES leg(id), FOREIGN KEY (route_id) REFERENCES route(id))")
-create_table_by_query(create_taxi_order_table_query, 'taxi_order')
+    # TAXI_ORDER_TABLE
+    create_taxi_order_table_query = ("CREATE TABLE taxi_order (id bigint PRIMARY KEY AUTO_INCREMENT, at_time timestamp, completed timestamp, "
+                                     "distance integer NOT NULL, eta integer, from_stand integer NOT NULL, in_pool boolean, max_loss integer NOT NULL, "
+                                     "max_wait integer NOT NULL, received timestamp, shared boolean NOT NULL, started timestamp, status integer, "
+                                     "to_stand integer NOT NULL, cab_id bigint, customer_id bigint, leg_id bigint, route_id bigint, "
+                                     "FOREIGN KEY (cab_id) REFERENCES cab(id), FOREIGN KEY (customer_id) REFERENCES customer(id), "
+                                     "FOREIGN KEY (leg_id) REFERENCES leg(id), FOREIGN KEY (route_id) REFERENCES route(id))")
+    create_table_by_query(create_taxi_order_table_query, 'taxi_order')
 
-# FREETAXI_ORDER_TABLE
-create_freetaxi_order_table_query = ("CREATE TABLE freetaxi_order (id bigint PRIMARY KEY AUTO_INCREMENT, from_stand integer NOT NULL, "
-                                     "to_stand integer NOT NULL, max_loss integer NOT NULL, received timestamp, shared boolean NOT NULL, "
-                                     "cab_id bigint, customer_id bigint)")
-create_table_by_query(create_freetaxi_order_table_query, 'freetaxi_order')
+    # FREETAXI_ORDER_TABLE
+    create_freetaxi_order_table_query = ("CREATE TABLE freetaxi_order (id bigint PRIMARY KEY AUTO_INCREMENT, from_stand integer NOT NULL, "
+                                         "to_stand integer NOT NULL, max_loss integer NOT NULL, received timestamp, shared boolean NOT NULL, "
+                                         "cab_id bigint, customer_id bigint)")
+    create_table_by_query(create_freetaxi_order_table_query, 'freetaxi_order')
 
-# STAT_TABLE
-create_stat_table_query = "CREATE TABLE stat (name character varying(255) PRIMARY KEY, int_val integer NOT NULL)"
-create_table_by_query(create_stat_table_query, 'stat')
-fill_stat_table()
+    # STAT_TABLE
+    create_stat_table_query = "CREATE TABLE stat (name character varying(255) PRIMARY KEY, int_val integer NOT NULL)"
+    create_table_by_query(create_stat_table_query, 'stat')
+    fill_stat_table()
 
-# STOP_TABLE
-create_stop_table_query = ("CREATE TABLE stop (id bigint AUTO_INCREMENT PRIMARY KEY, bearing integer, "
-                           "latitude double NOT NULL, longitude double NOT NULL, name varchar(255), "
-                           "no varchar(255), type varchar(255), capacity integer NOT NULL, sumo_edge varchar(255))")
-create_table_by_query(create_stop_table_query, 'stop')
+    # STOP_TABLE
+    create_stop_table_query = ("CREATE TABLE stop (id bigint AUTO_INCREMENT PRIMARY KEY, bearing integer, "
+                               "latitude double NOT NULL, longitude double NOT NULL, name varchar(255), "
+                               "no varchar(255), type varchar(255), capacity integer NOT NULL, sumo_edge varchar(255))")
+    create_table_by_query(create_stop_table_query, 'stop')
 
-print('All tables created!')
-my_db_connection.close()
+    print('All tables created!')
+    my_db_connection.close()
+
+if __name__ == "__main__":
+    main()

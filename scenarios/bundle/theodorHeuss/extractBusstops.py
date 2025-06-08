@@ -1,7 +1,10 @@
 from lxml import etree
+from mysql.connector.pooling import PooledMySQLConnection
 from pyproj import Transformer, CRS
 import math
-from setupTables import setup_db_connection
+import setupTables
+
+my_db_connection: PooledMySQLConnection
 
 # === Input files ===
 # Path to your files
@@ -46,19 +49,21 @@ def get_point_along_shape(shape, distance):
     return shape[-1]  # fallback to last point
 
 # === Insert the bus stop into the DB ===
-def add_bus_stop_to_db(stop, lat, lon, mydb):
+def add_bus_stop_to_db(stop, lat, lon):
     insert_values_query = ("INSERT INTO stop (bearing, latitude, longitude, name, type, capacity, sumo_edge) "
                            "VALUES (0, %s, %s, %s, NULL, %s, %s)")
     sumo_edge = stop.attrib["lane"]
     values = (lat, lon, stop.attrib["name"], stop.attrib["personCapacity"], sumo_edge[:len(sumo_edge) - 2])
-    mydb.cursor().execute(insert_values_query, values)
-    mydb.commit()
+    my_db_connection.cursor().execute(insert_values_query, values)
+    my_db_connection.commit()
 
 # === Parse bus stops and compute coordinates ===
 add_tree = etree.parse(ADD_FILE)
 bus_stops = add_tree.findall(".//busStop")
 
-mydb = setup_db_connection()
+setupTables.setup_db_connection()
+my_db_connection = setupTables.my_db_connection
+
 print("=== Bus Stop Coordinates ===")
 for stop in bus_stops:
     stop_id = stop.attrib["id"]
@@ -76,6 +81,7 @@ for stop in bus_stops:
     lon, lat = transformer.transform(x_utm, y_utm)
 
     print(f"Bus Stop ID: {stop_id} Lat/Lon: ({lat:.6f}, {lon:.6f})")
-    add_bus_stop_to_db(stop, lat, lon, mydb)
+    add_bus_stop_to_db(stop, lat, lon)
 
-mydb.close()
+print("Bus stops inserted into the DB!")
+my_db_connection.close()
