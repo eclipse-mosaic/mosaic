@@ -2,6 +2,7 @@ import sys
 from mysql import connector
 from mysql.connector.pooling import PooledMySQLConnection
 
+TABLE_NAMES_ORDER = ['taxi_order', 'leg', 'route', 'cab', 'customer', 'freetaxi_order', 'stat', 'stop']
 my_db_connection: PooledMySQLConnection
 
 # === Connect to the DB and create table ===
@@ -17,11 +18,11 @@ def setup_db_connection():
     if 'my_db_connection' not in globals():
         raise Exception("DB connection was not initialized")
     else:
-        print("DB connection initialized")
+        print("DB connection initialized!")
 
-def drop_tables_by_name(table_names):
+def drop_tables():
     cursor = my_db_connection.cursor()
-    for table_name in table_names:
+    for table_name in TABLE_NAMES_ORDER:
         # drop existing table
         cursor.execute("DROP TABLE IF EXISTS {}".format(table_name))
 
@@ -68,20 +69,12 @@ def reset_tables():
     cursor = my_db_connection.cursor()
     cursor.execute("UPDATE stat SET int_val=0")
     my_db_connection.commit()
-    cursor.execute("DELETE FROM taxi_order")
-    my_db_connection.commit()
-    cursor.execute("DELETE FROM leg")
-    my_db_connection.commit()
-    cursor.execute("DELETE FROM route")
-    my_db_connection.commit()
-    cursor.execute("DELETE FROM cab")
-    my_db_connection.commit()
-    cursor.execute("DELETE FROM customer")
-    my_db_connection.commit()
-    cursor.execute("DELETE FROM freetaxi_order")
-    my_db_connection.commit()
-    cursor.execute("DELETE FROM stop")
-    my_db_connection.commit()
+
+    for table_name in TABLE_NAMES_ORDER:
+        if table_name == 'stat':
+            continue
+        cursor.execute("DELETE FROM {}".format(table_name))
+        my_db_connection.commit()
     print("All tables reset!")
 
 # === Start of script ===
@@ -92,9 +85,9 @@ setup_db_connection()
 
 if sys.argv[1] == "0":
     reset_tables()
-    sys.exit("Stopping script.")
+    sys.exit("Stopping script")
 elif sys.argv[1] == "1":
-    drop_tables_by_name(['taxi_order', 'leg', 'route', 'cab', 'customer', 'freetaxi_order', 'stat', 'stop'])
+    drop_tables()
 else:
     raise Exception("Invalid argument given. Choose between '0' and '1'!")
 
