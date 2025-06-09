@@ -82,21 +82,21 @@ def reset_tables():
 def main():
     # === Start of script ===
     if len(sys.argv) != 2:
-        raise Exception("No or more than one argument given. Choose between '0' and '1'!")
+        raise Exception("No or more than one argument given. Choose between 'reset' and 'create'!")
 
     setup_db_connection()
 
-    if sys.argv[1] == "0":
+    if sys.argv[1] == "reset":
         reset_tables()
         sys.exit(0)
-    elif sys.argv[1] == "1":
+    elif sys.argv[1] == "create":
         drop_tables()
     else:
-        raise Exception("Invalid argument given. Choose between '0' and '1'!")
+        raise Exception("Invalid argument given. Choose between 'reset' and 'create'!")
 
     # CAB_TABLE
-    create_cab_table_query = ("CREATE TABLE cab (id BIGINT PRIMARY KEY AUTO_INCREMENT, location INTEGER NOT NULL, name VARCHAR(255), "
-                              "status INTEGER NOT NULL, seats INTEGER NOT NULL)")
+    create_cab_table_query = ("CREATE TABLE cab (id BIGINT PRIMARY KEY AUTO_INCREMENT, location INTEGER NOT NULL, "
+                              "name VARCHAR(255), status INTEGER NOT NULL, seats INTEGER NOT NULL)")
     create_table_by_query(create_cab_table_query, 'cab')
 
     # CUSTOMER_TABLE

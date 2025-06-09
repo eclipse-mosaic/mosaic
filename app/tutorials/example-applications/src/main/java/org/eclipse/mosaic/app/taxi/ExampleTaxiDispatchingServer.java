@@ -33,8 +33,10 @@ import java.util.stream.Collectors;
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
-    public static final int MAX_DETOUR_DISPATCHER_CONFIG = 70;
-    public static final int MAX_WAIT_DISPATCHER_CONFIG = 15;
+    private static final int MAX_DETOUR_DISPATCHER_CONFIG = 70;
+    private static final int MAX_WAIT_DISPATCHER_CONFIG = 15;
+    private static final int DISPATCHER_ASSIGNED_TAXI_STATUS = 0;
+    private static final int DISPATCHER_FREE_TAXI_STATUS = 1;
     private static Connection dbConnection;
 
     @Override
@@ -84,11 +86,52 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     }
 
+    private void fetchAvailableOrders() {
+        try {
+            PreparedStatement fetchOrders = dbConnection.prepareStatement(
+                "SELECT * FROM taxi_order WHERE status IN (0,1,2,6,7)");
+            ResultSet fetchedOrders = fetchOrders.executeQuery();
+        } catch(SQLException e) {
+            getLog().warn("Error while fetching available orders", e);
+        }
+    }
+
+    private void fetchAvailableRoutes() {
+        try {
+            PreparedStatement fetchRoutes = dbConnection.prepareStatement(
+                "SELECT l.id, from_stand, to_stand, place, distance, started, completed, " +
+                    "l.status, route_id, r.cab_id, passengers FROM leg l, route r " +
+                    "WHERE route_id=r.id and (l.status=1 OR l.status=5) ORDER by r.cab_id, route_id, place"
+            );
+            ResultSet fetchedRoutes = fetchRoutes.executeQuery();
+        } catch(SQLException e) {
+            getLog().warn("Error while fetching available routes", e);
+        }
+    }
+
+    private void insertCabsInDb(List<TaxiVehicleData> taxis) {
+        try {
+            PreparedStatement insertCabs = dbConnection.prepareStatement(
+              "INSERT INTO cab (location, name, status, seats) VALUES (?,?,?,?)"
+            );
+
+            for(TaxiVehicleData taxi : taxis) {
+                insertCabs.setInt(1, 0); // TODO assign a correct location(maybe a from_stand)
+                insertCabs.setString(2, taxi.getId());
+                insertCabs.setInt(3, taxi.getState() == TaxiVehicleData.EMPTY_TAXIS
+                    ? DISPATCHER_FREE_TAXI_STATUS : DISPATCHER_ASSIGNED_TAXI_STATUS);
+                insertCabs.setInt(4, taxi.getPersonCapacity());
+            }
+        } catch(SQLException e) {
+            getLog().warn("Error while inserting cabs in the DB", e);
+        }
+    }
+
     private void saveReservationsInDb(List<TaxiReservation> newTaxiReservations) {
         try {
             PreparedStatement insertReservations = dbConnection.prepareStatement(
-                "INSERT INTO taxi_order (from_stand, to_stand, max_loss, max_wait, shared," +
-                " status, received, distance, customer_id) VALUES (?,?,?,?,true,0,?,?,?)");
+                "INSERT INTO taxi_order (from_stand, to_stand, max_loss, max_wait, shared, " +
+                "status, received, distance, customer_id) VALUES (?,?,?,?,true,0,?,?,?)");
 
             for(TaxiReservation reservation: newTaxiReservations) {
                 List<Integer> busStopsIndices = getBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
@@ -98,7 +141,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 insertReservations.setInt(2, busStopsIndices.get(1));
                 insertReservations.setInt(3, MAX_DETOUR_DISPATCHER_CONFIG);
                 insertReservations.setInt(4, MAX_WAIT_DISPATCHER_CONFIG);
-                insertReservations.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+                insertReservations.setTimestamp(5, new Timestamp(System.currentTimeMillis())); // TODO check if there can't be a better method
                 insertReservations.setInt(6,
                     calculateDistanceInSecondsBetweenTwoStops(reservation.getFromEdge(), reservation.getToEdge()));
                 insertReservations.setLong(7, parsePerson(reservation.getPersonList()));
@@ -106,7 +149,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 insertReservations.clearParameters();
             }
 
-            int[] result = insertReservations.executeBatch();
+            int[] insertedReservations = insertReservations.executeBatch();
         } catch (SQLException e) {
             getLog().warn("Could not execute insert reservations query", e);
         }
@@ -146,12 +189,12 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     }
 
     private long parsePerson(List<String> personList) {
-        String person = personList.getFirst();
+        String person = personList.get(0);
         person = person.substring(1);
         return Long.parseLong(person);
     }
 
-    // TODO check if this is good enough for the dispatcher
+    // TODO check if this distance is good enough for the dispatcher
     private int calculateDistanceInSecondsBetweenTwoStops(String fromStopEdge,  String toStopEdge) {
         GeoPoint startPoint = getOs().getRoutingModule()
             .getConnection(fromStopEdge)
