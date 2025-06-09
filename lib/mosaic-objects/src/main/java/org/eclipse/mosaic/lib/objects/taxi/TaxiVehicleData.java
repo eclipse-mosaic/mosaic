@@ -37,16 +37,18 @@ public class TaxiVehicleData implements Serializable {
 
     private final String id;
     private final int state;
+    private final int personCapacity;
     private final VehicleData vehicleData;
     private final String numberOfCustomersServed;
     private final String totalOccupiedDistanceInMeters;
     private final String totalOccupiedTimeInSeconds;
     private final List<String> customersToPickUpOrOnBoard;
 
-    private TaxiVehicleData(String id, int state, VehicleData vehicleData, String numberOfCustomersServed, String totalOccupiedDistanceInMeters,
-                            String totalOccupiedTimeInSeconds, List<String> customersToPickUpOrOnBoard) {
+    private TaxiVehicleData(String id, int state, int personCapacity, VehicleData vehicleData, String numberOfCustomersServed,
+        String totalOccupiedDistanceInMeters, String totalOccupiedTimeInSeconds, List<String> customersToPickUpOrOnBoard) {
         this.id = id;
         this.state = state;
+        this.personCapacity = personCapacity;
         this.vehicleData = vehicleData;
         this.numberOfCustomersServed = numberOfCustomersServed;
         this.totalOccupiedDistanceInMeters = totalOccupiedDistanceInMeters;
@@ -60,6 +62,10 @@ public class TaxiVehicleData implements Serializable {
 
     public int getState() {
         return state;
+    }
+
+    public int getPersonCapacity() {
+        return personCapacity;
     }
 
     public VehicleData getVehicleData() {
@@ -99,6 +105,7 @@ public class TaxiVehicleData implements Serializable {
                 .appendSuper(super.equals(obj))
                 .append(this.id, other.id)
                 .append(this.state, other.state)
+                .append(this.personCapacity, other.personCapacity)
                 .append(this.numberOfCustomersServed, other.numberOfCustomersServed)
                 .append(this.totalOccupiedDistanceInMeters, other.totalOccupiedDistanceInMeters)
                 .append(this.totalOccupiedTimeInSeconds, other.totalOccupiedTimeInSeconds)
@@ -112,6 +119,7 @@ public class TaxiVehicleData implements Serializable {
                 .appendSuper(super.hashCode())
                 .append(id)
                 .append(state)
+                .append(personCapacity)
                 .append(numberOfCustomersServed)
                 .append(totalOccupiedDistanceInMeters)
                 .append(totalOccupiedTimeInSeconds)
@@ -122,6 +130,7 @@ public class TaxiVehicleData implements Serializable {
     public static class Builder {
         private String id;
         private int state;
+        private int personCapacity;
         private VehicleData vehicleData;
         private String customersServed;
         private String totalOccupiedDistanceInMeters;
@@ -135,6 +144,11 @@ public class TaxiVehicleData implements Serializable {
 
         public Builder withState(int state) {
             this.state = state;
+            return this;
+        }
+
+        public Builder withPersonCapacity(int personCapacity) {
+            this.personCapacity = personCapacity;
             return this;
         }
 
@@ -164,7 +178,7 @@ public class TaxiVehicleData implements Serializable {
         }
 
         public TaxiVehicleData build() {
-            return new TaxiVehicleData(id, state, vehicleData, customersServed, totalOccupiedDistanceInMeters,
+            return new TaxiVehicleData(id, state, personCapacity,vehicleData, customersServed, totalOccupiedDistanceInMeters,
                     totalOccupiedTimeInSeconds, customersToPickUpOrOnBoard);
         }
     }

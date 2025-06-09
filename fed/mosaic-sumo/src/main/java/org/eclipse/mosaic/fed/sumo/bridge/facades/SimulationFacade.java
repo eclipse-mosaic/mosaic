@@ -692,8 +692,9 @@ public class SimulationFacade {
 
         return new TaxiVehicleData.Builder()
                 .withId(id)
-                .withVehicleData(getLastKnownVehicleData(id))
                 .withState(taxiState)
+                .withPersonCapacity(bridge.getVehicleControl().getPersonCapacity(id))
+                .withVehicleData(getLastKnownVehicleData(id))
                 .withCustomersServed(numberOfServedCustomers)
                 .withTotalOccupiedDistanceInMeters(occupiedDistance)
                 .withTotalOccupiedTimeInSeconds(occupiedTime)

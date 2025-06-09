@@ -43,7 +43,7 @@ public class VehicleFacade {
     private final VehicleGetRouteId getRouteId;
     private final VehicleGetVehicleTypeId getVehicleTypeId;
     private final VehicleGetParameter getParameter;
-
+    private final VehicleGetPersonCapacity getPersonCapacity;
 
     private final VehicleSetChangeLane changeLane;
     private final VehicleSetSlowDown slowDown;
@@ -95,6 +95,7 @@ public class VehicleFacade {
         getRouteId = bridge.getCommandRegister().getOrCreate(VehicleGetRouteId.class);
         getVehicleTypeId = bridge.getCommandRegister().getOrCreate(VehicleGetVehicleTypeId.class);
         getParameter = bridge.getCommandRegister().getOrCreate(VehicleGetParameter.class);
+        getPersonCapacity = bridge.getCommandRegister().getOrCreate(VehicleGetPersonCapacity.class);
 
         changeLane = bridge.getCommandRegister().getOrCreate(VehicleSetChangeLane.class);
         slowDown = bridge.getCommandRegister().getOrCreate(VehicleSetSlowDown.class);
@@ -145,6 +146,14 @@ public class VehicleFacade {
             return getRouteId.execute(bridge, vehicleId);
         } catch (IllegalArgumentException | CommandException e) {
             throw new InternalFederateException("Could not request route for vehicle " + vehicleId, e);
+        }
+    }
+
+    public int getPersonCapacity(String vehicleId) throws InternalFederateException {
+        try {
+            return getPersonCapacity.execute(bridge, vehicleId);
+        } catch (IllegalArgumentException | CommandException e) {
+            throw new InternalFederateException("Could not request person capacity for vehicle " + vehicleId, e);
         }
     }
 
