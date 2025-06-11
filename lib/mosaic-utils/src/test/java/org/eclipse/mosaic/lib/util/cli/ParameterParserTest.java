@@ -36,7 +36,7 @@ public class ParameterParserTest {
         };
 
         //RUN
-        final TestParameters params = new ParameterParser<>(TestParameters.class).parseArguments(args, new TestParameters());
+        final TestParameters params = new ArgumentsOptionsParser<>(TestParameters.class).parseArguments(args, new TestParameters());
 
         //ASSERT
         assertEquals("myUserId", params.userid);
@@ -55,7 +55,7 @@ public class ParameterParserTest {
         parameters.startVisualizer = true;
 
         //RUN
-        List<String> arguments = new ParameterParser<>(TestParameters.class).transformToArguments(parameters);
+        List<String> arguments = new ArgumentsOptionsParser<>(TestParameters.class).transformToArguments(parameters);
 
         //ASSERT
         assertEquals("--config", arguments.get(0));

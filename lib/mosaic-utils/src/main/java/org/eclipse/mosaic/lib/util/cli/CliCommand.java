@@ -25,16 +25,21 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Command {
+public @interface CliCommand {
 
     /**
-     * The identifier of the command. Must match the pattern "command", or "command subcommand"
+     * The identifier of the command. Must match the pattern "command" or "command subcommand" (supports n subcommands).
      */
     String command();
 
     /**
-     * The description of the command used for help messages.
+     * A brief description of the command used for printing help messages.
      */
     String description();
+
+    /**
+     * An additional help text used along the description to give detailed usage details of the command.
+     */
+    String help() default "";
 
 }

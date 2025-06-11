@@ -21,11 +21,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to declare parameters for the command line.
+ * Annotation to declare an option for the command line.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Parameter {
+public @interface CliOption {
 
     /**
      * The short option name.
@@ -38,14 +38,14 @@ public @interface Parameter {
     String longOption();
 
     /**
-     * The description of the parameter used for help messages.
+     * The description of the option used for help messages.
      */
     String description();
 
     /**
      * The name of the argument for this option. If not given, the argument of the parameter option will be ignored.
      */
-    String argName() default "";
+    String argumentHint() default "";
 
     /**
      * The default value set at the annotated field, if an argName is specified, but is optional.

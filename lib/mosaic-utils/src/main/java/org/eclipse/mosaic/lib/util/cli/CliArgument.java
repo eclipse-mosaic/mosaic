@@ -25,12 +25,12 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Argument {
+public @interface CliArgument {
 
     /**
      * The name of the argument, used for help messages.
      */
-    String argName();
+    String argumentHint();
 
     /**
      * The position at which the argument is expected in the input arguments.

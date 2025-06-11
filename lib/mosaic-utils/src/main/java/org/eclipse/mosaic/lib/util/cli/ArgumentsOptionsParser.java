@@ -42,54 +42,54 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Automatically converts a list of arguments and parameters from the command line into a parameter object.
- * The parameter object is expected to contain fields annotated with @{@link Parameter} or @{@link Argument}.
- * {@link Argument}s follows a strict order and are expected at the beginning of the input command call. After
- * that, additional {@link Parameter}s follow, which have a short and/or long parameter name.
+ * Automatically converts a list of arguments and options from the command line into a parameter object.
+ * The parameter object is expected to contain fields annotated with @{@link CliOption} or @{@link CliArgument}.
+ * {@link CliArgument}s follows a strict order and are expected at the beginning of the input command call. After
+ * that, additional {@link CliOption}s follow, which have a short and/or long parameter name.
  *
  * @param <T> class of the parameter object, which later holds the parsed parameter values
  */
-public class ParameterParser<T> {
+public class ArgumentsOptionsParser<T> {
 
     private final CommandLineParser parser = new DefaultParser();
     private final Options options = new Options();
     private final List<Field> parameterFields;
     private final List<Field> argumentFields;
 
-    private String usageHint = " ";
-    private String header = "Parameters:\n";
+    private String usageHint;
+    private String header;
     private String footer;
 
     /**
-     * Constructs a new CLIParser with a class of the parameter object, which later holds the
-     * parameter values. This must also declare all command line related properties, such
+     * Constructs a new {@link ArgumentsOptionsParser} with a class of the object, which later holds the
+     * argument and option values. This must also declare all command line related properties, such
      * as the name of the option and its description. For this, the fields in the given class
-     * need to be public and need to be annotated with {@link Parameter}. Everything else
-     * is done by this parser.
+     * need to be public and need to be annotated with a @{@link CliArgument} or @{@link CliOption}.
+     * Everything else is done by this parser.
      */
-    public ParameterParser(final Class<T> parameterClass) {
+    public ArgumentsOptionsParser(final Class<T> parameterClass) {
         parameterFields = new LinkedList<>();
 
         options.addOption("h", "help", false, "Prints this help screen.\n");
 
-        // collect all fields which old required arguments
+        // collect all fields which hold required arguments
         argumentFields = Arrays.stream(FieldUtils.getAllFields(parameterClass))
-                .filter(f -> f.isAnnotationPresent(Argument.class))
-                .sorted(Comparator.comparingInt(a -> a.getAnnotation(Argument.class).index()))
+                .filter(f -> f.isAnnotationPresent(CliArgument.class))
+                .sorted(Comparator.comparingInt(a -> a.getAnnotation(CliArgument.class).index()))
                 .collect(Collectors.toList());
 
         // build Options out of declared fields of the parameter object
         final Map<String, OptionGroup> optionGroups = new HashMap<>();
         for (Field field : FieldUtils.getAllFields(parameterClass)) {
-            if (field.isAnnotationPresent(Parameter.class)) {
-                final Parameter cliAnnotation = field.getAnnotation(Parameter.class);
+            if (field.isAnnotationPresent(CliOption.class)) {
+                final CliOption cliAnnotation = field.getAnnotation(CliOption.class);
 
                 final Option option =
                         new Option(StringUtils.defaultIfBlank(cliAnnotation.shortOption(), null), cliAnnotation.description());
                 option.setLongOpt(cliAnnotation.longOption());
-                if (StringUtils.isNotEmpty(cliAnnotation.argName())) {
+                if (StringUtils.isNotEmpty(cliAnnotation.argumentHint())) {
                     option.setArgs(1);
-                    option.setArgName(cliAnnotation.argName());
+                    option.setArgName(cliAnnotation.argumentHint());
                     option.setOptionalArg(StringUtils.isNotEmpty(cliAnnotation.defaultArgValue()));
                 }
 
@@ -115,8 +115,11 @@ public class ParameterParser<T> {
     /**
      * Parses a list of arguments (POSIX style) and writes the set values into the given parameter object.
      * The parameter object should be of the same class as this parser is initialized with.
+     *
+     * @param args         the input arguments from the command line.
+     * @param targetObject the object which provides the required fields to fill in values parsed from the list of args.
      */
-    public final T parseArguments(final String[] args, final T parameters) throws ParseException {
+    public final T parseArguments(final String[] args, final T targetObject) throws ParseException {
         if (((!options.getRequiredOptions().isEmpty() || !argumentFields.isEmpty()) && args.length == 0)
                 || ArrayUtils.contains(args, "--help")
                 || ArrayUtils.contains(args, "-h")) {
@@ -128,9 +131,9 @@ public class ParameterParser<T> {
 
         for (Field argumentField : argumentFields) {
             if (argumentsToParse.isEmpty() || argumentsToParse.peek().startsWith("-")) {
-                throw new IllegalArgumentException("Missing argument: <" + argumentField.getAnnotation(Argument.class).argName() + ">");
+                throw new IllegalArgumentException("Missing argument: <" + argumentField.getAnnotation(CliArgument.class).argumentHint() + ">");
             }
-            setField(argumentField, parameters, argumentsToParse.removeFirst());
+            setField(argumentField, targetObject, argumentsToParse.removeFirst());
         }
 
         if (!argumentsToParse.isEmpty()) {
@@ -142,7 +145,7 @@ public class ParameterParser<T> {
 
         // write option values into parameter object
         for (Field field : parameterFields) {
-            final Parameter cliAnnotation = field.getAnnotation(Parameter.class);
+            final CliOption cliAnnotation = field.getAnnotation(CliOption.class);
             field.setAccessible(true);
 
             if (!line.hasOption(cliAnnotation.longOption())) {
@@ -153,18 +156,18 @@ public class ParameterParser<T> {
                 final String defaultValue = cliAnnotation.defaultArgValue();
 
                 if (boolean.class.isAssignableFrom(field.getType())) {
-                    field.set(parameters, true);
+                    field.set(targetObject, true);
                 } else if (List.class.isAssignableFrom(field.getType())) {
-                    field.set(parameters, Arrays.asList(line.getOptionValues(cliAnnotation.longOption()), defaultValue));
+                    field.set(targetObject, Arrays.asList(line.getOptionValues(cliAnnotation.longOption()), defaultValue));
                 } else {
-                    setField(field, parameters, line.getOptionValue(cliAnnotation.longOption(), defaultValue));
+                    setField(field, targetObject, line.getOptionValue(cliAnnotation.longOption(), defaultValue));
                 }
             } catch (Throwable e) {
                 throw new ParseException("Could not set field " + field.getName() + ": " + e.getLocalizedMessage());
             }
         }
 
-        return parameters;
+        return targetObject;
     }
 
     private void setField(Field field, Object target, String value) throws ParseException {
@@ -213,7 +216,7 @@ public class ParameterParser<T> {
 
         try {
             for (Field field : parameterFields) {
-                final Parameter cliAnnotation = field.getAnnotation(Parameter.class);
+                final CliOption cliAnnotation = field.getAnnotation(CliOption.class);
 
                 if (boolean.class.isAssignableFrom(field.getType())) {
                     if (field.getBoolean(parameters)) {
@@ -244,35 +247,49 @@ public class ParameterParser<T> {
      * @param printWriter writer to output help to
      */
     public void printHelp(PrintWriter printWriter) {
-        HelpFormatter helpFormatter = new HelpFormatter();
+        final HelpFormatter helpFormatter = new HelpFormatter();
 
-        List<String> ordering = new LinkedList<>();
+        final List<String> ordering = new LinkedList<>();
         for (Field field : parameterFields) {
-            final Parameter cliAnnotation = field.getAnnotation(Parameter.class);
+            final CliOption cliAnnotation = field.getAnnotation(CliOption.class);
             ordering.add(cliAnnotation.longOption());
         }
+        helpFormatter.setOptionComparator(Comparator.comparingInt(o -> ordering.indexOf(o.getLongOpt())));
 
-        final StringBuilder usageHintBuilder = new StringBuilder(usageHint);
-
-        if (!argumentFields.isEmpty()) {
-            usageHintBuilder.append("\nRequired arguments:");
-            final int indent =
-                    argumentFields.stream().mapToInt(a -> a.getAnnotation(Argument.class).argName().length()).max().orElse(0) + 4;
-            for (Field argumentField : argumentFields) {
-                Argument arg = argumentField.getAnnotation(Argument.class);
-                usageHintBuilder.append("\n ").append(arg.argName()).append(" ");
-                int repeat = indent - arg.argName().length() - 2;
-                if (repeat > 0) {
-                    usageHintBuilder.append(StringUtils.repeat(" ", repeat));
-                }
-                usageHintBuilder.append(arg.description());
-            }
-            usageHintBuilder.append("\n\n");
+        if (StringUtils.isNotBlank(usageHint)) {
+            printWriter.print("USAGE\n  ");
+            helpFormatter.printWrapped(printWriter, 120, 10, usageHint);
+            printWriter.println();
         }
 
-        helpFormatter.setSyntaxPrefix("Usage: ");
-        helpFormatter.setOptionComparator(Comparator.comparingInt(o -> ordering.indexOf(o.getLongOpt())));
-        helpFormatter.printHelp(printWriter, 120, usageHintBuilder.toString(), header, getOptions(), 1, 3, footer);
+        if (StringUtils.isNotEmpty(header)) {
+            helpFormatter.printWrapped(printWriter, 120, 2, header);
+            printWriter.println();
+        }
+
+        if (!argumentFields.isEmpty()) {
+            final StringBuilder arguments = new StringBuilder("ARGUMENTS");
+            final int indent = argumentFields.stream()
+                    .mapToInt(a -> a.getAnnotation(CliArgument.class).argumentHint().length()).max().orElse(0) + 4;
+            for (Field argumentField : argumentFields) {
+                CliArgument arg = argumentField.getAnnotation(CliArgument.class);
+                arguments.append("\n  ").append(arg.argumentHint()).append(" ");
+                int repeat = indent - arg.argumentHint().length() - 2;
+                if (repeat > 0) {
+                    arguments.append(StringUtils.repeat(" ", repeat));
+                }
+                arguments.append(arg.description());
+            }
+            arguments.append("\n\n");
+            helpFormatter.printWrapped(printWriter, 120, 2, arguments.toString());
+        }
+
+        printWriter.println("OPTIONS");
+        helpFormatter.printOptions(printWriter, 120, getOptions(), 2, 3);
+
+        if (StringUtils.isNotEmpty(footer)) {
+            helpFormatter.printWrapped(printWriter, 120, 2, footer);
+        }
     }
 
     public void printHelp() {
@@ -290,21 +307,21 @@ public class ParameterParser<T> {
      * Returns the names of all required arguments.
      */
     List<String> getArgumentFields() {
-        return argumentFields.stream().map(f -> f.getAnnotation(Argument.class).argName()).collect(Collectors.toList());
+        return argumentFields.stream().map(f -> f.getAnnotation(CliArgument.class).argumentHint()).collect(Collectors.toList());
     }
 
     /**
-     * This method is used to define a usage hint for the respective {@link ParameterParser}.
+     * This method is used to define a usage hint for the respective {@link ArgumentsOptionsParser}.
      *
      * @param usageHint the hint to be set
      * @param header    header for the hint
      * @param footer    footer for the hint
      * @return the object to chain further methods
      */
-    public ParameterParser<T> usageHint(String usageHint, String header, String footer) {
+    public ArgumentsOptionsParser<T> usageHint(String usageHint, String header, String footer) {
         this.header = ObjectUtils.defaultIfNull(header, this.header);
         this.footer = ObjectUtils.defaultIfNull(footer, this.footer);
-        this.usageHint = Validate.notNull(usageHint);
+        this.usageHint = ObjectUtils.defaultIfNull(usageHint, this.usageHint);
         return this;
     }
 }

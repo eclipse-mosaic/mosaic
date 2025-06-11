@@ -35,13 +35,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Automatically converts a list of arguments and parameters from the command line based on a list of
+ * Automatically converts a list of arguments and options from the command line based on a list of
  * (sub)commands. The input is expected to match the format "command [ARGUMENTS] [OPTIONS]".
- * Each command is a separate class implementing {@link Runnable} and annotated with @{@link Command}.
- * The fields within the command class shall be annotated with @{@link Argument} or @{@link Parameter} to
- * define required arguments in a fixed order or other flexible parameters.
+ * Each command is a separate class implementing {@link Runnable} and annotated with @{@link CliCommand}.
+ * The fields within the command class shall be annotated with @{@link CliArgument} or @{@link CliOption} to
+ * define required arguments in a fixed order and/or additional options.
  */
-public class CommandParser {
+public class CommandsParser {
 
     private final static Pattern COMMAND_PATTERN = Pattern.compile("^[a-z]+(?: [a-z]+)*$");
 
@@ -50,34 +50,31 @@ public class CommandParser {
     private int maxCommandLength = 0;
     private CommandExecutable<?> selectedCommand;
 
-    private String usageHint = "";
-    private String header = "Parameters:\n";
-    private String footer = null;
+    private String usageHint;
+    private String header;
+    private String footer;
 
-    public CommandParser(Runnable atLeastOneCommand, Runnable... furtherCommands) {
+    public CommandsParser(Runnable atLeastOneCommand, Runnable... furtherCommands) {
 
         final List<Runnable> allCommands = new ArrayList<>();
         allCommands.add(atLeastOneCommand);
         allCommands.addAll(List.of(furtherCommands));
 
-        for (Runnable commandExecutable : allCommands) {
-            Validate.isTrue(commandExecutable.getClass().isAnnotationPresent(Command.class), "Executable must be annotated with @Command");
+        for (Runnable runnable : allCommands) {
+            final CommandExecutable<?> commandExecutable = new CommandExecutable<>(runnable);
 
-            Command annotation = commandExecutable.getClass().getAnnotation(Command.class);
-            String commandKey = annotation.command();
-            Validate.isTrue(COMMAND_PATTERN.matcher(commandKey).matches(), "Command \"{}\" does not match the required pattern.");
+            final String commandKey = commandExecutable.command();
             Validate.isTrue(!commandExecutables.containsKey(commandKey), "Command \"{}\" is already defined.", commandKey);
-            this.commandExecutables.put(commandKey, new CommandExecutable<>(annotation, commandExecutable));
+            this.commandExecutables.put(commandKey, commandExecutable);
 
             maxCommandLength = Math.max(maxCommandLength, commandKey.split(" ").length);
-
         }
     }
 
     /**
      * Parses a list of arguments and selects the matching command class and returns it.
-     * Furthermore, it sets all values into the fields of the command class which according to
-     * their annotations.
+     * Furthermore, it sets all values into the fields of the command class according to
+     * provided @{@link CliArgument} and @{@link CliOption} annotations.
      *
      * @param args the plain args of the command line input
      * @throws ParseException           if the given input command line is wrong formatted (e.g., missing arguments)
@@ -171,24 +168,32 @@ public class CommandParser {
             return;
         }
 
-        StringBuilder generalUsage = new StringBuilder(this.usageHint).append(" command <ARGUMENT(S)> [OPTION(S)]\n\nAvailable commands:");
-        commandExecutables.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(
-                e -> generalUsage.append("\n ").append(e.getValue().generateUsage())
+        final String commandUsage = this.usageHint + " command [-h] [<ARGUMENT(S)>] [OPTION(S)]";
+
+        final StringBuilder header = new StringBuilder();
+        if (StringUtils.isNotEmpty(this.header)) {
+            header.append(this.header).append("\n\n");
+        }
+        header.append("COMMANDS\n");
+        int indent = commandExecutables.keySet().stream().mapToInt(String::length).max().orElse(0) + 5;
+        commandExecutables.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e ->
+                header.append(StringUtils.rightPad("  " + e.getKey(), indent, " "))
+                        .append(e.getValue().commandDescription.description())
+                        .append("\n")
         );
-        generalUsage.append("\n\n");
-        new ParameterParser<>(Object.class)
-                .usageHint(generalUsage.toString(), this.header, footer)
-                .printHelp();
+        new ArgumentsOptionsParser<>(Object.class)
+                .usageHint(commandUsage, header.toString(), footer)
+                .printHelp(printWriter);
     }
 
     /**
-     * This method is used to define a usage hint for the respective {@link ParameterParser}.
+     * This method is used to define a usage hint for the respective {@link ArgumentsOptionsParser}.
      *
      * @param usageHint the hint to be set
      * @param header    header for the hint
      * @return the object to chain further methods
      */
-    public CommandParser usageHint(String usageHint, String header, String footer) {
+    public CommandsParser usageHint(String usageHint, String header, String footer) {
         this.header = ObjectUtils.defaultIfNull(header, this.header);
         this.usageHint = ObjectUtils.defaultIfNull(usageHint, this.usageHint);
         this.footer = ObjectUtils.defaultIfNull(footer, this.footer);
@@ -197,16 +202,24 @@ public class CommandParser {
 
     private static class CommandExecutable<T extends Runnable> {
 
-        private final ParameterParser<T> parser;
+        private final ArgumentsOptionsParser<T> parser;
         private final T executable;
 
-        private final Command commandDescription;
+        private final CliCommand commandDescription;
 
-        private CommandExecutable(Command commandDescription, T executable) {
-            this.commandDescription = commandDescription;
+        private CommandExecutable(T executable) {
+            Validate.isTrue(executable.getClass().isAnnotationPresent(CliCommand.class), "Executable must be annotated with @CliCommand");
+            this.commandDescription = executable.getClass().getAnnotation(CliCommand.class);
             this.executable = executable;
-            this.parser = new ParameterParser<>((Class<T>) executable.getClass());
-            parser.usageHint(generateHelp(), "Parameters:\n", null);
+            this.parser = new ArgumentsOptionsParser<>((Class<T>) executable.getClass());
+            parser.usageHint(generateUsage(), generateHeader(), null);
+
+            final String commandKey = commandDescription.command();
+            Validate.isTrue(COMMAND_PATTERN.matcher(commandKey).matches(), "Command \"{}\" does not match the required pattern.");
+        }
+
+        private String command() {
+            return commandDescription.command();
         }
 
         private void printHelp() {
@@ -245,11 +258,10 @@ public class CommandParser {
             return builder.toString();
         }
 
-        private String generateHelp() {
-            StringBuilder builder = new StringBuilder(generateUsage());
-            builder.append("\nDescription:");
-            builder.append("\n ").append(commandDescription.description()).append("\n");
-            return builder.toString();
+        private String generateHeader() {
+            return "DESCRIPTION\n  "
+                    + commandDescription.description()
+                    + (StringUtils.isNotBlank(commandDescription.help()) ? " " + commandDescription.help() : "");
         }
 
     }

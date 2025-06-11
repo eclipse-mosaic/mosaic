@@ -21,32 +21,33 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.ParseException;
 import org.junit.Test;
 
 import java.io.File;
 
-public class CommandParserTest {
+public class CommandsParserTest {
 
     @Test
     public void knownCommand_everythingFine() throws ParseException {
         String args[] = {
-                "test", "command", "firstValue", "path/to/second",
+                "test", "command", "firstArgumentValue", "path/to/second/argument/value",
                 "-u", "theUser",
                 "-w", "30"
         };
 
         //RUN
-        Runnable selectedCommand = new CommandParser(new TestCommand()).parseArguments(args);
+        Runnable selectedCommand = new CommandsParser(new TestCommand()).parseArguments(args);
 
         assertTrue(selectedCommand instanceof TestCommand);
 
         //ASSERT
         TestCommand command = (TestCommand) selectedCommand;
 
-        assertEquals("firstValue", command.first);
-        assertEquals(new File("path/to/second"), command.second);
+        assertEquals("firstArgumentValue", command.first);
+        assertEquals(new File("path/to/second/argument/value"), command.second);
 
         assertEquals("theUser", command.userid);
         assertEquals(30, command.watchdogInterval);
@@ -59,33 +60,49 @@ public class CommandParserTest {
     @Test
     public void knownCommand_missingArgument() throws ParseException {
         String args[] = {
-                "test", "command", "firstValue",
+                "test", "command", "firstArgumentValue",
                 "-u", "theUser",
                 "-w", "30"
         };
 
         //RUN
         try {
-            new CommandParser(new TestCommand()).parseArguments(args);
+            new CommandsParser(new TestCommand()).parseArguments(args);
             fail();
         } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().contains("Missing argument: "));
+            assertTrue(e.getMessage().contains("Missing argument: <SECOND>"));
         }
     }
 
     @Test
-    public void knownCommand_missingParameter() throws ParseException {
+    public void knownCommand_missingOption() throws ParseException {
         String args[] = {
-                "test", "command", "firstValue", "path/to/second",
+                "test", "command", "firstValue", "path/to/second/argument/value",
                 "-w", "30"
         };
 
         //RUN
         try {
-            new CommandParser(new TestCommand()).parseArguments(args);
+            new CommandsParser(new TestCommand()).parseArguments(args);
             fail();
         } catch (MissingOptionException e) {
             assertTrue(e.getMessage().contains("Missing required option: u" ));
+        }
+    }
+
+    @Test
+    public void knownCommand_missingOptionValue() throws ParseException {
+        String args[] = {
+                "test", "command", "firstValue", "path/to/second/argument/value",
+                "-w"
+        };
+
+        //RUN
+        try {
+            new CommandsParser(new TestCommand()).parseArguments(args);
+            fail();
+        } catch (MissingArgumentException e) {
+            assertTrue(e.getMessage().contains("Missing argument for option: w" ));
         }
     }
 
@@ -99,7 +116,7 @@ public class CommandParserTest {
 
         //RUN
         try {
-            new CommandParser(new TestCommand()).parseArguments(args);
+            new CommandsParser(new TestCommand()).parseArguments(args);
             fail();
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage().contains("Unknown command: test"));

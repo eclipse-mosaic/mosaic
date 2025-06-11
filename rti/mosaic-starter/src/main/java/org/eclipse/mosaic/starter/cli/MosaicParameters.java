@@ -15,51 +15,51 @@
 
 package org.eclipse.mosaic.starter.cli;
 
-import org.eclipse.mosaic.lib.util.cli.Parameter;
-import org.eclipse.mosaic.lib.util.cli.ParameterParser;
+import org.eclipse.mosaic.lib.util.cli.ArgumentsOptionsParser;
+import org.eclipse.mosaic.lib.util.cli.CliOption;
 
 import java.io.Serializable;
 
 /**
- * This class holds the values of parameters parsed by the {@link ParameterParser}. Also, all
- * parameters are described here using the {@link Parameter} annotation.
+ * This class holds the values of options parsed by the {@link ArgumentsOptionsParser}. Also, all
+ * options are described here using the {@link CliOption} annotation.
  */
 public class MosaicParameters implements Serializable {
 
-    private static final long serialVersionUID = 837650766755740823L;
+    private static final long serialVersionUID = -1;
 
-    @Parameter(shortOption = "c", longOption = "config", argName = "PATH", description = "Path to MOSAIC scenario configuration file (scenario_config.json). Can be used instead of \"-s\" parameter. (mandatory).", group = "config")
+    @CliOption(shortOption = "c", longOption = "config", argumentHint = "PATH", description = "Path to MOSAIC scenario configuration file (scenario_config.json). Can be used instead of \"-s\" parameter. (mandatory).", group = "config", isRequired = true)
     public String configurationPath = null;
 
-    @Parameter(shortOption = "s", longOption = "scenario", argName = "NAME", description = "The name of the MOSAIC scenario. Can be used instead of \"-c\" parameter. (mandatory)", group = "config")
+    @CliOption(shortOption = "s", longOption = "scenario", argumentHint = "NAME", description = "The name of the MOSAIC scenario. Can be used instead of \"-c\" parameter. (mandatory)", group = "config", isRequired = true)
     public String scenarioName = null;
 
-    @Parameter(shortOption = "w", longOption = "watchdog-interval", argName = "SECONDS", description = "Kill MOSAIC process after n seconds if a federate is not responding. 0 disables the watchdog. (default: 30)")
-    public String watchdogInterval = null;
+    @CliOption(shortOption = "w", longOption = "watchdog-interval", argumentHint = "SECONDS", description = "Kill MOSAIC process after n seconds if a federate is not responding. 0 disables the watchdog. (default: 30)")
+    public int watchdogInterval = 30;
 
-    @Parameter(shortOption = "r", longOption = "random-seed", argName = "SEED", description = "Overrides the random seed which is given in the scenario configuration file")
-    public Long randomSeed;
+    @CliOption(shortOption = "r", longOption = "random-seed", argumentHint = "SEED", description = "Overrides the random seed which is given in the scenario configuration file.")
+    public Long randomSeed = null;
 
-    @Parameter(shortOption = "v", longOption = "start-visualizer", description = "Starts the web socket visualizer.")
+    @CliOption(shortOption = "v", longOption = "start-visualizer", description = "Opens the 2D web visualizer in the default browser.")
     public boolean startVisualizer = false;
 
-    @Parameter(shortOption = "b", longOption = "realtime-brake", argName = "REALTIMEFACTOR", description = "Set value for real time brake.")
-    public String realtimeBrake = null;
+    @CliOption(shortOption = "b", longOption = "realtime-brake", argumentHint = "FACTOR", description = "Use this parameter to slow down simulation execution if it's too fast. A value of '1' slows down to realtime, a value of '5' slows down to 5 times as fast as realtime.")
+    public Double realtimeBrake = null;
 
-    @Parameter(shortOption = "o", longOption = "log-level", argName = "LOGLEVEL", description = "Overrides the log level to new value (e.g. DEBUG)")
+    @CliOption(shortOption = "o", longOption = "log-level", argumentHint = "LOGLEVEL", description = "Overrides the overall log level to the provided value (e.g., TRACE, DEBUG, INFO, WARN, ERROR, OFF)")
     public String logLevel = null;
 
-    @Parameter(longOption = "runtime", argName = "PATH", description = "Path to MOSAIC RTI configuration file (default: etc/runtime.json)")
+    @CliOption(longOption = "runtime", argumentHint = "PATH", description = "Path to MOSAIC RTI configuration file (default: etc/runtime.json)")
     public String runtimeConfiguration = null;
 
-    @Parameter(longOption = "hosts", argName = "PATH", description = "Path to host configuration file (default: etc/hosts.json)")
+    @CliOption(longOption = "hosts", argumentHint = "PATH", description = "Path to host configuration file (default: etc/hosts.json)")
     public String hostsConfiguration = null;
 
-    @Parameter(shortOption = "l", longOption = "logger", argName = "PATH", description = "Path to logback configuration file (default: etc/logback.xml)")
+    @CliOption(shortOption = "l", longOption = "logger", argumentHint = "PATH", description = "Path to logback configuration file (default: etc/logback.xml)")
     public String loggerConfiguration = null;
 
-    @Parameter(shortOption = "e", longOption = "external-watchdog", argName = "PORTNUMBER", description = "Specific external watchdog port number")
-    public String externalWatchDog = null;
+    @CliOption(shortOption = "e", longOption = "external-watchdog", argumentHint = "PORT", description = "Specific external watchdog port number")
+    public Integer externalWatchDog = null;
 
 }
 

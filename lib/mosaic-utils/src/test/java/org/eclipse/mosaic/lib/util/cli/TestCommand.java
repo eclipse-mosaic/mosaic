@@ -17,13 +17,13 @@ package org.eclipse.mosaic.lib.util.cli;
 
 import java.io.File;
 
-@Command(command = "test command", description = "")
+@CliCommand(command = "test command", description = "")
 public class TestCommand extends TestParameters implements Runnable {
 
-    @Argument(argName = "SECOND", index = 1, description = "")
+    @CliArgument(argumentHint = "SECOND", index = 1, description = "")
     File second;
 
-    @Argument(argName = "FIRST", index = 0, description = "")
+    @CliArgument(argumentHint = "FIRST", index = 0, description = "")
     String first;
 
     @Override

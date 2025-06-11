@@ -35,7 +35,7 @@ public class MosaicComponentParameters {
     /**
      * The realtime break to slow down simulation for debugging/visualization purposes.
      */
-    private int realTimeBreak = 0;
+    private double realTimeBreak = 0;
 
     /**
      * Defines the number of threads to use when executing time advance of ambassadors
@@ -60,11 +60,11 @@ public class MosaicComponentParameters {
         return this;
     }
 
-    public int getRealTimeBreak() {
+    public double getRealTimeBreak() {
         return realTimeBreak;
     }
 
-    public MosaicComponentParameters setRealTimeBreak(int realTimeBreak) {
+    public MosaicComponentParameters setRealTimeBreak(double realTimeBreak) {
         this.realTimeBreak = realTimeBreak;
         return this;
     }
