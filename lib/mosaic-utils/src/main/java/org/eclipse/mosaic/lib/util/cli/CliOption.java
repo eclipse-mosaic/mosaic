@@ -43,14 +43,14 @@ public @interface CliOption {
     String description();
 
     /**
-     * The name of the argument for this option. If not given, the argument of the parameter option will be ignored.
+     * The name of the value for this option. Usually, all non-boolean options need such valueHint.
      */
-    String argumentHint() default "";
+    String valueHint() default "";
 
     /**
-     * The default value set at the annotated field, if an argName is specified, but is optional.
+     * The default value set at the annotated field, if an valueHint is specified, which is optional.
      */
-    String defaultArgValue() default "";
+    String defaultValue() default "";
 
     /**
      * The group to which this parameter option belongs to. Within a group, only one option must be used at most.

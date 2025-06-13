@@ -87,10 +87,10 @@ public class ArgumentsOptionsParser<T> {
                 final Option option =
                         new Option(StringUtils.defaultIfBlank(cliAnnotation.shortOption(), null), cliAnnotation.description());
                 option.setLongOpt(cliAnnotation.longOption());
-                if (StringUtils.isNotEmpty(cliAnnotation.argumentHint())) {
+                if (StringUtils.isNotEmpty(cliAnnotation.valueHint())) {
                     option.setArgs(1);
-                    option.setArgName(cliAnnotation.argumentHint());
-                    option.setOptionalArg(StringUtils.isNotEmpty(cliAnnotation.defaultArgValue()));
+                    option.setArgName(cliAnnotation.valueHint());
+                    option.setOptionalArg(StringUtils.isNotEmpty(cliAnnotation.defaultValue()));
                 }
 
                 if (StringUtils.isNotBlank(cliAnnotation.group())) {
@@ -153,7 +153,7 @@ public class ArgumentsOptionsParser<T> {
             }
 
             try {
-                final String defaultValue = cliAnnotation.defaultArgValue();
+                final String defaultValue = cliAnnotation.defaultValue();
 
                 if (boolean.class.isAssignableFrom(field.getType())) {
                     field.set(targetObject, true);
