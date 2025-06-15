@@ -29,7 +29,6 @@ import org.eclipse.mosaic.lib.util.scheduling.Event;
 import java.sql.*;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
@@ -38,34 +37,48 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final int DISPATCHER_ASSIGNED_TAXI_STATUS = 0;
     private static final int DISPATCHER_FREE_TAXI_STATUS = 1;
     private static Connection dbConnection;
+    private static int lastSavedTaxiIndex = -1;
+    private static int lastSavedReservationIndex = -1;
 
     @Override
     public void onStartup() {
         connectToDatabase();
+        checkIfTableIsNotEmpty("customer");
+        checkIfTableIsNotEmpty("stop");
     }
 
     @Override
     public void onShutdown() {
-
+        closeDbConnection();
     }
 
     @Override
     public void onTaxiDataUpdate(List<TaxiVehicleData> taxis, List<TaxiReservation> taxiReservations) {
 
         // select all empty taxis
-        List<String> emptyTaxis = taxis.stream()
+        List<TaxiVehicleData> emptyTaxis = taxis.stream()
             .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TAXIS)
-            .map(TaxiVehicleData::getId)
-            .collect(Collectors.toList());
+            .toList();
+
+        List<TaxiVehicleData> taxisToSave = emptyTaxis.stream()
+            .filter(taxi -> Integer.parseInt(taxi.getId().substring(4)) > lastSavedTaxiIndex)
+            .toList();
+
+        if (!taxisToSave.isEmpty()) {
+            insertNewCabsInDb(taxisToSave);
+        }
 
         // select all unassigned reservations
         List<TaxiReservation> unassignedReservations = taxiReservations.stream()
             .filter(taxiRes -> taxiRes.getReservationState() == TaxiReservation.ONLY_NEW_RESERVATIONS ||
                 taxiRes.getReservationState() == TaxiReservation.ALREADY_RETRIEVED_RESERVATIONS)
+            .filter(taxiRes -> Integer.parseInt(taxiRes.getId()) > lastSavedReservationIndex)
             .toList();
 
-        saveReservationsInDb(unassignedReservations);
-//
+        if (!unassignedReservations.isEmpty()) {
+            insertNewReservationsInDb(unassignedReservations);
+        }
+
 //        for (TaxiReservation unassignedReservation: unassignedReservations) {
 //            if (emptyTaxis.isEmpty()) {
 //                break;
@@ -86,11 +99,30 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     }
 
+    private void checkIfTableIsNotEmpty(String tableName) {
+        try {
+            PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
+               "SELECT 1 FROM %s LIMIT 1".formatted(tableName));
+            ResultSet checkQueryResult = checkCustomerTable.executeQuery();
+
+            if (!checkQueryResult.next()) {
+                throw new RuntimeException("%s table is empty!".formatted(tableName));
+            }
+
+            checkQueryResult.close();
+            checkCustomerTable.close();
+        } catch(SQLException e) {
+            getLog().warn("Error checking tables in DB");
+        }
+    }
+
     private void fetchAvailableOrders() {
         try {
             PreparedStatement fetchOrders = dbConnection.prepareStatement(
                 "SELECT * FROM taxi_order WHERE status IN (0,1,2,6,7)");
             ResultSet fetchedOrders = fetchOrders.executeQuery();
+            fetchOrders.close();
+            fetchOrders.close();
         } catch(SQLException e) {
             getLog().warn("Error while fetching available orders", e);
         }
@@ -104,12 +136,14 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                     "WHERE route_id=r.id and (l.status=1 OR l.status=5) ORDER by r.cab_id, route_id, place"
             );
             ResultSet fetchedRoutes = fetchRoutes.executeQuery();
+            fetchedRoutes.close();
+            fetchRoutes.close();
         } catch(SQLException e) {
             getLog().warn("Error while fetching available routes", e);
         }
     }
 
-    private void insertCabsInDb(List<TaxiVehicleData> taxis) {
+    private void insertNewCabsInDb(List<TaxiVehicleData> taxis) {
         try {
             PreparedStatement insertCabs = dbConnection.prepareStatement(
               "INSERT INTO cab (location, name, status, seats) VALUES (?,?,?,?)"
@@ -121,13 +155,22 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 insertCabs.setInt(3, taxi.getState() == TaxiVehicleData.EMPTY_TAXIS
                     ? DISPATCHER_FREE_TAXI_STATUS : DISPATCHER_ASSIGNED_TAXI_STATUS);
                 insertCabs.setInt(4, taxi.getPersonCapacity());
+                insertCabs.addBatch();
+                insertCabs.clearParameters();
             }
+
+            int[] insertCabsResults = insertCabs.executeBatch();
+            for (int batchCommandResult : insertCabsResults) {
+                assert batchCommandResult >= 0;
+            }
+            insertCabs.close();
+            lastSavedTaxiIndex += taxis.size();
         } catch(SQLException e) {
             getLog().warn("Error while inserting cabs in the DB", e);
         }
     }
 
-    private void saveReservationsInDb(List<TaxiReservation> newTaxiReservations) {
+    private void insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations) {
         try {
             PreparedStatement insertReservations = dbConnection.prepareStatement(
                 "INSERT INTO taxi_order (from_stand, to_stand, max_loss, max_wait, shared, " +
@@ -149,7 +192,12 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 insertReservations.clearParameters();
             }
 
-            int[] insertedReservations = insertReservations.executeBatch();
+            int[] insertedReservationsResults = insertReservations.executeBatch();
+            for (int batchCommandResult : insertedReservationsResults) {
+                assert batchCommandResult >= 0;
+            }
+            insertReservations.close();
+            lastSavedReservationIndex +=  newTaxiReservations.size();
         } catch (SQLException e) {
             getLog().warn("Could not execute insert reservations query", e);
         }
@@ -179,6 +227,9 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                     fromStop = selectedStops.getLong("id");
                 }
             }
+
+            selectedStops.close();
+            selectStopsByEdgeId.close();
 
             return List.of((int)fromStop, (int)toStop);
         } catch (SQLException e) {
@@ -225,6 +276,14 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             getLog().info("Connected to database successfully");
         } catch (SQLException e) {
             getLog().warn("Could not connect to database", e);
+        }
+    }
+
+    private void closeDbConnection() {
+        try {
+            dbConnection.close();
+        } catch (SQLException e) {
+            getLog().warn("Error closing connection to database", e);
         }
     }
 }
