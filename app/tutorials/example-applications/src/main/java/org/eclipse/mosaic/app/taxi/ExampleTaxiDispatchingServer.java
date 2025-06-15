@@ -18,6 +18,7 @@ package org.eclipse.mosaic.app.taxi;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.TaxiServerApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.ServerOperatingSystem;
+import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
@@ -27,6 +28,7 @@ import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -36,6 +38,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final int MAX_WAIT_DISPATCHER_CONFIG = 15;
     private static final int DISPATCHER_ASSIGNED_TAXI_STATUS = 0;
     private static final int DISPATCHER_FREE_TAXI_STATUS = 1;
+    private static final int DISPATCHER_ASSIGNED_ORDER_STATUS = 1;
     private static Connection dbConnection;
     private static int lastSavedTaxiIndex = -1;
     private static int lastSavedReservationIndex = -1;
@@ -43,8 +46,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     @Override
     public void onStartup() {
         connectToDatabase();
-        checkIfTableIsNotEmpty("customer");
-        checkIfTableIsNotEmpty("stop");
+        checkIfTablesAreNotEmpty(List.of("customer", "stop"));
     }
 
     @Override
@@ -56,11 +58,8 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     public void onTaxiDataUpdate(List<TaxiVehicleData> taxis, List<TaxiReservation> taxiReservations) {
 
         // select all empty taxis
-        List<TaxiVehicleData> emptyTaxis = taxis.stream()
+        List<TaxiVehicleData> taxisToSave = taxis.stream()
             .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TAXIS)
-            .toList();
-
-        List<TaxiVehicleData> taxisToSave = emptyTaxis.stream()
             .filter(taxi -> Integer.parseInt(taxi.getId().substring(4)) > lastSavedTaxiIndex)
             .toList();
 
@@ -77,6 +76,16 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
         if (!unassignedReservations.isEmpty()) {
             insertNewReservationsInDb(unassignedReservations);
+        }
+
+        List<TaxiDispatchData> taxiDispatchDataList = fetchAvailableTaxiDispatchData();
+
+        if (!taxiDispatchDataList.isEmpty()) {
+            for  (TaxiDispatchData taxiDispatchData : taxiDispatchDataList) {
+                getOs().sendInteractionToRti(
+                    new TaxiDispatch(getOs().getSimulationTime(), taxiDispatchData.taxiId(), taxiDispatchData.customerIds())
+                );
+            }
         }
 
 //        for (TaxiReservation unassignedReservation: unassignedReservations) {
@@ -99,33 +108,48 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     }
 
-    private void checkIfTableIsNotEmpty(String tableName) {
+    private void checkIfTablesAreNotEmpty(List<String> tableNames) {
         try {
-            PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
-               "SELECT 1 FROM %s LIMIT 1".formatted(tableName));
-            ResultSet checkQueryResult = checkCustomerTable.executeQuery();
+            for (String tableName : tableNames) {
+                PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
+                    "SELECT 1 FROM %s LIMIT 1".formatted(tableName));
+                ResultSet checkQueryResult = checkCustomerTable.executeQuery();
 
-            if (!checkQueryResult.next()) {
-                throw new RuntimeException("%s table is empty!".formatted(tableName));
+                if (!checkQueryResult.next()) {
+                    throw new RuntimeException("%s table is empty!".formatted(tableName));
+                }
+
+                checkQueryResult.close();
+                checkCustomerTable.close();
             }
-
-            checkQueryResult.close();
-            checkCustomerTable.close();
         } catch(SQLException e) {
-            getLog().warn("Error checking tables in DB");
+            getLog().warn("Error checking tables in DB", e);
         }
     }
 
-    private void fetchAvailableOrders() {
+    private List<TaxiDispatchData> fetchAvailableTaxiDispatchData() {
         try {
             PreparedStatement fetchOrders = dbConnection.prepareStatement(
-                "SELECT * FROM taxi_order WHERE status IN (0,1,2,6,7)");
+                "SELECT * FROM taxi_order WHERE status IN (0,1,2,6,7)"); //TODO check which status we need here
             ResultSet fetchedOrders = fetchOrders.executeQuery();
+            List<TaxiDispatchData> taxiDispatchDataList = new ArrayList<>();
+
+            while (fetchedOrders.next()) {
+                if (fetchedOrders.getInt("status") == DISPATCHER_ASSIGNED_ORDER_STATUS) {
+                    String cabId = fetchedOrders.getString("cab_id");
+                    String customerId = fetchedOrders.getString("customer_id");
+                    taxiDispatchDataList.add(new TaxiDispatchData(cabId, List.of(customerId)));
+                }
+            }
+
             fetchOrders.close();
             fetchOrders.close();
+            return taxiDispatchDataList;
         } catch(SQLException e) {
             getLog().warn("Error while fetching available orders", e);
         }
+
+        return List.of();
     }
 
     private void fetchAvailableRoutes() {
@@ -149,8 +173,8 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
               "INSERT INTO cab (location, name, status, seats) VALUES (?,?,?,?)"
             );
 
-            for(TaxiVehicleData taxi : taxis) {
-                insertCabs.setInt(1, 0); // TODO assign a correct location(maybe a from_stand)
+            for (TaxiVehicleData taxi : taxis) {
+                insertCabs.setInt(1, 0); // TODO have some starting from_stand for the taxi
                 insertCabs.setString(2, taxi.getId());
                 insertCabs.setInt(3, taxi.getState() == TaxiVehicleData.EMPTY_TAXIS
                     ? DISPATCHER_FREE_TAXI_STATUS : DISPATCHER_ASSIGNED_TAXI_STATUS);
@@ -176,7 +200,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 "INSERT INTO taxi_order (from_stand, to_stand, max_loss, max_wait, shared, " +
                 "status, received, distance, customer_id) VALUES (?,?,?,?,true,0,?,?,?)");
 
-            for(TaxiReservation reservation: newTaxiReservations) {
+            for (TaxiReservation reservation: newTaxiReservations) {
                 List<Integer> busStopsIndices = getBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
                 assert busStopsIndices.size() == 2;
 
@@ -186,7 +210,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 insertReservations.setInt(4, MAX_WAIT_DISPATCHER_CONFIG);
                 insertReservations.setTimestamp(5, new Timestamp(System.currentTimeMillis())); // TODO check if there can't be a better method
                 insertReservations.setInt(6,
-                    calculateDistanceInSecondsBetweenTwoStops(reservation.getFromEdge(), reservation.getToEdge()));
+                    calculateDistanceInMinutesBetweenTwoStops(reservation.getFromEdge(), reservation.getToEdge()));
                 insertReservations.setLong(7, parsePerson(reservation.getPersonList()));
                 insertReservations.addBatch();
                 insertReservations.clearParameters();
@@ -215,16 +239,17 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
             long fromStop = 0L;
             long toStop = 0L;
-            if(selectedStops.next()) {
-                if(fromEdgeId.equals(selectedStops.getString("sumo_edge"))) {
-                    fromStop = selectedStops.getLong("id");
+            String idColumn = "id";
+            if (selectedStops.next()) {
+                if (fromEdgeId.equals(selectedStops.getString("sumo_edge"))) {
+                    fromStop = selectedStops.getLong(idColumn);
                     selectedStops.next();
-                    toStop = selectedStops.getLong("id");
+                    toStop = selectedStops.getLong(idColumn);
                 }
                 else {
-                    toStop = selectedStops.getLong("id");
+                    toStop = selectedStops.getLong(idColumn);
                     selectedStops.next();
-                    fromStop = selectedStops.getLong("id");
+                    fromStop = selectedStops.getLong(idColumn);
                 }
             }
 
@@ -246,7 +271,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     }
 
     // TODO check if this distance is good enough for the dispatcher
-    private int calculateDistanceInSecondsBetweenTwoStops(String fromStopEdge,  String toStopEdge) {
+    private int calculateDistanceInMinutesBetweenTwoStops(String fromStopEdge,  String toStopEdge) {
         GeoPoint startPoint = getOs().getRoutingModule()
             .getConnection(fromStopEdge)
             .getStartNode()
@@ -260,7 +285,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             new RoutingPosition(startPoint),
             new RoutingPosition(finalPoint),
             new RoutingParameters());
-        double time = Math.ceil(response.getBestRoute().getTime());
+        double time = Math.ceil(response.getBestRoute().getTime() / 60);
 
         return (int) time;
     }
@@ -285,5 +310,9 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         } catch (SQLException e) {
             getLog().warn("Error closing connection to database", e);
         }
+    }
+
+    private record TaxiDispatchData(String taxiId, List<String> customerIds) {
+
     }
 }
