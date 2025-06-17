@@ -16,7 +16,7 @@
 package org.eclipse.mosaic.lib.objects.addressing;
 
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
@@ -42,7 +42,7 @@ public class AdHocMessageRoutingBuilder {
     private AdHocChannel channel = AdHocChannel.CCH;
     private NetworkAddress destination = null;
     private Integer hops = MAXIMUM_TTL;
-    private DestinationType routing = null;
+    private RoutingType routing = null;
     private GeoArea targetArea = null;
 
     private boolean channelChanged = false;
@@ -155,7 +155,7 @@ public class AdHocMessageRoutingBuilder {
      */
     public AdHocMessageRoutingBuilder topological() {
         Validate.isTrue(!routingChanged, "Routing strategy has already been set!");
-        this.routing = DestinationType.AD_HOC_TOPOCAST;
+        this.routing = RoutingType.AD_HOC_TOPOCAST;
         this.routingChanged = true;
         return this;
     }
@@ -167,7 +167,7 @@ public class AdHocMessageRoutingBuilder {
      */
     public AdHocMessageRoutingBuilder geographical(GeoArea area) {
         Validate.isTrue(!routingChanged, "Routing strategy has already been set!");
-        this.routing = DestinationType.AD_HOC_GEOCAST;
+        this.routing = RoutingType.AD_HOC_GEOCAST;
         this.targetArea = area;
         this.routingChanged = true;
         return this;

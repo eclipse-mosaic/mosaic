@@ -201,10 +201,11 @@ public final class IpResolver implements Serializable {
         int netPart = addressArrayToFlat(netMask.getAddress());
         int client = ip & ~netPart;
         netPart = netPart & ip;
+        int index = client - 1;
 
         for (Map.Entry<UnitType, Inet4Address> unitNetworkEntry : unitNetworks.entrySet()) {
             if (netPart == addressArrayToFlat(unitNetworkEntry.getValue().getAddress())) {
-                return unitNetworkEntry.getKey().prefix + "_" + client;
+                return unitNetworkEntry.getKey().prefix + "_" + index;
             }
         }
         throw new RuntimeException("Unresolvable address " + address);
@@ -230,7 +231,7 @@ public final class IpResolver implements Serializable {
 
                 final Inet4Address ipResult;
                 try {
-                    ipResult = (Inet4Address) Inet4Address.getByAddress(addressFlatToArray(network | unitNumber));
+                    ipResult = (Inet4Address) Inet4Address.getByAddress(addressFlatToArray(network | (unitNumber + 1)));
                 } catch (UnknownHostException ex) {
                     throw new RuntimeException("Error converting hostname to IP, address is not IPv4");
                 }

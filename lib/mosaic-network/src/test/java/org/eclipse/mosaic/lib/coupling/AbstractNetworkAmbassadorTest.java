@@ -16,7 +16,6 @@
 package org.eclipse.mosaic.lib.coupling;
 
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
@@ -32,6 +31,7 @@ import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
+import org.eclipse.mosaic.lib.geo.MutableCartesianPoint;
 import org.eclipse.mosaic.lib.geo.UtmPoint;
 import org.eclipse.mosaic.lib.geo.UtmZone;
 import org.eclipse.mosaic.lib.junit.GeoProjectionRule;
@@ -89,9 +89,9 @@ public class AbstractNetworkAmbassadorTest {
         networkAmbassador.connectToFederate(null, -1);
 
         when(ambassadorFederateChannelMock.writeInitBody(anyLong(), anyLong())).thenReturn(ClientServerChannel.CMD.SUCCESS);
-        when(ambassadorFederateChannelMock.writeAddNodeMessage(anyLong(), anyList())).thenReturn(ClientServerChannel.CMD.SUCCESS);
-        when(ambassadorFederateChannelMock.writeAddRsuNodeMessage(anyLong(), anyList())).thenReturn(ClientServerChannel.CMD.SUCCESS);
-        when(ambassadorFederateChannelMock.writeConfigMessage(
+        when(ambassadorFederateChannelMock.writeAddNodeMessage(anyLong(), ClientServerChannelProtos.UpdateNode.UpdateType.ADD_VEHICLE, new ClientServerChannel.NodeDataContainer(anyInt(), new MutableCartesianPoint(anyInt(), anyInt(), anyInt())))).thenReturn(ClientServerChannel.CMD.SUCCESS);
+        when(ambassadorFederateChannelMock.writeAddNodeMessage(anyLong(), ClientServerChannelProtos.UpdateNode.UpdateType.ADD_RSU, new ClientServerChannel.NodeDataContainer(anyInt(), new MutableCartesianPoint(anyInt(), anyInt(), anyInt())))).thenReturn(ClientServerChannel.CMD.SUCCESS);
+        when(ambassadorFederateChannelMock.writeAdhocRadioConfigMessage(
                 anyLong(),
                 anyInt(),
                 anyInt(),
@@ -133,8 +133,8 @@ public class AbstractNetworkAmbassadorTest {
         // Assert
         // even though processMessage(VehicleUpdates message) has been called,
         // they can only be called when an ad hoc configuration is configured, which we haven't done yet
-        verify(ambassadorFederateChannelMock, never()).writeAddNodeMessage(anyLong(), anyList());
-        verify(ambassadorFederateChannelMock, never()).writeConfigMessage(anyLong(), anyInt(), anyInt(), isA(AdHocConfiguration.class));
+        verify(ambassadorFederateChannelMock, never()).writeAddNodeMessage(anyLong(), ClientServerChannelProtos.UpdateNode.UpdateType.ADD_VEHICLE, new ClientServerChannel.NodeDataContainer(anyInt(), new MutableCartesianPoint(anyInt(), anyInt(), anyInt())));
+        verify(ambassadorFederateChannelMock, never()).writeAdhocRadioConfigMessage(anyLong(), anyInt(), anyInt(), isA(AdHocConfiguration.class));
     }
 
     @Test
@@ -160,8 +160,8 @@ public class AbstractNetworkAmbassadorTest {
         networkAmbassador.processInteraction(adHocCommunicationConfiguration);
 
         // Assert
-        verify(ambassadorFederateChannelMock, times(1)).writeAddNodeMessage(eq(2 * TIME.SECOND), anyList());
-        verify(ambassadorFederateChannelMock, times(1)).writeConfigMessage(eq(2 * TIME.SECOND), anyInt(), anyInt(), eq(adHocConfiguration));
+        verify(ambassadorFederateChannelMock, times(1)).writeAddNodeMessage(eq(2 * TIME.SECOND), ClientServerChannelProtos.UpdateNode.UpdateType.ADD_VEHICLE, new ClientServerChannel.NodeDataContainer(anyInt(), new MutableCartesianPoint(anyInt(), anyInt(), anyInt())));
+        verify(ambassadorFederateChannelMock, times(1)).writeAdhocRadioConfigMessage(eq(2 * TIME.SECOND), anyInt(), anyInt(), eq(adHocConfiguration));
     }
 
     @Test
@@ -186,8 +186,8 @@ public class AbstractNetworkAmbassadorTest {
         networkAmbassador.processInteraction(vehicleUpdates); // Move vehicle
 
         // Assert
-        verify(ambassadorFederateChannelMock, times(1)).writeAddNodeMessage(eq(2 * TIME.SECOND), anyList());
-        verify(ambassadorFederateChannelMock, times(1)).writeConfigMessage(eq(2 * TIME.SECOND), anyInt(), anyInt(), eq(adHocConfiguration));
+        verify(ambassadorFederateChannelMock, times(1)).writeAddNodeMessage(eq(2 * TIME.SECOND), ClientServerChannelProtos.UpdateNode.UpdateType.ADD_VEHICLE, new ClientServerChannel.NodeDataContainer(anyInt(), new MutableCartesianPoint(anyInt(), anyInt(), anyInt())));
+        verify(ambassadorFederateChannelMock, times(1)).writeAdhocRadioConfigMessage(eq(2 * TIME.SECOND), anyInt(), anyInt(), eq(adHocConfiguration));
     }
 
     @Test
@@ -206,8 +206,8 @@ public class AbstractNetworkAmbassadorTest {
         networkAmbassador.processInteraction(rsuRegistration);
 
         // Assert
-        verify(ambassadorFederateChannelMock, never()).writeAddNodeMessage(anyLong(), anyList());
-        verify(ambassadorFederateChannelMock, never()).writeConfigMessage(anyLong(), anyInt(), anyInt(), isA(AdHocConfiguration.class));
+        verify(ambassadorFederateChannelMock, never()).writeAddNodeMessage(anyLong(), ClientServerChannelProtos.UpdateNode.UpdateType.ADD_VEHICLE, new ClientServerChannel.NodeDataContainer(anyInt(), new MutableCartesianPoint(anyInt(), anyInt(), anyInt())));
+        verify(ambassadorFederateChannelMock, never()).writeAdhocRadioConfigMessage(anyLong(), anyInt(), anyInt(), isA(AdHocConfiguration.class));
     }
 
     @Test
@@ -227,8 +227,8 @@ public class AbstractNetworkAmbassadorTest {
         networkAmbassador.processInteraction(adHocCommunicationConfiguration);
 
         // Assert
-        verify(ambassadorFederateChannelMock, times(1)).writeAddRsuNodeMessage(eq(2 * TIME.SECOND), anyList());
-        verify(ambassadorFederateChannelMock, times(1)).writeConfigMessage(eq(2 * TIME.SECOND), anyInt(), anyInt(), eq(adHocConfiguration));
+        verify(ambassadorFederateChannelMock, times(1)).writeAddNodeMessage(eq(2 * TIME.SECOND), ClientServerChannelProtos.UpdateNode.UpdateType.ADD_RSU, new ClientServerChannel.NodeDataContainer(anyInt(), new MutableCartesianPoint(anyInt(), anyInt(), anyInt())));;
+        verify(ambassadorFederateChannelMock, times(1)).writeAdhocRadioConfigMessage(eq(2 * TIME.SECOND), anyInt(), anyInt(), eq(adHocConfiguration));
     }
 
     private VehicleData createVehicleInfo(String string) {

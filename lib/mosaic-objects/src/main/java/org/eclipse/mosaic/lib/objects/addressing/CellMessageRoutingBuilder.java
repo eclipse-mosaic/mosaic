@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.lib.objects.addressing;
 
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
@@ -38,7 +38,7 @@ public class CellMessageRoutingBuilder {
     private long streamBandwidthInBitPs = -1;
 
     private NetworkAddress destination = null;
-    private DestinationType routing = null;
+    private RoutingType routing = null;
     private GeoArea targetArea = null;
 
     private boolean destinationChanged = false;
@@ -174,8 +174,8 @@ public class CellMessageRoutingBuilder {
      */
     public CellMessageRoutingBuilder mbs() {
         Validate.isTrue(!mbsChanged, "MBS was already chosen!");
-        Validate.isTrue(!(routing == DestinationType.CELL_TOPOCAST), "MBS can not be enabled for topological routing!");
-        routing = DestinationType.CELL_GEOCAST_MBMS;
+        Validate.isTrue(!(routing == RoutingType.CELL_TOPOCAST), "MBS can not be enabled for topological routing!");
+        routing = RoutingType.CELL_GEOCAST_MBMS;
         mbsChanged = true;
         return this;
     }
@@ -187,7 +187,7 @@ public class CellMessageRoutingBuilder {
     public CellMessageRoutingBuilder topological() {
         Validate.isTrue(!routingChanged, "Routing was already set!");
         Validate.isTrue(!mbsChanged, "MBS can not be enabled for topological routing!");
-        routing = DestinationType.CELL_TOPOCAST;
+        routing = RoutingType.CELL_TOPOCAST;
         routingChanged = true;
         return this;
     }
@@ -200,7 +200,7 @@ public class CellMessageRoutingBuilder {
     public CellMessageRoutingBuilder geographical(GeoArea area) {
         Validate.isTrue(!routingChanged, "Routing was already set!");
         if (!mbsChanged) {
-            routing = DestinationType.CELL_GEOCAST;
+            routing = RoutingType.CELL_GEOCAST;
         }
         targetArea = area;
         routingChanged = true;
@@ -226,7 +226,7 @@ public class CellMessageRoutingBuilder {
     }
 
     private void checkArea() {
-        if (routing == DestinationType.CELL_GEOCAST_MBMS && targetArea == null) {
+        if (routing == RoutingType.CELL_GEOCAST_MBMS && targetArea == null) {
             throw new IllegalArgumentException("No target area was given for geographical routing using mbs!"
                     + "Have you called .geographical(GeoArea)? Aborting.");
         }

@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.lib.coupling;
 
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.objects.addressing.NetworkAddress;
 
@@ -30,12 +30,12 @@ public final class CAbstractNetworkAmbassador {
 
     /**
      * Returns {@code true}, if the network ambassador implementation supports the
-     * given {@link DestinationType}.
+     * given {@link RoutingType}.
      *
-     * @param routingType the {@link DestinationType} to check
-     * @return {@code true}, if the network ambassador implementation supports the given {@link DestinationType}.
+     * @param routingType the {@link RoutingType} to check
+     * @return {@code true}, if the network ambassador implementation supports the given {@link RoutingType}.
      */
-    boolean isRoutingTypeSupported(DestinationType routingType) {
+    boolean isRoutingTypeSupported(RoutingType routingType) {
         return messages.routingType.getOrDefault(routingType, false);
     }
 
@@ -65,16 +65,16 @@ public final class CAbstractNetworkAmbassador {
 
     static class CMessages {
 
-        private CDestinationAdress destinationAddress = new CDestinationAdress();
-        private Map<DestinationType, Boolean> routingType = new HashMap<>();
+        private CDestinationAddress destinationAddress = new CDestinationAddress();
+        private Map<RoutingType, Boolean> routingType = new HashMap<>();
         private Map<ProtocolType, Boolean> protocolType = new HashMap<>();
 
         CMessages() {
-            routingType.put(DestinationType.AD_HOC_GEOCAST, false);
-            routingType.put(DestinationType.AD_HOC_TOPOCAST, true);
-            routingType.put(DestinationType.CELL_GEOCAST, false);
-            routingType.put(DestinationType.CELL_GEOCAST_MBMS, false);
-            routingType.put(DestinationType.CELL_TOPOCAST, false);
+            routingType.put(RoutingType.AD_HOC_GEOCAST, false);
+            routingType.put(RoutingType.AD_HOC_TOPOCAST, true);
+            routingType.put(RoutingType.CELL_GEOCAST, false);
+            routingType.put(RoutingType.CELL_GEOCAST_MBMS, false);
+            routingType.put(RoutingType.CELL_TOPOCAST, true);
 
             protocolType.put(ProtocolType.UDP, true);
             protocolType.put(ProtocolType.TCP, false);
@@ -82,8 +82,8 @@ public final class CAbstractNetworkAmbassador {
     }
 
     @SuppressWarnings("FieldCanBeLocal")
-    static class CDestinationAdress {
-        private boolean ipv4UnicastAddress = false;
+    static class CDestinationAddress {
+        private boolean ipv4UnicastAddress = true;
         private boolean ipv4BroadcastAddress = true;
         private boolean ipv4AnycastAddress = false;
     }

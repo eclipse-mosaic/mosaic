@@ -16,7 +16,7 @@
 package org.eclipse.mosaic.lib.objects.addressing;
 
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 
@@ -39,7 +39,7 @@ public class DestinationAddressContainer implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private final NetworkAddress destinationAddress;
-    private final DestinationType type;
+    private final RoutingType type;
 
     /**
      * Time to live (TTL). Unitless.
@@ -64,12 +64,12 @@ public class DestinationAddressContainer implements Serializable {
     /**
      * Creates a new {@link DestinationAddressContainer}.
      *
-     * @param destinationType a destination type describing the addressing schema
+     * @param routingType a destination type describing the addressing schema
      * @param destinationAddress  destination address in IpV4
      * @param adHocChannel a AdHoc channel on the 5.9 GHz Band {@link AdHocChannel}
      */
     public DestinationAddressContainer(
-            DestinationType destinationType,
+            RoutingType routingType,
             NetworkAddress destinationAddress,
             AdHocChannel adHocChannel,
             Integer timeToLive,
@@ -78,7 +78,7 @@ public class DestinationAddressContainer implements Serializable {
     ) {
         // Only use a TopocastDestinationAddress or a GeocastDestinationAddress.
         this.destinationAddress = Objects.requireNonNull(destinationAddress);
-        this.type = Objects.requireNonNull(destinationType);
+        this.type = Objects.requireNonNull(routingType);
         this.adHocChannel = adHocChannel;
         this.timeToLive = timeToLive;
         this.disseminationArea = disseminationArea;
@@ -91,7 +91,7 @@ public class DestinationAddressContainer implements Serializable {
     }
 
     @Nonnull
-    public DestinationType getType() {
+    public RoutingType getType() {
         return type;
     }
     
