@@ -181,6 +181,13 @@ public class FileUtils {
     }
 
     /**
+     * Returns {@code true}, if the provided file exists and ends with a .json file extension.
+     */
+    public static boolean isGeoJsonFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".geojson");
+    }
+
+    /**
      * Returns {@code true}, if the provided file exists and ends with a .xml file extension.
      */
     public static boolean isXmlFile(File file) {
