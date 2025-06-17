@@ -40,7 +40,7 @@ public class GeoPointAdapter implements JsonDeserializer<GeoPoint>, JsonSerializ
     public JsonElement serialize(GeoPoint point, Type type, JsonSerializationContext jsonSerializationContext) {
         final JsonElement element = jsonSerializationContext.serialize(point);
         if (MathUtils.isFuzzyZero(point.getAltitude()) && element instanceof JsonObject) {
-            ((JsonObject)element).remove("altitude");
+            ((JsonObject) element).remove("altitude");
         }
         return element;
     }

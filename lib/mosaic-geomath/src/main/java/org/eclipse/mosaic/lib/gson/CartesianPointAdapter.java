@@ -54,7 +54,7 @@ public class CartesianPointAdapter implements JsonDeserializer<CartesianPoint>, 
     public JsonElement serialize(CartesianPoint point, Type type, JsonSerializationContext jsonSerializationContext) {
         final JsonElement element = jsonSerializationContext.serialize(point);
         if (MathUtils.isFuzzyZero(point.getZ()) && element instanceof JsonObject) {
-            ((JsonObject)element).remove("z");
+            ((JsonObject) element).remove("z");
         }
         return element;
     }
