@@ -155,7 +155,7 @@
         },
         {
             "id": "sumo",
-            "classname": "org.eclipse.mosaic.fed.sumo.ambassador.SumoGuiAmbassador",
+            "classname": "org.eclipse.mosaic.fed.sumo.ambassador.SumoAmbassador",
             "configuration": "sumo_config.json",
             "priority": 50,
             "host": "local",

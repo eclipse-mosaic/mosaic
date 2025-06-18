@@ -174,7 +174,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             );
 
             for (TaxiVehicleData taxi : taxis) {
-                insertCabs.setInt(1, 0); // TODO have some starting from_stand for the taxi
+                insertCabs.setInt(1, 1); // TODO have some starting from_stand for the taxi
                 insertCabs.setString(2, taxi.getId());
                 insertCabs.setInt(3, taxi.getState() == TaxiVehicleData.EMPTY_TAXIS
                     ? DISPATCHER_FREE_TAXI_STATUS : DISPATCHER_ASSIGNED_TAXI_STATUS);

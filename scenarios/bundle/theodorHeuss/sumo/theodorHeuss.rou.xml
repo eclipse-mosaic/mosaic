@@ -13,7 +13,7 @@
 
 	<vehicle id="t1" type="TaxiSumo" route="1" depart="0.00" line="taxi"/>
 	<vehicle id="t2" type="TaxiSumo" route="2" depart="0.00" line="taxi"/>
-	<vehicle id="t3" type="TaxiSumo" route="3" depart="5.00" line="taxi"/>
+	<vehicle id="t3" type="TaxiSumo" route="3" depart="0.00" line="taxi"/>
 
 	<person id="p1" depart="0.00" color="green">
 		<ride from="4515866_27560039_27559811" busStop="bs3" lines="taxi"/>
