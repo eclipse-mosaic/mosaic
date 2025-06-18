@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.starter;
 
-import org.eclipse.mosaic.lib.util.cli.CommandLineParser;
+import org.eclipse.mosaic.lib.util.cli.ArgumentsOptionsParser;
 import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
 import org.eclipse.mosaic.rti.MosaicComponentProvider;
 import org.eclipse.mosaic.rti.api.MosaicVersion;
@@ -28,7 +28,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import com.networknt.schema.JsonValidator;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -110,17 +109,15 @@ public class MosaicStarter {
         final MosaicSimulation simulation = createSimulation()
                 .setRuntimeConfiguration(runtimeConfiguration)
                 .setHostsConfiguration(hostsConfiguration)
-                .setRealtimeBrake(StringUtils.isNumeric(params.realtimeBrake) ? Integer.parseInt(params.realtimeBrake) : 0)
+                .setRealtimeBrake(params.realtimeBrake != null ? params.realtimeBrake : 0.0)
                 .setLogbackConfigurationFile(params.loggerConfiguration != null ? Paths.get(params.loggerConfiguration) : LOGBACK_CONFIG)
                 .setLogLevelOverride(params.logLevel)
                 .setComponentProviderFactory(createComponentProviderFactory(runtimeConfiguration, classLoader))
-                .setClassLoader(classLoader);
+                .setClassLoader(classLoader)
+                .setWatchdogInterval(params.watchdogInterval);
 
-        if (StringUtils.isNotEmpty(params.watchdogInterval) && StringUtils.isNumeric(params.watchdogInterval)) {
-            simulation.setWatchdogInterval(Integer.parseInt(params.watchdogInterval));
-        }
-        if (StringUtils.isNotEmpty(params.externalWatchDog) && StringUtils.isNumeric(params.externalWatchDog)) {
-            simulation.setExternalWatchdogPort(Integer.parseInt(params.externalWatchDog));
+        if (params.externalWatchDog != null) {
+            simulation.setExternalWatchdogPort(params.externalWatchDog);
         }
 
         final CScenario scenarioConfiguration = loadJsonConfiguration(scenarioConfigurationFile, CScenario.class);
@@ -147,14 +144,25 @@ public class MosaicStarter {
 
     protected void printVersionAndCopyrightInfo() {
         System.out.println("Eclipse MOSAIC [Version " + MosaicVersion.get() + "]");
-        System.out.println("Copyright (c) 2024 Fraunhofer FOKUS and others. All rights reserved.");
+        System.out.println("Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.");
         System.out.println("License EPL-2.0: Eclipse Public License Version 2 [https://eclipse.org/legal/epl-v20.html].");
         System.out.println();
     }
 
     protected MosaicParameters readParametersFromCli(String[] args) throws ExecutionException {
-        final CommandLineParser<MosaicParameters> cli = new CommandLineParser<>(MosaicParameters.class)
-                .usageHint("mosaic -c <CONFIG-FILE> \n       mosaic -s <SCENARIO> \n\n", null, null);
+        final ArgumentsOptionsParser<MosaicParameters> cli = new ArgumentsOptionsParser<>(MosaicParameters.class)
+                .usageHint("mosaic -c <CONFIG-FILE> [OPTION(S)]\n  mosaic -s <SCENARIO> [OPTION(S)]",
+                        """
+                                DESCRIPTION
+                                  Executes a MOSAIC simulation scenario.
+                                  
+                                  The scenario can be provided by its name using the '-s SCENARIO_NAME' option if a scenario with the given
+                                  name is located in the 'scenarios' directory. Otherwise, use the option '-c path/to/scenario_config.json'
+                                  to execute a scenario which is located in a specific path.
+                                  
+                                  A list of all other options can be found below. It may be helpful to use the parameter '-w 0' if the
+                                  simulation uses a simulator which takes too long for its initialization procedure.
+                                  """, null);
         try {
             final MosaicParameters params = cli.parseArguments(args, new MosaicParameters());
             if (params == null) {
@@ -270,7 +278,7 @@ public class MosaicStarter {
      *
      * @param cli command line into a parameter object.
      */
-    protected void printUsage(CommandLineParser<?> cli, String error) {
+    protected void printUsage(ArgumentsOptionsParser<?> cli, String error) {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8))) {
             cli.printHelp(writer);

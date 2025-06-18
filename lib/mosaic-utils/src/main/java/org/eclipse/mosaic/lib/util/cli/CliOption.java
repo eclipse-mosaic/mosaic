@@ -21,22 +21,44 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to declare parameters for the command line.
+ * Annotation to declare an option for the command line.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CommandLineOption {
+public @interface CliOption {
 
+    /**
+     * The short option name.
+     */
     String shortOption() default "";
 
+    /**
+     * The long option name.
+     */
     String longOption();
 
+    /**
+     * The description of the option used for help messages.
+     */
     String description();
 
-    String argName() default "";
+    /**
+     * The name of the value for this option. Usually, all non-boolean options need such valueHint.
+     */
+    String valueHint() default "";
 
+    /**
+     * The default value set at the annotated field, if an valueHint is specified, which is optional.
+     */
+    String defaultValue() default "";
+
+    /**
+     * The group to which this parameter option belongs to. Within a group, only one option must be used at most.
+     */
     String group() default "";
 
+    /**
+     * Defines, if this parameter (or group, if set) is a required parameter.
+     */
     boolean isRequired() default false;
-
 }

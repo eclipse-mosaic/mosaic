@@ -32,14 +32,13 @@ public class MosaicVersion implements Comparable<MosaicVersion> {
 
     private static String mosaicVersion;
 
-    private int major;
-    private int minor;
-    private boolean isSnapshot;
+    private final int major;
+    private final int minor;
+    private final boolean isSnapshot;
 
     private MosaicVersion(@Nonnull String version) {
         // make sure there is something to check
         Objects.requireNonNull(version);
-        mosaicVersion = version;
         // check for snapshot
         String[] split = version.split("-");
         this.isSnapshot = (split.length > 1 && "SNAPSHOT".equals(split[1]));

@@ -29,7 +29,7 @@ import org.eclipse.mosaic.rti.api.time.FederateEvent;
  */
 public class SequentialTimeManagement extends AbstractTimeManagement {
 
-    private final int realtimeBrake;
+    private final double realtimeBrake;
 
     /**
      * Creates a new instance of the sequential time management.

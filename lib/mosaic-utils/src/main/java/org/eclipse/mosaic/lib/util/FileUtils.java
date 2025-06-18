@@ -172,4 +172,53 @@ public class FileUtils {
         }
         return file;
     }
+
+    /**
+     * Returns {@code true}, if the provided file exists and ends with a .json file extension.
+     */
+    public static boolean isJsonFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".json");
+    }
+
+    /**
+     * Returns {@code true}, if the provided file exists and ends with a .xml file extension.
+     */
+    public static boolean isXmlFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".xml");
+    }
+
+    /**
+     * Returns {@code true}, if the provided file exists and ends with a .db file extension.
+     */
+    public static boolean isDatabaseFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".db");
+    }
+
+    /**
+     * Returns {@code true}, if the provided file exists and ends with a .osm file extension.
+     */
+    public static boolean isOsmFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".osm");
+    }
+
+    /**
+     * Returns {@code true}, if the provided file exists and ends with a .sumocfg file extension.
+     */
+    public static boolean isSumoCfgFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".sumocfg");
+    }
+
+    /**
+     * Returns {@code true}, if the provided file exists and ends with a .net.xml file extension.
+     */
+    public static boolean isSumoNetFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".net.xml");
+    }
+
+    /**
+     * Returns {@code true}, if the provided file exists and ends with a .rou.xml file extension.
+     */
+    public static boolean isSumoRouteFile(File file) {
+        return file != null && file.exists() && file.getName().endsWith(".rou.xml");
+    }
 }

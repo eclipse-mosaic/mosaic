@@ -76,11 +76,6 @@ import java.util.stream.Collectors;
 
 public class MosaicSimulation {
 
-    /**
-     * Default interval of the watchdog thread in seconds.
-     */
-    private static final int DEFAULT_WATCHDOG_INTERVAL = 30;
-
     private static final Path LOG_DIRECTORY = Paths.get("logs");
 
     private static final Path FEDERATE_DIRECTORY = Paths.get("bin", "fed");
@@ -92,8 +87,8 @@ public class MosaicSimulation {
     private Path logbackConfigurationFile;
     private String logLevelOverride;
 
-    private int realtimeBrake = 0;
-    private int watchdogInterval = DEFAULT_WATCHDOG_INTERVAL;
+    private double realtimeBrake = 0;
+    private int watchdogInterval = 0;
     private int externalWatchdogPort = 0;
 
     private Logger log = null;
@@ -137,7 +132,7 @@ public class MosaicSimulation {
         return this;
     }
 
-    public MosaicSimulation setRealtimeBrake(int realtimeBrake) {
+    public MosaicSimulation setRealtimeBrake(double realtimeBrake) {
         this.realtimeBrake = realtimeBrake;
         return this;
     }

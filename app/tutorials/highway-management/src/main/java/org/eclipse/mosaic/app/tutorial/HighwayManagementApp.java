@@ -15,17 +15,16 @@
 
 package org.eclipse.mosaic.app.tutorial;
 
+import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.tmc.InductionLoop;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.tmc.LaneAreaDetector;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.TrafficManagementCenterApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.TrafficManagementCenterOperatingSystem;
-import org.eclipse.mosaic.lib.database.Database;
-import org.eclipse.mosaic.lib.database.route.Route;
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleRoute;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 import org.eclipse.mosaic.rti.TIME;
 
-import java.io.File;
 import java.util.Collection;
 
 public class HighwayManagementApp extends AbstractApplication<TrafficManagementCenterOperatingSystem> implements TrafficManagementCenterApplication {
@@ -40,26 +39,23 @@ public class HighwayManagementApp extends AbstractApplication<TrafficManagementC
 
     @Override
     public void onStartup() {
-        // Find database file in application ambassador directory
-        File[] dbFiles = getOs().getConfigurationPath().listFiles((f, n) -> n.endsWith(".db"));
-
-        if (dbFiles != null && dbFiles.length > 0) {
-            Database database = Database.loadFromFile(dbFiles[0]);
-            final Route routeToClose = database.getRoute(routeIdToClose);
-
-            // On tenth second second of simulation, close the lanes along the given route
-            getOs().getEventManager().addEvent(10 * TIME.SECOND, (e) ->
-                    closeEdges(routeToClose, numberOfLanesToClose)
-            );
-
-            // On 300th second of simulation, open the lanes along the given route
-            getOs().getEventManager().addEvent(300 * TIME.SECOND, (e) ->
-                    openEdges(routeToClose, numberOfLanesToClose)
-            );
+        VehicleRoute routeToClose = SimulationKernel.SimulationKernel.getRoutes().get(routeIdToClose);
+        if (routeToClose == null) {
+            throw new IllegalArgumentException("Could not find route with id=" + routeIdToClose + " in route cache.");
         }
+
+        // On tenth second of simulation, close the lanes along the given route
+        getOs().getEventManager().addEvent(10 * TIME.SECOND, (e) ->
+                closeEdges(routeToClose, numberOfLanesToClose)
+        );
+
+        // On 300th second of simulation, open the lanes along the given route
+        getOs().getEventManager().addEvent(300 * TIME.SECOND, (e) ->
+                openEdges(routeToClose, numberOfLanesToClose)
+        );
     }
 
-    private void closeEdges(Route routeToClose, int numberOfLanesToClose) {
+    private void closeEdges(VehicleRoute routeToClose, int numberOfLanesToClose) {
         getLog().info("Closing {} lanes along route {}", numberOfLanesToClose, routeToClose.getId());
 
         for (String edge : routeToClose.getConnectionIds()) {
@@ -69,7 +65,7 @@ public class HighwayManagementApp extends AbstractApplication<TrafficManagementC
         }
     }
 
-    private void openEdges(Route routeToClose, int numberOfLanesToClose) {
+    private void openEdges(VehicleRoute routeToClose, int numberOfLanesToClose) {
         getLog().info("Opening {} lanes along route {}", numberOfLanesToClose, routeToClose.getId());
 
         for (String edge : routeToClose.getConnectionIds()) {

@@ -20,19 +20,19 @@ import java.io.Serializable;
 public class TestParameters implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @CommandLineOption(shortOption = "c", longOption = "config", argName = "PATH", description = "...", group = "config")
+    @CliOption(shortOption = "c", longOption = "config", valueHint = "PATH", description = "...", group = "config")
     public String configurationPath = null;
 
-    @CommandLineOption(shortOption = "s", longOption = "scenario", argName = "NAME", description = "...", group = "config")
+    @CliOption(shortOption = "s", longOption = "scenario", valueHint = "NAME", description = "...", group = "config")
     public String scenarioName = null;
 
-    @CommandLineOption(shortOption = "w", longOption = "watchdog-interval", argName = "SECONDS", description = "...")
-    public String watchdoginterval = null;
+    @CliOption(shortOption = "w", longOption = "watchdog-interval", valueHint = "SECONDS", description = "...")
+    public int watchdogInterval = -1;
 
-    @CommandLineOption(shortOption = "v", longOption = "start-visualizer", description = "...")
+    @CliOption(shortOption = "v", longOption = "start-visualizer", description = "...")
     public boolean startVisualizer = false;
 
-    @CommandLineOption(shortOption = "u", longOption = "user", argName = "USERID", description = "...", isRequired = true)
+    @CliOption(shortOption = "u", longOption = "user", valueHint = "USERID", description = "...", isRequired = true)
     public String userid = null;
 
 }
