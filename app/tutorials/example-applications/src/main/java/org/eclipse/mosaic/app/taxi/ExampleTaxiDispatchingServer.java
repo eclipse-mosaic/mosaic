@@ -39,6 +39,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final int DISPATCHER_ASSIGNED_TAXI_STATUS = 0;
     private static final int DISPATCHER_FREE_TAXI_STATUS = 1;
     private static final int DISPATCHER_ASSIGNED_ORDER_STATUS = 1;
+    private static final int VEHICLE_ID_PREFIX_LENGTH = 4; // the length of "veh_"
     private static Connection dbConnection;
     private static int lastSavedTaxiIndex = -1;
     private static int lastSavedReservationIndex = -1;
@@ -46,7 +47,8 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     @Override
     public void onStartup() {
         connectToDatabase();
-        checkIfTablesAreNotEmpty(List.of("customer", "stop"));
+        checkTablesState(List.of("customer", "stop"), false);
+        checkTablesState(List.of("cab", "taxi_order", "leg", "route", "freetaxi_order"), true);
     }
 
     @Override
@@ -60,7 +62,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         // select all empty taxis
         List<TaxiVehicleData> taxisToSave = taxis.stream()
             .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TAXIS)
-            .filter(taxi -> Integer.parseInt(taxi.getId().substring(4)) > lastSavedTaxiIndex)
+            .filter(taxi -> Integer.parseInt(taxi.getId().substring(VEHICLE_ID_PREFIX_LENGTH)) > lastSavedTaxiIndex)
             .toList();
 
         if (!taxisToSave.isEmpty()) {
@@ -88,6 +90,8 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             }
         }
 
+        updateTaxiVehicles();
+
 //        for (TaxiReservation unassignedReservation: unassignedReservations) {
 //            if (emptyTaxis.isEmpty()) {
 //                break;
@@ -108,15 +112,21 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     }
 
-    private void checkIfTablesAreNotEmpty(List<String> tableNames) {
+    private void checkTablesState(List<String> tableNames, boolean shouldTableBeEmpty) {
         try {
             for (String tableName : tableNames) {
                 PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
                     "SELECT 1 FROM %s LIMIT 1".formatted(tableName));
                 ResultSet checkQueryResult = checkCustomerTable.executeQuery();
 
-                if (!checkQueryResult.next()) {
-                    throw new RuntimeException("%s table is empty!".formatted(tableName));
+                if (shouldTableBeEmpty) {
+                    if (checkQueryResult.next()) {
+                        throw new RuntimeException("%s table is not empty!".formatted(tableName));
+                    }
+                } else {
+                    if (!checkQueryResult.next()) {
+                        throw new RuntimeException("%s table is empty!".formatted(tableName));
+                    }
                 }
 
                 checkQueryResult.close();
@@ -125,6 +135,10 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         } catch(SQLException e) {
             getLog().warn("Error checking tables in DB", e);
         }
+    }
+
+    private void updateTaxiVehicles() {
+
     }
 
     private List<TaxiDispatchData> fetchAvailableTaxiDispatchData() {
@@ -136,9 +150,9 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
             while (fetchedOrders.next()) {
                 if (fetchedOrders.getInt("status") == DISPATCHER_ASSIGNED_ORDER_STATUS) {
-                    String cabId = fetchedOrders.getString("cab_id");
+                    String cabSumoId = fetchedOrders.getString("name");
                     String customerId = fetchedOrders.getString("customer_id");
-                    taxiDispatchDataList.add(new TaxiDispatchData(cabId, List.of(customerId)));
+                    taxiDispatchDataList.add(new TaxiDispatchData(cabSumoId, List.of("p" + customerId)));
                 }
             }
 
