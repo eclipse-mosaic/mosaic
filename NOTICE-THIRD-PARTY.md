@@ -245,6 +245,14 @@ mapdb (1.0.8)
  * Source: https://github.com/jankotek/MapDB
 
 
+MySQL Connector/J (9.3.0)
+
+ * License: The GNU General Public License, v2 with Universal FOSS Exception, v1.0
+ * Maven artifact: `com.mysql:mysql-connector-j:9.3.0`
+ * Project: http://dev.mysql.com/doc/connector-j/en/
+ * Source: https://github.com/mysql/mysql-connector-j
+
+
 opencsv (5.9)
 
  * License: Apache-2.0

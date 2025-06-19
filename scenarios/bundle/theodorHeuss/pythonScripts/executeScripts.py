@@ -1,0 +1,18 @@
+import setupTables
+import extractPersons
+import extractBusstops
+
+SHOULD_RESET_TABLES = True # Change this to False if you want to recreate all tables
+
+def print_separation_line():
+    print('=' * 40)
+
+def main():
+    setupTables.main(True)
+    print_separation_line()
+    extractPersons.main()
+    print_separation_line()
+    extractBusstops.main()
+
+if __name__ == "__main__":
+    main()

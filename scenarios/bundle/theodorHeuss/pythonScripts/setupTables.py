@@ -1,4 +1,4 @@
-import sys
+import os
 from mysql import connector
 from mysql.connector.pooling import PooledMySQLConnection
 
@@ -72,27 +72,22 @@ def reset_tables():
     my_db_connection.commit()
 
     for table_name in DELETE_TABLE_NAMES_ORDER:
-        print("Current table {}".format(table_name))
+        print("Resetting table {}".format(table_name))
         cursor.execute("DELETE FROM {}".format(table_name))
         my_db_connection.commit()
         cursor.execute("ALTER TABLE {} AUTO_INCREMENT = 1".format(table_name))
         my_db_connection.commit()
     print("All tables reset!")
 
-def main():
-    # === Start of script ===
-    if len(sys.argv) != 2:
-        raise Exception("No or more than one argument given. Choose between 'reset' and 'create'!")
-
+def main(should_reset):
+    print("Executing script:", os.path.basename(__file__))
     setup_db_connection()
 
-    if sys.argv[1] == "reset":
+    if should_reset:
         reset_tables()
-        sys.exit(0)
-    elif sys.argv[1] == "create":
-        drop_tables()
+        return
     else:
-        raise Exception("Invalid argument given. Choose between 'reset' and 'create'!")
+        drop_tables()
 
     # CAB_TABLE
     create_cab_table_query = ("CREATE TABLE cab (id BIGINT PRIMARY KEY AUTO_INCREMENT, location INTEGER NOT NULL, "
@@ -145,4 +140,4 @@ def main():
     my_db_connection.close()
 
 if __name__ == "__main__":
-    main()
+    main(True) # Change this to False if you want to recreate all tables
