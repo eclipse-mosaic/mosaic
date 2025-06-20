@@ -24,7 +24,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
@@ -39,12 +38,10 @@ public class GeoPointAdapter implements JsonDeserializer<GeoPoint>, JsonSerializ
 
     @Override
     public JsonElement serialize(GeoPoint point, Type type, JsonSerializationContext jsonSerializationContext) {
-        JsonObject object = new JsonObject();
-        object.add("latitude", new JsonPrimitive(point.getLatitude()));
-        object.add("longitude", new JsonPrimitive(point.getLongitude()));
-        if (!MathUtils.isFuzzyZero(point.getAltitude())) {
-            object.add("altitude", new JsonPrimitive(point.getAltitude()));
+        final JsonElement element = jsonSerializationContext.serialize(point);
+        if (MathUtils.isFuzzyZero(point.getAltitude()) && element instanceof JsonObject) {
+            ((JsonObject) element).remove("altitude");
         }
-        return object;
+        return element;
     }
 }
