@@ -1,6 +1,4 @@
-import os
-import math
-import setupTables
+import os, math, setupTables
 from lxml import etree
 from mysql.connector.pooling import PooledMySQLConnection
 from pyproj import Transformer, CRS

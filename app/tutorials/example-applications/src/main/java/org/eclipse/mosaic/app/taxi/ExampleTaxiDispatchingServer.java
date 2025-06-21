@@ -31,6 +31,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
@@ -47,8 +48,8 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     @Override
     public void onStartup() {
         connectToDatabase();
-        checkTablesState(List.of("customer", "stop"), false);
-        checkTablesState(List.of("cab", "taxi_order", "leg", "route", "freetaxi_order"), true);
+        checkTablesState(List.of("customer", "stop", "cab"), false);
+        checkTablesState(List.of("taxi_order", "leg", "route", "freetaxi_order"), true);
     }
 
     @Override
@@ -59,14 +60,14 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     @Override
     public void onTaxiDataUpdate(List<TaxiVehicleData> taxis, List<TaxiReservation> taxiReservations) {
 
-        // select all empty taxis
-        List<TaxiVehicleData> taxisToSave = taxis.stream()
+        // select all empty taxis which now enter the simulation
+        List<TaxiVehicleData> taxisToRegister = taxis.stream()
             .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TAXIS)
             .filter(taxi -> Integer.parseInt(taxi.getId().substring(VEHICLE_ID_PREFIX_LENGTH)) > lastSavedTaxiIndex)
             .toList();
 
-        if (!taxisToSave.isEmpty()) {
-            insertNewCabsInDb(taxisToSave);
+        if (!taxisToRegister.isEmpty()) {
+            registerTaxisInDb(taxisToRegister);
         }
 
         // select all unassigned reservations
@@ -80,7 +81,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             insertNewReservationsInDb(unassignedReservations);
         }
 
-        List<TaxiDispatchData> taxiDispatchDataList = fetchAvailableTaxiDispatchData();
+        List<TaxiDispatchData> taxiDispatchDataList = fetchAvailableTaxiDispatchData(); // TODO update the already taken orders
 
         if (!taxiDispatchDataList.isEmpty()) {
             for  (TaxiDispatchData taxiDispatchData : taxiDispatchDataList) {
@@ -91,20 +92,6 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         }
 
         updateTaxiVehicles();
-
-//        for (TaxiReservation unassignedReservation: unassignedReservations) {
-//            if (emptyTaxis.isEmpty()) {
-//                break;
-//            }
-//            // for each unassigned reservation, just choose an empty taxi randomly
-//            String emptyTaxi = emptyTaxis.remove(getRandom().nextInt(emptyTaxis.size()));
-//
-//            //  and send the dispatch command to SumoAmbassador via TaxiDispatch interaction
-//            getOs().sendInteractionToRti(
-//                    new TaxiDispatch(getOs().getSimulationTime(), emptyTaxi, Lists.newArrayList(unassignedReservation.getId()))
-//            );
-//
-//        }
     }
 
     @Override
@@ -181,30 +168,30 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         }
     }
 
-    private void insertNewCabsInDb(List<TaxiVehicleData> taxis) {
+    private void registerTaxisInDb(List<TaxiVehicleData> taxis) {
         try {
-            PreparedStatement insertCabs = dbConnection.prepareStatement(
-              "INSERT INTO cab (location, name, status, seats) VALUES (?,?,?,?)"
+            String idsToRegister = taxis.stream()
+                .map(TaxiVehicleData::getId)
+                .map(id -> Integer.parseInt(id.substring(VEHICLE_ID_PREFIX_LENGTH)) + 1)
+                .map(Object::toString)
+                .collect(Collectors.joining(","));
+
+            // Setting the taxi status to FREE for the given IDs
+            PreparedStatement updateCabs = dbConnection.prepareStatement(
+              "UPDATE cab SET status = ? WHERE ID IN (?)"
             );
 
-            for (TaxiVehicleData taxi : taxis) {
-                insertCabs.setInt(1, 1); // TODO have some starting from_stand for the taxi
-                insertCabs.setString(2, taxi.getId());
-                insertCabs.setInt(3, taxi.getState() == TaxiVehicleData.EMPTY_TAXIS
-                    ? DISPATCHER_FREE_TAXI_STATUS : DISPATCHER_ASSIGNED_TAXI_STATUS);
-                insertCabs.setInt(4, taxi.getPersonCapacity());
-                insertCabs.addBatch();
-                insertCabs.clearParameters();
-            }
+            updateCabs.setInt(1, DISPATCHER_FREE_TAXI_STATUS);
+            updateCabs.setString(2, idsToRegister);
+            int updatedRows = updateCabs.executeUpdate();
 
-            int[] insertCabsResults = insertCabs.executeBatch();
-            for (int batchCommandResult : insertCabsResults) {
-                assert batchCommandResult >= 0;
+            if (updatedRows != taxis.size()) {
+                throw new RuntimeException("Some cabs were not registered correctly!");
             }
-            insertCabs.close();
+            updateCabs.close();
             lastSavedTaxiIndex += taxis.size();
         } catch(SQLException e) {
-            getLog().warn("Error while inserting cabs in the DB", e);
+            getLog().warn("Error while registering cabs in the DB", e);
         }
     }
 
@@ -216,7 +203,9 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
             for (TaxiReservation reservation: newTaxiReservations) {
                 List<Integer> busStopsIndices = getBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
-                assert busStopsIndices.size() == 2;
+                if (busStopsIndices.size() != 2) {
+                    throw new RuntimeException("Number of fetched bus stops is not 2!");
+                }
 
                 insertReservations.setInt(1, busStopsIndices.get(0));
                 insertReservations.setInt(2, busStopsIndices.get(1));
@@ -232,7 +221,9 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
             int[] insertedReservationsResults = insertReservations.executeBatch();
             for (int batchCommandResult : insertedReservationsResults) {
-                assert batchCommandResult >= 0;
+                if (batchCommandResult < 0) {
+                    throw new RuntimeException("Some reservations were not inserted correctly!");
+                }
             }
             insertReservations.close();
             lastSavedReservationIndex +=  newTaxiReservations.size();
@@ -249,20 +240,25 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             selectStopsByEdgeId.setString(1, fromEdgeId);
             selectStopsByEdgeId.setString(2, toEdgeId);
             ResultSet selectedStops = selectStopsByEdgeId.executeQuery();
-            assert selectedStops.getFetchSize() == 2;
 
-            long fromStop = 0L;
-            long toStop = 0L;
+            long fromStop;
+            long toStop;
             String idColumn = "id";
-            if (selectedStops.next()) {
+            if (!selectedStops.next()) {
+                throw new RuntimeException("Number of fetched bus stops is not 2!");
+            } else {
                 if (fromEdgeId.equals(selectedStops.getString("sumo_edge"))) {
                     fromStop = selectedStops.getLong(idColumn);
-                    selectedStops.next();
+                    if (!selectedStops.next()) {
+                        throw new RuntimeException("Number of fetched bus stops is not 2!");
+                    }
                     toStop = selectedStops.getLong(idColumn);
                 }
                 else {
                     toStop = selectedStops.getLong(idColumn);
-                    selectedStops.next();
+                    if (!selectedStops.next()) {
+                        throw new RuntimeException("Number of fetched bus stops is not 2!");
+                    }
                     fromStop = selectedStops.getLong(idColumn);
                 }
             }
@@ -270,7 +266,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             selectedStops.close();
             selectStopsByEdgeId.close();
 
-            return List.of((int)fromStop, (int)toStop);
+            return List.of((int) fromStop, (int) toStop);
         } catch (SQLException e) {
             getLog().warn("Could not execute select stops query", e);
         }
