@@ -19,9 +19,9 @@
 		<ride from="4515866_27560039_27559811" busStop="bs3" lines="taxi"/>
 	</person>
 	<person id="p2" depart="0.00" color="red">
-		<ride from="38763678_27559628_27559627" to="493264401_27559341_27559334" lines="taxi"/>
+		<ride from="38763678_27559628_27559627" busStop="bs7" lines="taxi"/>
 	</person>
-	<person id="p3" depart="5.00" color="blue">
-		<ride from="1092670137_28997950_28997949" to="4515882_27559329_459663522" lines="taxi"/>
+	<person id="p3" depart="0.00" color="blue">
+		<ride from="1092670137_28997949_459659148" busStop="bs6" lines="taxi"/>
 	</person>
 </routes>
