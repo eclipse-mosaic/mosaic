@@ -21,12 +21,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.enums.EventCause;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.geo.GeoRectangle;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
 import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
 import org.eclipse.mosaic.rti.TIME;
 
@@ -89,8 +90,8 @@ public class CEnvironmentTest {
         );
         assertEventDeserialization(
                 eventGeoRectangle,
-                SensorType.OBSTACLE,
-                1,
+                Sensor.EVENT,
+                EventCause.OBSTACLE_ON_ROAD,
                 eventGeoRectangleExpectedLocation,
                 null,
                 0,
@@ -98,8 +99,8 @@ public class CEnvironmentTest {
         );
         assertEventDeserialization(
                 eventGeoCircle,
-                SensorType.ICE,
-                10,
+                Sensor.ICE,
+                5,
                 eventGeoCircleExpectedLocation,
                 null,
                 0,
@@ -107,8 +108,8 @@ public class CEnvironmentTest {
         );
         assertEventDeserialization(
                 eventGeoPolygon,
-                SensorType.ROADWORKS,
-                15,
+                Sensor.EVENT,
+                EventCause.ROADWORKS,
                 eventGeoPolygonExpectedLocation,
                 null,
                 0,
@@ -116,8 +117,8 @@ public class CEnvironmentTest {
         );
         assertEventDeserialization(
                 eventParkingLot,
-                SensorType.PARKING_LOT,
-                10,
+                Sensor.TEMPERATURE,
+                10.0,
                 null,
                 "seg0",
                 0,
@@ -156,17 +157,17 @@ public class CEnvironmentTest {
         return new ObjectInstantiation<>(CEnvironment.class).readFile(new File(path));
     }
 
-    private void assertEventDeserialization(
+    private <T> void assertEventDeserialization(
             CEvent event,
-            SensorType expectedSensorType,
-            int expectedEventValue,
+            Sensor<T> expectedSensor,
+            T expectedEventValue,
             @Nullable GeoArea expectedArea,
             @Nullable String expectedConnectionId,
             long expectedStartTime,
             long expectedEndTime) {
 
-        assertEquals(expectedSensorType, event.type.sensorType);
-        assertEquals(expectedEventValue, event.type.value);
+        assertEquals(expectedSensor.getName(), event.event.type);
+        assertEquals(expectedEventValue, expectedSensor.translate(event.event.value));
         assertEquals(expectedArea, event.location.area);
         assertEquals(expectedConnectionId, event.location.connectionId);
         assertEquals(expectedStartTime, event.time.start);

@@ -15,7 +15,6 @@
 
 package org.eclipse.mosaic.lib.objects.environment;
 
-import org.eclipse.mosaic.lib.enums.SensorType;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -25,7 +24,7 @@ import java.io.Serializable;
 import javax.annotation.Nonnull;
 
 /**
- * Holds the Environment location.
+ * Holds the Environment location. Can be used to visualize the areas in which certain events are configured.
  */
 public class EnvironmentEventLocation implements Serializable {
 
@@ -38,12 +37,20 @@ public class EnvironmentEventLocation implements Serializable {
 
     /**
      * The type of sensor which is sensing values in the event area.
+     * Should correspond to the name of an existing {@link Sensor}.
      */
-    private final SensorType type;
+    private final String eventType;
 
-    public EnvironmentEventLocation(@Nonnull GeoArea eventArea, @Nonnull SensorType type) {
+    /**
+     * Creates a new environment event location. The event type should correspond to the name of
+     * an existing {@link Sensor}.
+     *
+     * @param eventArea the geographic area in which the event occurs
+     * @param eventType event type
+     */
+    public EnvironmentEventLocation(@Nonnull GeoArea eventArea, @Nonnull String eventType) {
         this.area = eventArea;
-        this.type = type;
+        this.eventType = eventType;
     }
 
     @Nonnull
@@ -52,14 +59,14 @@ public class EnvironmentEventLocation implements Serializable {
     }
 
     @Nonnull
-    public SensorType getType() {
-        return type;
+    public String getEventType() {
+        return eventType;
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(7, 37)
-                .append(type)
+                .append(eventType)
                 .append(area)
                 .toHashCode();
     }
@@ -78,13 +85,13 @@ public class EnvironmentEventLocation implements Serializable {
 
         EnvironmentEventLocation rhs = (EnvironmentEventLocation) obj;
         return new EqualsBuilder()
-                .append(this.type, rhs.type)
+                .append(this.eventType, rhs.eventType)
                 .append(this.area, rhs.area)
                 .isEquals();
     }
 
     @Override
     public String toString() {
-        return "EnvironmentEventLocation{" + "type=" + type + ", area=" + area + '}';
+        return "EnvironmentEventLocation{" + "eventType=" + eventType + ", area=" + area + '}';
     }
 }

@@ -15,10 +15,12 @@
 
 package org.eclipse.mosaic.fed.application.app.api.perception;
 
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
+
+import java.util.Optional;
 
 /**
- * A basic sensor module which provides single integer values for a given {@link SensorType}.
+ * A basic sensor module which provides single integer values for a given {@link Sensor}.
  */
 public interface BasicSensorModule {
 
@@ -33,15 +35,17 @@ public interface BasicSensorModule {
     boolean isEnabled();
 
     /**
-     * Disables this basic sensor module. {@link #getStrengthOf(SensorType)} will always return 0.
+     * Disables this basic sensor module. {@link #getSensorValue(Sensor)} will always return null.
      */
     void disable();
 
     /**
-     * Returns the state (as strength) of the supplied environment {@link SensorType}.
+     * Returns the value of the provided environment {@link Sensor}.
      *
-     * @param sensorType The {@link SensorType} type to use.
+     * @param sensor The {@link Sensor} to use.
      * @return Strength of the measured environment sensor data.
      */
-    int getStrengthOf(SensorType sensorType);
+    <T> Optional<T> getSensorValue(Sensor<T> sensor);
+
 }
+
