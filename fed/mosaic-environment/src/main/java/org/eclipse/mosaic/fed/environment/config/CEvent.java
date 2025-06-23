@@ -27,7 +27,7 @@ public class CEvent implements Serializable {
     /**
      * Type of the event.
      */
-    public CEventType type = new CEventType();
+    public CEventType event = new CEventType();
 
     /**
      * The location of the event,, this can either be a

@@ -19,7 +19,7 @@ import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.Simpl
 import org.eclipse.mosaic.fed.application.app.api.perception.BasicSensorModule;
 import org.eclipse.mosaic.fed.application.app.api.perception.LidarSensorModule;
 import org.eclipse.mosaic.fed.application.app.api.perception.PerceptionModule;
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
 
 /**
  * Interface to mark an {@link org.eclipse.mosaic.fed.application.app.api.os.OperatingSystem} as
@@ -34,7 +34,7 @@ public interface Perceptive {
     PerceptionModule<SimplePerceptionConfiguration> getPerceptionModule();
 
     /**
-     * Returns a basic sensor module which provides single integer values for given {@link SensorType}s.
+     * Returns a basic sensor module which provides single integer values for given {@link Sensor}s.
      * Can be used, e.g., to detect preconfigured icy roads, or rainy areas in conjunction with the mosaic-environment simulator.
      */
     BasicSensorModule getBasicSensorModule();

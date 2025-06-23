@@ -26,9 +26,10 @@ import org.eclipse.mosaic.fed.application.app.api.navigation.NavigationModule;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.interactions.communication.V2xMessageTransmission;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.enums.EventCause;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
 import org.eclipse.mosaic.lib.objects.v2x.MessageRouting;
 import org.eclipse.mosaic.lib.objects.v2x.V2xMessage;
 import org.eclipse.mosaic.lib.objects.v2x.etsi.Denm;
@@ -43,6 +44,7 @@ import org.eclipse.mosaic.lib.routing.util.ReRouteSpecificConnectionsCostFunctio
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import java.awt.Color;
+import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -113,8 +115,7 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
         if (msg.getRouting().getSource().getSourceName().equals("server_0")) {
             // Message was received via cell from the WeatherServer
             getLog().infoSimTime(this, "Received message over cell from WeatherServer");
-        }
-        else {
+        } else {
             getLog().infoSimTime(this, "Received message from {}", msg.getRouting().getSource().getSourceName());
         }
 
@@ -142,19 +143,23 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
      * This method is used to request new data from the sensors and, in case of new data, react on it.
      */
     private void detectSensors() {
+
+        List<Sensor<Integer>> hazardSensors = List.of(Sensor.ICE, Sensor.FOG, Sensor.SNOW);
         /*
          * The current strength of each environment sensor is examined here.
          * If one is higher than zero, we reason that we are in a hazardous area with the
          * given hazard.
          */
-        for (SensorType currentType : SensorType.values()) {
+        for (Sensor<Integer> hazardSensor : hazardSensors) {
 
             // The strength of a detected sensor
-            int strength = getOs().getBasicSensorModule().getStrengthOf(currentType);
+            int strength = getOs().getBasicSensorModule().getSensorValue(hazardSensor).orElse(0);
 
             if (strength > 0) {
+                getLog().infoSimTime(this, "Sensor {} event of strength {} detected", hazardSensor.getName(), strength);
+
                 // Method which is called to react on new or changed environment events
-                reactOnEnvironmentData(currentType, strength);
+                reactOnAdverseWeatherCondition();
                 return; // the early exit discards other possible environmental warnings, ok for this tutorial purpose
             }
         }
@@ -167,11 +172,8 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
      * data. It retrieves the strength, type and position of the
      * detected event. Later on all information is filled into a new
      * DEN Message and will be sent.
-     *
-     * @param type     sensor type
-     * @param strength event strength
      */
-    private void reactOnEnvironmentData(SensorType type, int strength) {
+    private void reactOnAdverseWeatherCondition() {
         // failsafe
         if (getOs().getVehicleData() == null) {
             getLog().infoSimTime(this, "No vehicleInfo given, skipping.");
@@ -188,11 +190,7 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
         // ID of the connection on which the vehicle detected an event.
         String roadId = getOs().getVehicleData().getRoadPosition().getConnection().getId();
 
-        getLog().infoSimTime(this, "Sensor {} event detected", type);
-
         getLog().debugSimTime(this, "Position: {}", vehicleLongLat);
-        getLog().debugSimTime(this, "Event strength to: {}", strength);
-        getLog().debugSimTime(this, "SensorType to: {}", type);
         getLog().debugSimTime(this, "RoadId on which the event take place: {}", roadId);
 
         // Region with a radius around the coordinates of the car.
@@ -217,9 +215,10 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
          * and a payload in the form of a DenmContent object. It contains fields such as the current timestamp
          * of the sending node, the geo position of the sending node, warning type and event strength.
          */
-        Denm denm = new Denm(mr,
-                new DenmContent(getOs().getSimulationTime(), vehicleLongLat, roadId, type, strength, SPEED, 0.0f, vehicleLongLat, null, null),
-                200);
+        Denm denm = new Denm(mr, new DenmContent(
+                getOs().getSimulationTime(), vehicleLongLat, roadId, EventCause.ADVERSE_WEATHER_CONDITION,
+                SPEED, 0.0f, vehicleLongLat, null, null
+        ), 200);
         getLog().infoSimTime(this, "Sending DENM");
 
         /*
@@ -239,9 +238,8 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
 
         // Print some useful DEN message information
         if (getLog().isDebugEnabled()) {
-            getLog().debugSimTime(this, "DENM content: Sensor Type: {}", denm.getWarningType().toString());
+            getLog().debugSimTime(this, "DENM content: Event cause: {}", denm.getEventCause().toString());
             getLog().debugSimTime(this, "DENM content: Event position: {}", denm.getEventLocation());
-            getLog().debugSimTime(this, "DENM content: Event Strength: {}", denm.getEventStrength());
             getLog().debugSimTime(this, "DENM content: Road Id of the Sender: {}", denm.getEventRoadId());
             getLog().debugSimTime(this, "CurrVehicle: position: {}", getOs().getNavigationModule().getRoadPosition());
             getLog().debugSimTime(this, "CurrVehicle: route: {}", routeInfo.getId());

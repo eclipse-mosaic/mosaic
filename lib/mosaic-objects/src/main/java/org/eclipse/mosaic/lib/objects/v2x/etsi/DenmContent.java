@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.lib.objects.v2x.etsi;
 
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.enums.EventCause;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.objects.ToDataOutput;
@@ -38,34 +38,29 @@ public class DenmContent implements ToDataOutput, Serializable {
     private final long time;
 
     /**
-     * GPS-position of the sending node
+     * GPS-position of the sending node.
      */
     private final GeoPoint senderPosition;
 
     /**
-     *
+     * Road location of the event.
      */
     private final String eventRoadId;
 
     /**
-     * type of the warning
+     * Cause of the event.
      */
-    private final SensorType warningType;
+    private final EventCause eventCause;
 
     /**
-     * strength of the causing event
-     */
-    private final int eventStrength;
-
-    /**
-     * resulting speed because of the event
+     * Resulting speed because of the event.
      */
     private final float causedSpeed;
 
     private final float senderDeceleration;
 
     /**
-     * The location of the event
+     * The location of the event.
      */
     private final GeoPoint eventLocation;
 
@@ -79,16 +74,15 @@ public class DenmContent implements ToDataOutput, Serializable {
      */
     private final String extendedContainer;
 
-    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final SensorType warningType, final int eventStrength, final float causedSpeed, final float senderDeceleration) {
-        this(time, senderPosition, eventRoadId, warningType, eventStrength, causedSpeed, senderDeceleration, null, null, null);
+    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final EventCause eventCause, final float causedSpeed, final float senderDeceleration) {
+        this(time, senderPosition, eventRoadId, eventCause, causedSpeed, senderDeceleration, null, null, null);
     }
 
-    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final SensorType warningType, final int eventStrength, final float causedSpeed, final float senderDeceleration, final GeoPoint eventLocation, final GeoPolygon eventArea, final String extendedContainer) {
+    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final EventCause eventCause, final float causedSpeed, final float senderDeceleration, final GeoPoint eventLocation, final GeoPolygon eventArea, final String extendedContainer) {
         this.time = time;
         this.senderPosition = senderPosition;
         this.eventRoadId = eventRoadId;
-        this.warningType = warningType;
-        this.eventStrength = eventStrength;
+        this.eventCause = eventCause;
         this.causedSpeed = causedSpeed;
         this.senderDeceleration = senderDeceleration;
         this.eventLocation = eventLocation;
@@ -111,8 +105,7 @@ public class DenmContent implements ToDataOutput, Serializable {
             this.eventRoadId = null;
         }
 
-        this.warningType = SensorType.fromId(din.readByte());
-        this.eventStrength = din.readByte();
+        this.eventCause = EventCause.fromId(din.readInt());
         this.causedSpeed = din.readFloat();
         this.senderDeceleration = din.readFloat();
 
@@ -143,7 +136,7 @@ public class DenmContent implements ToDataOutput, Serializable {
     }
 
     DenmContent(final DenmContent denm) {
-        this(denm.getTime(), denm.getSenderPosition(), denm.getEventRoadId(), denm.getWarningType(), denm.getEventStrength(), denm.getCausedSpeed(), denm.getSenderDeceleration(), denm.getEventLocation(), denm.getEventArea(), denm.getExtendedContainer());
+        this(denm.getTime(), denm.getSenderPosition(), denm.getEventRoadId(), denm.getEventCause(), denm.getCausedSpeed(), denm.getSenderDeceleration(), denm.getEventLocation(), denm.getEventArea(), denm.getExtendedContainer());
     }
 
     public long getTime() {
@@ -158,12 +151,8 @@ public class DenmContent implements ToDataOutput, Serializable {
         return eventRoadId;
     }
 
-    public SensorType getWarningType() {
-        return warningType;
-    }
-
-    public int getEventStrength() {
-        return eventStrength;
+    public EventCause getEventCause() {
+        return eventCause;
     }
 
     public float getCausedSpeed() {
@@ -197,8 +186,7 @@ public class DenmContent implements ToDataOutput, Serializable {
         if (eventRoadId != null) {
             dataOutput.writeUTF(eventRoadId);
         }
-        dataOutput.writeByte(warningType.id);
-        dataOutput.writeByte(eventStrength);
+        dataOutput.writeInt(eventCause.id);
         dataOutput.writeFloat(causedSpeed);
         dataOutput.writeFloat(senderDeceleration);
         dataOutput.writeBoolean(eventLocation != null);

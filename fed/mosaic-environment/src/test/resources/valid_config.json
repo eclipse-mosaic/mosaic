@@ -1,9 +1,9 @@
 {
     "events": [
         {
-            "type": {
-                "sensorType": "OBSTACLE",
-                "value": 1
+            "event": {
+                "type": "EVENT",
+                "value": "OBSTACLE_ON_ROAD"
             },
             "location": {
                 "area": {
@@ -24,9 +24,9 @@
             }
         },
         {
-            "type": {
-                "sensorType": "ICE",
-                "value": 10
+            "event": {
+                "type": "ICE",
+                "value": 5
             },
             "location": {
                 "area": {
@@ -44,9 +44,9 @@
             }
         },
         {
-            "type": {
-                "sensorType": "ROADWORKS",
-                "value": 15
+            "event": {
+                "type": "EVENT",
+                "value": "ROADWORKS"
             },
             "location": {
                 "area": {
@@ -77,8 +77,8 @@
             }
         },
         {
-            "type": {
-                "sensorType": "PARKING_LOT",
+            "event": {
+                "type": "TEMPERATURE",
                 "value": 10
             },
             "location": {
