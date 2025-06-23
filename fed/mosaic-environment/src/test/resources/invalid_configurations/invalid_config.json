@@ -1,8 +1,8 @@
 {
     "events": [
         {
-            "type": {
-                "sensorType": "OBSTACLE",
+            "event": {
+                "type": "OBSTACLE",
                 "value": 20
             },
             "location": {

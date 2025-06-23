@@ -114,8 +114,7 @@ public class WeatherServerApp extends AbstractApplication<ServerOperatingSystem>
                         lastReceivedMessage.getTime(),
                         lastReceivedMessage.getSenderPosition(),
                         lastReceivedMessage.getEventRoadId(),
-                        lastReceivedMessage.getWarningType(),
-                        lastReceivedMessage.getEventStrength(),
+                        lastReceivedMessage.getEventCause(),
                         lastReceivedMessage.getCausedSpeed(),
                         lastReceivedMessage.getSenderDeceleration(),
                         lastReceivedMessage.getEventLocation(),
@@ -139,9 +138,8 @@ public class WeatherServerApp extends AbstractApplication<ServerOperatingSystem>
             return;
         }
         lastReceivedMessage = (Denm) msg;
-        getLog().debugSimTime(this, "DENM content: Sensor Type: {}", lastReceivedMessage.getWarningType().toString());
+        getLog().debugSimTime(this, "DENM content: Event Cause: {}", lastReceivedMessage.getEventCause().toString());
         getLog().debugSimTime(this, "DENM content: Event position: {}", lastReceivedMessage.getEventLocation());
-        getLog().debugSimTime(this, "DENM content: Event Strength: {}", lastReceivedMessage.getEventStrength());
         getLog().debugSimTime(this, "DENM content: Road Id of the Sender: {}", lastReceivedMessage.getEventRoadId());
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -16,41 +16,46 @@
 package org.eclipse.mosaic.lib.enums;
 
 /**
- * Enumeration of sensor types that are available in a vehicle.
+ * Causes to inform others about certain events. Inspired by CauseCodeType from ETSI DENM.
+ *
+ * @see <a href="https://etsi.org/deliver/etsi_en/302600_302699/30263703/01.03.01_60/en_30263703v010301p.pdf">en_30263703v010301p.pdf</a>
  */
-public enum SensorType {
+public enum EventCause {
 
-    FOG(0),
-    ICE(1),
-    SNOW(2),
-    RAIN(3),
-    SPEED(17),
-    POSITION(18),
-    DIRECTION(19),
-    CURVE(20),
-    OBSTACLE(23),
-    PARKING_LOT(24),
-    ROADWORKS(25);
-    
+    TRAFFIC_CONDITION(1),
+    ACCIDENT(2),
+    ROADWORKS(3),
+    OBSTACLE_ON_ROAD(10),
+    ADVERSE_WEATHER_CONDITION(6),
+    SLOW_VEHICLE(26),
+    VEHICLE_BREAKDOWN(91),
+    EMERGENCY_VEHICLE_APPROACHING(95),
+    COLLISION_RISK(97),
+    DANGEROUS_SITUATION(99);
+
+    /**
+     * Identifier, used mainly for serialization purposes.
+     */
     public final int id;
-    
+
     /**
      * Default constructor.
      *
      * @param id identifying integer
      */
-    SensorType(int id) {
+    EventCause(int id) {
         this.id = id;
     }
-    
+
+
     /**
      * Returns the enum mapped from an integer.
      *
      * @param id identifying integer
      * @return the enum mapped from an integer.
      */
-    public static SensorType fromId(int id) {
-        for (SensorType type: SensorType.values()) {
+    public static EventCause fromId(int id) {
+        for (EventCause type : EventCause.values()) {
             if (type.id == id) {
                 return type;
             }
@@ -58,4 +63,3 @@ public enum SensorType {
         throw new IllegalArgumentException("Unknown SensorType id " + id);
     }
 }
-

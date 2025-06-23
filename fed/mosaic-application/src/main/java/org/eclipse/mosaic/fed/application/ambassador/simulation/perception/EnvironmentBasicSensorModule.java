@@ -17,12 +17,13 @@ package org.eclipse.mosaic.fed.application.ambassador.simulation.perception;
 
 import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
 import org.eclipse.mosaic.fed.application.app.api.perception.BasicSensorModule;
-import org.eclipse.mosaic.lib.enums.SensorType;
 import org.eclipse.mosaic.lib.objects.environment.EnvironmentEvent;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -32,7 +33,7 @@ import java.util.Set;
  */
 public class EnvironmentBasicSensorModule implements BasicSensorModule {
 
-    private final Map<SensorType, EnvironmentEvent> environmentEvents = new HashMap<>();
+    private final Map<String, EnvironmentEvent> environmentEvents = new HashMap<>();
 
     private boolean enabled = false;
 
@@ -52,19 +53,19 @@ public class EnvironmentBasicSensorModule implements BasicSensorModule {
     }
 
     @Override
-    public int getStrengthOf(SensorType sensorType) {
-        EnvironmentEvent event = environmentEvents.get(sensorType);
+    public <T> Optional<T> getSensorValue(Sensor<T> sensor) {
+        EnvironmentEvent event = environmentEvents.get(sensor.getName());
         if (event != null && event.from <= SimulationKernel.SimulationKernel.getCurrentSimulationTime()
                 && event.until >= SimulationKernel.SimulationKernel.getCurrentSimulationTime()) {
-            return event.strength;
+            return Optional.ofNullable(sensor.translate(event.value));
         }
-        return 0;
+        return Optional.empty();
     }
 
     /**
-     * Adds a new {@link EnvironmentEvent} for the given {@link SensorType}.
+     * Adds a new {@link EnvironmentEvent} for the given {@link Sensor}.
      */
-    public final void addEnvironmentEvent(SensorType type, EnvironmentEvent environmentEvent) {
+    public final void addEnvironmentEvent(String type, EnvironmentEvent environmentEvent) {
         if (isEnabled()) {
             environmentEvents.put(type, environmentEvent);
         }
@@ -76,10 +77,10 @@ public class EnvironmentBasicSensorModule implements BasicSensorModule {
      * good form to delete the event you no longer need to save some memory.
      */
     public final void cleanPastEnvironmentEvents() {
-        final Set<SensorType> toRemove = new HashSet<>();
+        final Set<String> toRemove = new HashSet<>();
 
-        for (Map.Entry<SensorType, EnvironmentEvent> entrySet : environmentEvents.entrySet()) {
-            SensorType type = entrySet.getKey();
+        for (Map.Entry<String, EnvironmentEvent> entrySet : environmentEvents.entrySet()) {
+            String type = entrySet.getKey();
             EnvironmentEvent environmentEvent = entrySet.getValue();
             if (environmentEvent.until < SimulationKernel.SimulationKernel.getCurrentSimulationTime()) {
                 toRemove.add(type);

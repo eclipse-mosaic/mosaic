@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.lib.objects.v2x.etsi;
 
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.enums.EventCause;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.objects.v2x.EncodedPayload;
@@ -90,22 +90,12 @@ public class Denm extends V2xMessage {
     }
 
     /**
-     * Returns the type of the warning.
+     * Returns the cause of the warning event.
      *
-     * @return the type of the warning.
+     * @return the cause of the warning event.
      */
-    public SensorType getWarningType() {
-        return this.denmContent.getWarningType();
-    }
-
-    /**
-     * TODO: Add the Unit. Unit: [???].
-     * Returns the strength of the causing event.
-     *
-     * @return the strength.
-     */
-    public int getEventStrength() {
-        return this.denmContent.getEventStrength();
+    public EventCause getEventCause() {
+        return this.denmContent.getEventCause();
     }
 
     /**

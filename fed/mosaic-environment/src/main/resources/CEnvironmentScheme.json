@@ -16,9 +16,9 @@
             "description": "Object to define a single event configuration.",
             "type": "object",
             "properties": {
-                "type": { 
+                "event": {
                     "description": "Type of the event.",
-                    "$ref": "#/definitions/eventType" 
+                    "$ref": "#/definitions/eventType"
                 },
                 "location": { 
                     "description": "The location of the event,, this can either be a geoArea or a string representing a specific road segment.",
@@ -29,24 +29,25 @@
                     "$ref": "#/definitions/eventTime" 
                 }
             },
-            "required": [ "type", "location", "time" ]
+            "required": [ "event", "location", "time" ]
         },
         "eventType": {
             "title": "eventType",
             "description": "Object to define the type of an event.",
             "type": "object",
             "properties": {
-                "sensorType": { 
-                    "description": "Represents the type of sensor value this event is emitting (e.g. Ice, Snow, or an arbitrary Obstacle). The value can be set to any valid string.",
+                "type": {
+                    "description": "Represents the type of sensor value this event is emitting (e.g. ICE, SNOW, or an arbitrary EVENT). The value can be set to any valid string.",
                     "type": "string"
                 },
                 "value": {
-                    "description": "Used for assigning a value to the event. It can be used as the strength of an event, the amount of free parking spots in a parking lot, etc.",
-                    "type": "integer", 
-                    "default": 1 
+                    "description": "Used for assigning a value to the event. It can be used as the strength of an event, the road surface quality, or the name of a specific event cause, etc.",
+                    "anyOf": [
+                        { "type": "string", "maxLength": 30 },
+                        { "type": "number", "minimum": 0 }
+                    ]
                 }
-            },
-            "required": [ "sensorType" ]
+            }
         },
         "eventLocation": {
             "title": "eventLocation",
