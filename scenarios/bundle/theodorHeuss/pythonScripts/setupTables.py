@@ -111,7 +111,7 @@ def main(should_reset):
     create_table_by_query(create_leg_table_query, 'leg')
 
     # TAXI_ORDER_TABLE
-    create_taxi_order_table_query = ("CREATE TABLE taxi_order (id bigint PRIMARY KEY AUTO_INCREMENT, at_time timestamp, completed timestamp, "
+    create_taxi_order_table_query = ("CREATE TABLE taxi_order (id bigint PRIMARY KEY AUTO_INCREMENT, sumo_id bigint NOT NULL, at_time timestamp, completed timestamp, "
                                      "distance integer NOT NULL, eta integer, from_stand integer NOT NULL, in_pool boolean, max_loss integer NOT NULL, "
                                      "max_wait integer NOT NULL, received timestamp, shared boolean NOT NULL, started timestamp, status integer, "
                                      "to_stand integer NOT NULL, cab_id bigint, customer_id bigint, leg_id bigint, route_id bigint, "

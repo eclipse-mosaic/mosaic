@@ -6,7 +6,7 @@ def print_separation_line():
     print('=' * 40)
 
 def main():
-    setupTables.main(True)
+    setupTables.main(SHOULD_RESET_TABLES)
     print_separation_line()
     extractPersons.main()
     print_separation_line()
