@@ -30,7 +30,7 @@ import java.io.IOException;
 
 /**
  * Adapter for JSON fields which translates values as string representatives to
- * actual long values (nanoseconds), e.g. "10 ms" -> 10_000_000, "20 ns" -> 20, "0.5h" -> 1_800_000_000_000
+ * actual long values (nanoseconds), e.g., "10 ms" -> 10_000_000, "20 ns" -> 20, "0.5h" -> 1_800_000_000_000
  * <br><br>
  * Usage:
  * <pre>

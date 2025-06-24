@@ -31,7 +31,7 @@ import javax.annotation.Nonnull;
 
 /**
  * Adapter for JSON fields which translates values as string representatives to actual long or double values (nanoseconds),
- * e.g. "10 ms" -> 10_000_000, "20 ns" -> 20, "0.5h" -> 1_800_000_000_000
+ * e.g., "10 ms" -> 10_000_000, "20 ns" -> 20, "0.5h" -> 1_800_000_000_000
  */
 public abstract class TimeConverter<N extends Number> {
 

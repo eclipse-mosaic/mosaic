@@ -29,7 +29,7 @@ import java.io.IOException;
 
 /**
  * Adapter for JSON fields which translates values as string representatives to
- * actual long values representing the number of bits, e.g.
+ * actual long values representing the number of bits, e.g.,
  * <br>for size: "10 Bytes" -> 80, "2kbit" -> 2000
  * <br>for bandwidth: "10 MBps km/h" -> 80000000, "5 kbps" -> 5000
  * <br><br>

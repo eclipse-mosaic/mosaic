@@ -29,7 +29,7 @@ import java.io.IOException;
 
 /**
  * Adapter for JSON fields which translates values as string representatives to
- * actual double values, e.g.
+ * actual double values, e.g.,
  * <br>for distances: "10 km" -> 10000, "10 cm" -> 0.1, "0.5m" -> 0.5
  * <br>for speeds: "10 km/h" -> 2.77, "10 m/s" -> 10, "35 mph" -> 15.6464
  * <br><br>
