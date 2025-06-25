@@ -1,6 +1,6 @@
 {
     "messages": {
-        "destinationType": {
+        "routingType": {
             "AD_HOC_GEOCAST": false,
             "AD_HOC_TOPOCAST": true,
             "CELL_GEOCAST": false,

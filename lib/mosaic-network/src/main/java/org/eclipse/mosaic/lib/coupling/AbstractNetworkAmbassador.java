@@ -16,6 +16,8 @@
 package org.eclipse.mosaic.lib.coupling;
 
 import org.eclipse.mosaic.interactions.communication.AdHocCommunicationConfiguration;
+import org.eclipse.mosaic.interactions.communication.CellularCommunicationConfiguration;
+import org.eclipse.mosaic.interactions.communication.CommunicationConfiguration;
 import org.eclipse.mosaic.interactions.communication.V2xMessageReception;
 import org.eclipse.mosaic.interactions.communication.V2xMessageTransmission;
 import org.eclipse.mosaic.interactions.mapping.ChargingStationRegistration;
@@ -25,14 +27,17 @@ import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannel.CMD;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannel.NodeDataContainer;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannel.ReceiveMessageContainer;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.UnitData;
 import org.eclipse.mosaic.lib.objects.UnitNameComparator;
 import org.eclipse.mosaic.lib.objects.UnitNameGenerator;
 import org.eclipse.mosaic.lib.objects.addressing.DestinationAddressContainer;
+import org.eclipse.mosaic.lib.objects.addressing.IpResolver;
 import org.eclipse.mosaic.lib.objects.addressing.SourceAddressContainer;
 import org.eclipse.mosaic.lib.objects.communication.AdHocConfiguration;
+import org.eclipse.mosaic.lib.objects.communication.CellConfiguration;
 import org.eclipse.mosaic.lib.objects.mapping.ChargingStationMapping;
 import org.eclipse.mosaic.lib.objects.mapping.RsuMapping;
 import org.eclipse.mosaic.lib.objects.mapping.TrafficLightMapping;
@@ -46,12 +51,12 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 import org.eclipse.mosaic.rti.api.federatestarter.DockerFederateExecutor;
 import org.eclipse.mosaic.rti.api.parameters.AmbassadorParameter;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -60,10 +65,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 /**
  * The Ambassador for coupling a network simulator to MOSAIC RTI.
@@ -72,11 +75,11 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
 
     private final static class RegisteredNode {
 
-        private AdHocCommunicationConfiguration configuration;
+        private CommunicationConfiguration configuration;
         private CartesianPoint position;
 
-        private RegisteredNode(AdHocCommunicationConfiguration configAdHoc, CartesianPoint position) {
-            this.configuration = configAdHoc;
+        private RegisteredNode(CommunicationConfiguration config, CartesianPoint position) {
+            this.configuration = config;
             this.position = position;
         }
     }
@@ -109,11 +112,11 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
     protected DockerFederateExecutor dockerFederateExecutor = null;
 
     /**
-     * List of new nodes, either vehicles or RSUs, which are only added when they have a position AND enabled AdHoc Communication.
+     * List of new nodes, either vehicles or RSUs, which are only added when they have a position AND enabled radio communication.
      * Nodes are registered when just one part 1. OR 2. is received,
      * To get fully simulated, the ambassador must receive both of the following interactions:
      * 1. {@link VehicleUpdates}, {@link RsuRegistration}, {@link TrafficLightRegistration}, {@link ChargingStationRegistration}
-     * 2. {@link AdHocCommunicationConfiguration}
+     * 2. {@link CommunicationConfiguration}
      */
     private final Map<String, RegisteredNode> registeredNodes;
 
@@ -127,12 +130,6 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
      * Ids of nodes which has been added and removed.
      */
     protected final List<String> removedNodes;
-
-    /**
-     * This is used to fetch the most recent position of a vehicle when a {@link AdHocCommunicationConfiguration} interaction
-     * is processed.
-     */
-    private VehicleUpdates latestVehicleUpdates = null;
 
     /**
      * A config object for whether to bypass federate destination type capability queries in
@@ -307,9 +304,9 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
         try {
             // 1st Handshake: (1) Ambassador sends INIT (2) Ambassador sends times, (3) Federate sends SUCCESS
             if (CMD.SUCCESS != ambassadorFederateChannel.writeInitBody(startTime, endTime)) {
-                log.error("Could not initialize: " + federateAmbassadorChannel.getLastStatusMessage());
+                log.error("Could not initialize.");
                 throw new InternalFederateException(
-                        "Error in " + federateName + ": " + federateAmbassadorChannel.getLastStatusMessage()
+                        "Error in " + federateName + ": Could not initialize"
                 );
             }
             log.info("Init simulation with startTime={}, stopTime={}", TIME.format(startTime), TIME.format(endTime));
@@ -334,6 +331,10 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
             this.process((V2xMessageTransmission) interaction);
         } else if (interaction.getTypeId().equals(AdHocCommunicationConfiguration.TYPE_ID)) {
             this.process((AdHocCommunicationConfiguration) interaction);
+        } else if (interaction.getTypeId().equals(CellularCommunicationConfiguration.TYPE_ID)) {
+            this.process((CellularCommunicationConfiguration) interaction);
+        } else {
+            log.warn("Unhandeled interaction type {}", interaction.getTypeId());
         }
     }
 
@@ -406,7 +407,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
      */
     private synchronized void process(RsuRegistration interaction) {
         log.debug(
-                "Add RSU {} at simulation time {} ",
+                "Register RSU {} at simulation time {} ",
                 interaction.getMapping().getName(),
                 TIME.format(interaction.getTime())
         );
@@ -415,20 +416,20 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
             log.warn("A RSU with ID {} was already added. Ignoring message.", mapping.getName());
             return;
         }
-        // Put the new RSU into our list of nodes to be added when AdHoc configuration is received
+        // Put the new RSU into our list of nodes to be added when radio configuration is received
         registeredNodes.put(mapping.getName(), new RegisteredNode(null, mapping.getPosition().toCartesian()));
     }
 
     /**
      * Add nodes based on received traffic light mappings.
      * The method checks if the TLs are already present.
-     * If not, the traffic light is added as a virtual node for later adding if an AdhocModuleConfiguration is received.
+     * If not, the traffic light is added as a virtual node for later adding if an {@link CommunicationConfiguration} is received.
      *
      * @param interaction interaction containing a mapping of added traffic light
      */
     private synchronized void process(TrafficLightRegistration interaction) {
         log.debug(
-                "Add traffic light RSU for TL {} at simulation time {} ",
+                "Register TL {} (as RSU) at simulation time {} ",
                 interaction.getMapping().getName(),
                 TIME.format(interaction.getTime())
         );
@@ -437,14 +438,14 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
             log.warn("A TL with ID {} was already added. Ignoring message.", mapping.getName());
             return;
         }
-        // Put the new TL RSU into our list of nodes to be added when AdHoc configuration is received
+        // Put the new TL RSU into our list of nodes to be added when radio configuration is received
         registeredNodes.put(mapping.getName(), new RegisteredNode(null, mapping.getPosition().toCartesian()));
     }
 
     /**
      * Add nodes based on received charging station mappings.
      * The method checks if the ChargingStation RSU is already present.
-     * If not, the charging station is added as a virtual node for later adding if an AdhocModuleConfiguration is received.
+     * If not, the charging station is added as a virtual node for later adding if an {@link CommunicationConfiguration} is received.
      *
      * @param interaction interaction containing a mapping of added charging station
      */
@@ -459,7 +460,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
             log.warn("A ChargingStation with ID {} was already added. Ignoring message.", mapping.getName());
             return;
         }
-        // Put the new Charging Station RSU into our list of virtually added RSUs with no AdHoc configuration yet
+        // Put the new Charging Station RSU into our list of nodes to be added when radio configuration is received
         registeredNodes.put(mapping.getName(), new RegisteredNode(null, mapping.getPosition().toCartesian()));
     }
 
@@ -485,9 +486,6 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
      */
     private synchronized void process(VehicleUpdates interaction) throws InternalFederateException {
         try {
-            // save the latest vehicle updates for the case: first VehicleUpdates arrive before AdHocCommunicationConfiguration
-            latestVehicleUpdates = interaction;
-
             if (!interaction.getAdded().isEmpty()) {
                 List<VehicleData> addedVehicles = interaction.getAdded();
                 Comparator<UnitData> comp = new UnitNameComparator();
@@ -495,17 +493,23 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
                 for (VehicleData vi : addedVehicles) {
                     if (simulatedNodes.containsInternalId(vi.getName())) {
                         log.warn("Vehicle with ID {} was already added, ignoring entry.", vi.getName());
-                        continue;
-                    } else if (!registeredNodes.containsKey(vi.getName())) {
-                        log.debug("Vehicle with ID {} is not in the registered list (no config arrived yet)", vi.getName());
-                        continue;
-                    }
-                    // add vehicles with stored config in the case: AdHocCommunicationConfiguration arrived before VehicleUpdates
-                    RegisteredNode registeredNode = registeredNodes.get(vi.getName());
-                    registeredNode.position = vi.getProjectedPosition();
-                    if (registeredNode.configuration != null) {
-                        addVehicleNodeToSimulation(vi.getName(), registeredNode, interaction.getTime());
-                        registeredNodes.remove(vi.getName());
+                    } else if (registeredNodes.containsKey(vi.getName())) {
+                        // CommunicationConfiguration arrived before VehicleUpdates
+                        RegisteredNode registeredNode = registeredNodes.get(vi.getName());
+                        registeredNode.position = vi.getProjectedPosition();
+                        if (registeredNode.configuration == null) {
+                            log.error("Vehicle with ID {} was already registered but has no config present.", vi.getName());
+                            return;
+                        }
+                        addNodeToSimulation(vi.getName(), registeredNode, interaction.getTime());
+                    } else {
+                        // Waiting for CommunicationConfiguration
+                        log.debug(
+                                "Register Vehicle {} at simulation time {} ",
+                                vi.getName(),
+                                TIME.format(interaction.getTime())
+                        );
+                        registeredNodes.put(vi.getName(), new RegisteredNode(null, vi.getProjectedPosition()));
                     }
                 }
             }
@@ -536,10 +540,8 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
                     }
                 }
                 if (CMD.SUCCESS != ambassadorFederateChannel.writeUpdatePositionsMessage(time, nodesToUpdate)) {
-                    LoggerFactory.getLogger(this.getClass()).error(
-                            "Could not update nodes: " + federateAmbassadorChannel.getLastStatusMessage()
-                    );
-                    throw new InternalFederateException("Could not update nodes: " + federateAmbassadorChannel.getLastStatusMessage());
+                    LoggerFactory.getLogger(this.getClass()).error("Could not update nodes.");
+                    throw new InternalFederateException("Error in " + federateName + ": Could not update nodes");
                 }
             }
         } catch (IOException | InternalFederateException e) {
@@ -607,20 +609,49 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
             );
             // Write the message onto the channel and to the federate
             // Then wait for ack
-            int ack = ambassadorFederateChannel.writeSendMessage(
-                    interaction.getTime(),
-                    sourceId,
-                    interaction.getMessage().getId(),
-                    interaction.getMessage().getPayload().getEffectiveLength(),
-                    dac
-            );
+            int ack = CMD.UNDEF;
+            if (dac.getType() == RoutingType.AD_HOC_TOPOCAST) {
+                if (dac.getAddress().isBroadcast()) {
+                    ack = ambassadorFederateChannel.writeSendMessage(
+                            interaction.getTime(),
+                            sourceId,
+                            interaction.getMessage().getId(),
+                            interaction.getMessage().getPayload().getEffectiveLength(),
+                            dac
+                    );
+                } else {
+                    throw new InternalFederateException(
+                            String.format("This V2XMessage requires an address (%s) currently not supported in the combination with the chosen routing protocol (%s).", dac.getAddress(), dac.getType())
+                    );
+                }
+            } else if (dac.getType() == RoutingType.CELL_TOPOCAST) {
+                if (dac.getAddress().isUnicast()) {
+                    ack = ambassadorFederateChannel.writeSendMessage(
+                            interaction.getTime(),
+                            sourceId,
+                            interaction.getMessage().getId(),
+                            interaction.getMessage().getPayload().getEffectiveLength(),
+                            dac
+                    );
+                } else {
+                    throw new InternalFederateException(
+                            String.format("This V2XMessage requires an address (%s) currently not supported in the combination with the chosen routing protocol (%s).", dac.getAddress(), dac.getType())
+                    );
+                }
+            } else {
+                // Enable for fail hard and early
+                throw new InternalFederateException(
+                        String.format("This V2XMessage requires a destination type (%s) currently not supported by this network simulator.", dac.getType())
+                );
+            }
+
             if (CMD.SUCCESS != ack) {
                 log.error(
-                        "Could not insert V2X message into network: {}",
-                        federateAmbassadorChannel.getLastStatusMessage()
+                        "Could not insert V2X message into network. Return status: {}",
+                        ack
                 );
                 throw new InternalFederateException(
-                        "Error in " + federateName + federateAmbassadorChannel.getLastStatusMessage()
+                        "Error in " + federateName + ": Could not insert V2X message into network"
                 );
             }
         } catch (IOException | InternalFederateException e) {
@@ -639,133 +670,99 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
         final String nodeId = interaction.getConfiguration().getNodeId();
         if (interaction.getConfiguration().getRadioMode() == AdHocConfiguration.RadioMode.OFF) {
             log.debug("Received AdHoc configuration (disable) for node {}", nodeId);
-            disableRadioForNode(nodeId, interaction);
+            removeNode(nodeId, interaction);
         } else {
             log.debug("Received AdHoc configuration (enable) for node {}", nodeId);
             configureRadioForNode(nodeId, interaction);
         }
     }
 
-    private void disableRadioForNode(String nodeId, AdHocCommunicationConfiguration interaction) throws InternalFederateException {
-        final long time = interaction.getTime();
-        // verify the vehicles are simulated in the current simulation
-        final Integer nodeToRemove = simulatedNodes.containsInternalId(nodeId) ? simulatedNodes.toExternalId(nodeId) : null;
-        if (nodeToRemove != null) {
-            log.info("removeNode ID[int={}, ext={}] time={}", nodeId, nodeToRemove, TIME.format(time));
-            simulatedNodes.removeUsingInternalId(nodeId); // remove the vehicle from our internal list
-            removedNodes.add(nodeId);
-        } else if (registeredNodes.containsKey(nodeId)) {
-            log.info("removeNode (still virtual) ID[int={}] time={}", nodeId, TIME.format(time));
-            registeredNodes.remove(nodeId);
-            return;
+    /**
+     * Receive an {@link CellularCommunicationConfiguration} and send it to the federate if the corresponding node is simulated.
+     * If the node is not simulated (only added but did not move yet) the configuration interaction will be saved for later.
+     *
+     * @param interaction the Cellular configuration interaction
+     */
+    protected synchronized void process(CellularCommunicationConfiguration interaction) throws InternalFederateException {
+        final String nodeId = interaction.getConfiguration().getNodeId();
+        if (interaction.getConfiguration().isEnabled()) {
+            log.debug("Received Cellular configuration (enable) for node {}", nodeId);
+            configureRadioForNode(nodeId, interaction);
         } else {
-            log.warn("Node ID[int={}] is not simulated", nodeId);
-            return;
-        }
-
-        try {
-            if (CMD.SUCCESS != ambassadorFederateChannel.writeRemoveNodesMessage(time, Lists.newArrayList(nodeToRemove))) {
-                throw new InternalFederateException(
-                        "Could not remove nodes: " + federateAmbassadorChannel.getLastStatusMessage()
-                );
-            }
-        } catch (IOException | InternalFederateException e) {
-            log.error("{}, time={}", e.getMessage(), TIME.format(interaction.getTime()));
-            throw new InternalFederateException("Could not remove node from the simulator.", e);
+            log.debug("Received Cellular configuration (disable) for node {}", nodeId);
+            removeNode(nodeId, interaction);
         }
     }
 
-    private void configureRadioForNode(String nodeId, AdHocCommunicationConfiguration interaction) throws InternalFederateException {
-        if (simulatedNodes.containsInternalId(nodeId)) {
+    //####################################################################
+    //   Helper methods
+    //####################################################################
+
+    private void configureRadioForNode(String nodeId, CommunicationConfiguration interaction) throws InternalFederateException {
+        if (removedNodes.contains(nodeId)) {
+            log.warn("Got radio configuration for already removed node {}. Ignoring.", nodeId);
+        } else if (simulatedNodes.containsInternalId(nodeId)) {
             // node is already simulated -> configure
             log.debug("Updating Configuration for simulated node {}", nodeId);
-            sendAdHocCommunicationConfiguration(interaction, interaction.getTime());
+            if (interaction instanceof AdHocCommunicationConfiguration castedInteraction) {
+                sendAdHocCommunicationConfiguration(castedInteraction, interaction.getTime());
+            } else if (interaction instanceof CellularCommunicationConfiguration castedInteraction) {
+                sendCellularCommunicationConfiguration(castedInteraction, interaction.getTime());
+            }
         } else if (UnitNameGenerator.isVehicle(nodeId)) {
-            // for (not yet simulated) vehicles:
-            // we fetch the latest position from the most recent VehicleUpdates (they may arrived before AdHocCommunicationConfiguration)
-            // in case VehicleUpdates (and hence positions) are not there, put the vehicle's config to registeredNodes without position
-            VehicleData latestData = fetchVehicleDataFromLastUpdate(nodeId);
-            RegisteredNode configuredNode = new RegisteredNode(interaction, latestData != null ? latestData.getProjectedPosition() : null);
-            if (latestData != null) {
-                addVehicleNodeToSimulation(nodeId, configuredNode, interaction.getTime());
-            } else if (!removedNodes.contains(nodeId)) {
-                log.debug("Saving Configuration for later insertion as vehicle {} has not moved yet.", nodeId);
-                registeredNodes.put(nodeId, configuredNode);
+            if (registeredNodes.containsKey(nodeId)) {
+                // VehicleUpdates arrived before CommunicationConfiguration
+                RegisteredNode registeredNode = registeredNodes.get(nodeId);
+                registeredNode.configuration = interaction;
+                if (registeredNode.position == null) {
+                    log.error("Vehicle with ID {} was already registered but has no position present.", nodeId);
+                    return;
+                }
+                addNodeToSimulation(nodeId, registeredNode, interaction.getTime());
+            } else {
+                // Wait for first VehicleUpdate with position
+                log.debug(
+                    "Register radio config for Vehicle {} at simulation time {} ",
+                    nodeId,
+                    TIME.format(interaction.getTime())
+                );
+                registeredNodes.put(nodeId, new RegisteredNode(interaction, null));
             }
         } else if (registeredNodes.containsKey(nodeId)) {
-            // for RSUs, TLs and CSs, Registrations arrive before AdHocCommunicationConfiguration -> they could be added to simulation now
+            // for RSUs, TLs and CSs, Registrations arrive before CommunicationConfiguration -> they can be added to the simulation now
             RegisteredNode registeredNode = registeredNodes.get(nodeId);
             registeredNode.configuration = interaction;
-            addRsuNodeToSimulation(nodeId, registeredNode, interaction.getTime());
-            registeredNodes.remove(nodeId);
+            addNodeToSimulation(nodeId, registeredNode, interaction.getTime());
         } else {
-            log.warn("Got AdHoc configuration for unknown node {}. Ignoring.", nodeId);
+            log.warn("Got radio configuration for unknown node {}. Ignoring.", nodeId);
         }
     }
 
-    private synchronized VehicleData fetchVehicleDataFromLastUpdate(String vehicleId) {
-        if (latestVehicleUpdates == null) {
-            return null;
-        }
-        // see if vehicle was added or updated within the last vehicle update
-        Optional<VehicleData> vehicleData = Stream.concat(latestVehicleUpdates.getAdded().stream(), latestVehicleUpdates.getUpdated().stream())
-                .filter(v -> v.getName().equals(vehicleId))
-                .findFirst();
-        return vehicleData.orElse(null);
-    }
-
-    private synchronized void addRsuNodeToSimulation(String nodeId, RegisteredNode virtualNode, long time) throws InternalFederateException {
-        List<NodeDataContainer> nodesToAdd = new ArrayList<>(); // Prepare a list for adding multiple RSUs
+    private synchronized void addNodeToSimulation(String nodeId, RegisteredNode registeredNode, long time) throws InternalFederateException {
         try {
             if (simulatedNodes.containsInternalId(nodeId)) {
-                log.warn("RSU with id (internal={}) couldn't be added: name already exists ", nodeId);
+                log.warn("Node with id (internal={}) couldn't be added: name already exists", nodeId);
             } else {
                 int id = simulatedNodes.toExternalId(nodeId);
-                nodesToAdd.add(new NodeDataContainer(id, virtualNode.position));  // Add TL to the list
-                // Let channel send list and get an acknowledgement
-                if (CMD.SUCCESS != ambassadorFederateChannel.writeAddRsuNodeMessage(time, nodesToAdd)) {
-                    log.error("Could not add new RSU: {}", federateAmbassadorChannel.getLastStatusMessage());
-                    throw new InternalFederateException(
-                            "Error in " + federateName + ": " + federateAmbassadorChannel.getLastStatusMessage()
-                    );
+                ClientServerChannelProtos.UpdateNode.UpdateType type = UnitNameGenerator.isVehicle(nodeId) ? ClientServerChannelProtos.UpdateNode.UpdateType.ADD_VEHICLE : ClientServerChannelProtos.UpdateNode.UpdateType.ADD_RSU;
+                if (CMD.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(time, type, new NodeDataContainer(id, registeredNode.position))) {
+                    log.error("Could not add new node.");
+                    throw new InternalFederateException("Error in " + federateName + ": Could not add new node");
                 }
                 log.info(
-                        "Added RSU ID[int={}, ext={}] at projected position={} time={}",
-                        simulatedNodes.fromExternalId(id), id, virtualNode.position, TIME.format(time)
-                );
-                log.debug("Sending AdHocCommunicationConfiguration for RSU node {}", nodeId);
-                sendAdHocCommunicationConfiguration(virtualNode.configuration, time);
-            }
-        } catch (IOException | InternalFederateException e) {
-            log.error(e.getMessage(), e);
-            throw new InternalFederateException("Could not add new rsu.", e);
-        }
-    }
-
-    private synchronized void addVehicleNodeToSimulation(String nodeId, RegisteredNode registeredNode, long time) throws InternalFederateException {
-        List<NodeDataContainer> nodesToAdd = new ArrayList<>();
-        try {
-            if (simulatedNodes.containsInternalId(nodeId)) {
-                log.warn("Vehicle with id(int={}) couldn't be added: name already exists ", nodeId);
-            } else {
-                int id = simulatedNodes.toExternalId(nodeId);
-                nodesToAdd.add(new NodeDataContainer(id, registeredNode.position));
-                if (CMD.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(time, nodesToAdd)) {
-                    log.error("Could not add new vehicles: {}", federateAmbassadorChannel.getLastStatusMessage());
-                    throw new InternalFederateException(
-                            "Error in " + federateName + ": " + federateAmbassadorChannel.getLastStatusMessage()
-                    );
-                }
-                log.info(
-                        "Added vehicle ID[int={}, ext={}] at position={} time={}",
+                        "Added Node ID[int={}, ext={}] at projected position={} time={}",
                         simulatedNodes.fromExternalId(id), id, registeredNode.position, TIME.format(time)
                 );
-                log.debug("Sending AdHocCommunicationConfiguration for vehicle node {}.", nodeId);
-                sendAdHocCommunicationConfiguration(registeredNode.configuration, time);
+                registeredNodes.remove(nodeId);
+                if (registeredNode.configuration instanceof AdHocCommunicationConfiguration castedInteraction) {
+                    sendAdHocCommunicationConfiguration(castedInteraction, time);
+                } else if (registeredNode.configuration instanceof CellularCommunicationConfiguration castedInteraction) {
+                    sendCellularCommunicationConfiguration(castedInteraction, time);
+                }
             }
         } catch (IOException | InternalFederateException e) {
             log.error(e.getMessage(), e);
-            throw new InternalFederateException("Could not add new vehicle.", e);
+            throw new InternalFederateException("Could not add new node.", e);
         }
     }
 
@@ -777,68 +774,105 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
      * @param interaction interaction containing an AdHocConfiguration
      * @param time        workaround for wrong timestamps when retaining configuration interactions
      */
-    private synchronized void sendAdHocCommunicationConfiguration(AdHocCommunicationConfiguration interaction, long time) {
-        log.debug("Sending radio configuration interaction {} to {}", interaction.getId(), federateName);
+    private synchronized void sendAdHocCommunicationConfiguration(AdHocCommunicationConfiguration interaction, long time) throws InternalFederateException {
         try {
             int interactionId = interaction.getId();
             AdHocConfiguration configuration = interaction.getConfiguration();
-            Integer externalId = simulatedNodes.containsInternalId(configuration.getNodeId())
-                    ? simulatedNodes.toExternalId(configuration.getNodeId())
-                    : null;
-            if (externalId != null) {   // If the node is simulated
-                if (log.isTraceEnabled()) {
-                    log.trace(
-                            "AdHocCommunicationConfiguration: from node ID[int={}, ext={}], at time = {} channels: [{},{}|{},{}]",
-                            configuration.getNodeId(), externalId, time,
-                            (configuration.getConf0() != null ? configuration.getConf0().getChannel0() : "null"),
-                            (configuration.getConf0() != null ? configuration.getConf0().getChannel1() : "null"),
-                            (configuration.getConf1() != null ? configuration.getConf1().getChannel0() : "null"),
-                            (configuration.getConf1() != null ? configuration.getConf1().getChannel1() : "null")
-                    );
-                }
-                if (log.isTraceEnabled()) {
-                    log.trace("AdHocCommunicationConfiguration: Number of radios: {}", configuration.getRadioMode());
-                    if (configuration.getRadioMode() != AdHocConfiguration.RadioMode.OFF) {
-                        log.trace("AdHocCommunicationConfiguration: radio0: IP: {}", configuration.getConf0().getNewIP());
-                        log.trace("AdHocCommunicationConfiguration: radio0: Subnet: {}", configuration.getConf0().getNewSubnet());
-                        log.trace("AdHocCommunicationConfiguration: radio0: Mode: {}", configuration.getConf0().getMode());
-                        log.trace("AdHocCommunicationConfiguration: radio0: Channel0: {}", configuration.getConf0().getChannel0());
-                        log.trace("AdHocCommunicationConfiguration: radio0: Channel1: {}", configuration.getConf0().getChannel1());
-                        if (configuration.getConf0().getNewPower() == -1) {
-                            log.trace("AdHocCommunicationConfiguration: radio0: Power set by federate");
-                        } else {
-                            log.trace("AdHocCommunicationConfiguration: radio0: Power: {} mW", configuration.getConf0().getNewPower());
-                        }
-                    }
-                    if (configuration.getRadioMode() == AdHocConfiguration.RadioMode.DUAL) {
-                        log.trace("AdHocCommunicationConfiguration: radio1: IP: {}", configuration.getConf1().getNewIP());
-                        log.trace("AdHocCommunicationConfiguration: radio1: Subnet: {}", configuration.getConf1().getNewSubnet());
-                        log.trace("AdHocCommunicationConfiguration: radio1: Mode: {}", configuration.getConf1().getMode());
-                        log.trace("AdHocCommunicationConfiguration: radio1: Channel0: {}", configuration.getConf1().getChannel0());
-                        log.trace("AdHocCommunicationConfiguration: radio1: Channel1: {}", configuration.getConf1().getChannel1());
-                        if (configuration.getConf1().getNewPower() == -1) {
-                            log.trace("AdHocCommunicationConfiguration: radio1: Power set by federate");
-                        } else {
-                            log.trace("AdHocCommunicationConfiguration: radio1: Power: {} mW", configuration.getConf1().getNewPower());
-                        }
-                    }
-                }
-                // actually write the data to the federate
-                if (CMD.SUCCESS != ambassadorFederateChannel.writeConfigMessage(time, interactionId, externalId, configuration)) {
-                    LoggerFactory.getLogger(this.getClass()).error(
-                            "Could not configure node {}s radio: {}",
-                            configuration.getNodeId(),
-                            federateAmbassadorChannel.getLastStatusMessage()
-                    );
-                    throw new InternalFederateException(
-                            "Error in " + federateName + federateAmbassadorChannel.getLastStatusMessage()
-                    );
-                }
-            } else {
+            if (!simulatedNodes.containsInternalId(configuration.getNodeId())) {
                 throw new IllegalValueException("Node not simulated: " + configuration.getNodeId());
             }
-        } catch (IOException | InternalFederateException | IllegalValueException ex) {
-            log.error("{} could not configure the radio", ambassadorName);
+            log.debug("Sending AdHocCommunicationConfiguration for node {}", configuration.getNodeId());
+            Integer nodeId = simulatedNodes.toExternalId(configuration.getNodeId());
+            if (log.isTraceEnabled()) {
+                log.trace(
+                        "AdHocCommunicationConfiguration: from node ID[int={}, ext={}], at time = {} channels: [{},{}|{},{}]",
+                        configuration.getNodeId(), nodeId, time,
+                        (configuration.getConf0() != null ? configuration.getConf0().getChannel0() : "null"),
+                        (configuration.getConf0() != null ? configuration.getConf0().getChannel1() : "null"),
+                        (configuration.getConf1() != null ? configuration.getConf1().getChannel0() : "null"),
+                        (configuration.getConf1() != null ? configuration.getConf1().getChannel1() : "null")
+                );
+                log.trace("AdHocCommunicationConfiguration: Number of radios: {}", configuration.getRadioMode());
+                if (configuration.getRadioMode() != AdHocConfiguration.RadioMode.OFF) {
+                    log.trace("AdHocCommunicationConfiguration: radio0: IP: {}", configuration.getConf0().getIp());
+                    log.trace("AdHocCommunicationConfiguration: radio0: Subnet: {}", configuration.getConf0().getSubnet());
+                    log.trace("AdHocCommunicationConfiguration: radio0: Mode: {}", configuration.getConf0().getMode());
+                    log.trace("AdHocCommunicationConfiguration: radio0: Channel0: {}", configuration.getConf0().getChannel0());
+                    log.trace("AdHocCommunicationConfiguration: radio0: Channel1: {}", configuration.getConf0().getChannel1());
+                    if (configuration.getConf0().getPower() == -1) {
+                        log.trace("AdHocCommunicationConfiguration: radio0: Power set by federate");
+                    } else {
+                        log.trace("AdHocCommunicationConfiguration: radio0: Power: {} mW", configuration.getConf0().getPower());
+                    }
+                }
+                if (configuration.getRadioMode() == AdHocConfiguration.RadioMode.DUAL) {
+                    log.trace("AdHocCommunicationConfiguration: radio1: IP: {}", configuration.getConf1().getIp());
+                    log.trace("AdHocCommunicationConfiguration: radio1: Subnet: {}", configuration.getConf1().getSubnet());
+                    log.trace("AdHocCommunicationConfiguration: radio1: Mode: {}", configuration.getConf1().getMode());
+                    log.trace("AdHocCommunicationConfiguration: radio1: Channel0: {}", configuration.getConf1().getChannel0());
+                    log.trace("AdHocCommunicationConfiguration: radio1: Channel1: {}", configuration.getConf1().getChannel1());
+                    if (configuration.getConf1().getPower() == -1) {
+                        log.trace("AdHocCommunicationConfiguration: radio1: Power set by federate");
+                    } else {
+                        log.trace("AdHocCommunicationConfiguration: radio1: Power: {} mW", configuration.getConf1().getPower());
+                    }
+                }
+            }
+            if (CMD.SUCCESS != ambassadorFederateChannel.writeAdhocRadioConfigMessage(time, interactionId, nodeId, configuration)) {
+                log.error("Could not configure node {}s radio", configuration.getNodeId());
+                throw new InternalFederateException(
+                        "Error in " + federateName + ": Could not configure node " + configuration.getNodeId() + "s radio"
+                );
+            }
+        } catch (IOException | InternalFederateException | IllegalValueException e) {
+            log.error(e.getMessage(), e);
+            throw new InternalFederateException("Could not configure the radio.", e);
+        }
+    }
+
+    private synchronized void sendCellularCommunicationConfiguration(CellularCommunicationConfiguration interaction, long time) throws InternalFederateException {
+        try {
+            CellConfiguration configuration = interaction.getConfiguration();
+            if (!simulatedNodes.containsInternalId(configuration.getNodeId())) {
+                throw new IllegalValueException("Node not simulated: " + configuration.getNodeId());
+            }
+            log.debug("Sending CellularCommunicationConfiguration for node {}", configuration.getNodeId());
+            Integer nodeId = simulatedNodes.toExternalId(configuration.getNodeId());
+            Inet4Address ip = IpResolver.getSingleton().lookup(configuration.getNodeId());
+            if (CMD.SUCCESS != ambassadorFederateChannel.writeCellRadioConfigMessage(time, nodeId, configuration, ip)) {
+                log.error("Could not configure node {}s radio", configuration.getNodeId());
+                throw new InternalFederateException(
+                        "Error in " + federateName + ": Could not configure node " + configuration.getNodeId() + "s radio"
+                );
+            }
+        } catch (IOException | InternalFederateException | IllegalValueException e) {
+            log.error(e.getMessage(), e);
+            throw new InternalFederateException("Could not configure the radio.", e);
+        }
+    }
+
+    private void removeNode(String nodeId, Interaction interaction) throws InternalFederateException {
+        final long time = interaction.getTime();
+        // verify the node is simulated in the current simulation
+        final Integer nodeToRemove = simulatedNodes.containsInternalId(nodeId) ? simulatedNodes.toExternalId(nodeId) : null;
+        if (nodeToRemove != null) {
+            log.info("removeNode ID[int={}, ext={}] time={}", nodeId, nodeToRemove, TIME.format(time));
+            simulatedNodes.removeUsingInternalId(nodeId); // remove the vehicle from our internal list
+            removedNodes.add(nodeId);
+            try {
+                if (CMD.SUCCESS != ambassadorFederateChannel.writeRemoveNodeMessage(time, nodeToRemove)) {
+                    log.error("Could not remove node.");
+                    throw new InternalFederateException("Error in " + federateName + ": Could not remove node");
+                }
+            } catch (IOException | InternalFederateException e) {
+                log.error("{}, time={}", e.getMessage(), TIME.format(interaction.getTime()));
+                throw new InternalFederateException("Could not remove node from the simulator.", e);
+            }
+        } else if (registeredNodes.containsKey(nodeId)) {
+            log.info("removeNode (still virtual) ID[int={}] time={}", nodeId, TIME.format(time));
+            registeredNodes.remove(nodeId);
+        } else {
+            log.warn("Node ID[int={}] is not simulated", nodeId);
         }
     }
 

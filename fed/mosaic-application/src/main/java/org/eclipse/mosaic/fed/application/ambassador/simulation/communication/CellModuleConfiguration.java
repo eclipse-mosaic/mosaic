@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.fed.application.ambassador.simulation.communication;
 
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 
 /**
  * <pre>
@@ -67,7 +67,7 @@ public class CellModuleConfiguration extends AbstractCommunicationModuleConfigur
      * @param geoRadius      reception radius for CAM
      * @return the built {@link CellModuleConfiguration}
      */
-    public CellModuleConfiguration camConfiguration(DestinationType addressingMode, double geoRadius) {
+    public CellModuleConfiguration camConfiguration(RoutingType addressingMode, double geoRadius) {
         this.camConfiguration = new CellCamConfiguration(addressingMode, geoRadius);
         return this;
     }
@@ -79,7 +79,7 @@ public class CellModuleConfiguration extends AbstractCommunicationModuleConfigur
      * @return the built {@link CellModuleConfiguration}
      */
     public CellModuleConfiguration camConfiguration(double geoRadius) {
-        this.camConfiguration = new CellCamConfiguration(DestinationType.CELL_GEOCAST, geoRadius);
+        this.camConfiguration = new CellCamConfiguration(RoutingType.CELL_GEOCAST, geoRadius);
         return this;
     }
 
@@ -106,21 +106,21 @@ public class CellModuleConfiguration extends AbstractCommunicationModuleConfigur
      * and information distance to neighbors in the vicinity.
      */
     public static class CellCamConfiguration {
-        final DestinationType addressingMode;
+        final RoutingType addressingMode;
         double geoRadius;
         String topocastReceiver;
 
-        public CellCamConfiguration(DestinationType addressingMode, double geoRadius) {
+        public CellCamConfiguration(RoutingType addressingMode, double geoRadius) {
             this.addressingMode = addressingMode;
             this.geoRadius = geoRadius;
         }
 
         public CellCamConfiguration(String topocastReceiver) {
-            this.addressingMode = DestinationType.CELL_TOPOCAST;
+            this.addressingMode = RoutingType.CELL_TOPOCAST;
             this.topocastReceiver = topocastReceiver;
         }
 
-        public DestinationType getAddressingMode() {
+        public RoutingType getAddressingMode() {
             return addressingMode;
         }
 

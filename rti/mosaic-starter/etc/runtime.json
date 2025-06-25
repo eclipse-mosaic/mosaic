@@ -121,15 +121,16 @@
             "dockerImage": "",
             "host": "local",
             "port": 5011,
-            "deploy": true,
-            "start": true,
+            "deploy": false,
+            "start": false,
             "subscriptions": [
                 "RsuRegistration",
                 "ChargingStationRegistration",
                 "TrafficLightRegistration",
                 "VehicleUpdates",
                 "V2xMessageTransmission",
-                "AdHocCommunicationConfiguration"
+                "AdHocCommunicationConfiguration",
+                "CellularCommunicationConfiguration"
             ],
             "javaClasspathEntries": []
         },
