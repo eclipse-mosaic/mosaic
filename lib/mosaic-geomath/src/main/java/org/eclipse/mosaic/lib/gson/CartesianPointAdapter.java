@@ -23,7 +23,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
@@ -53,12 +52,10 @@ public class CartesianPointAdapter implements JsonDeserializer<CartesianPoint>, 
 
     @Override
     public JsonElement serialize(CartesianPoint point, Type type, JsonSerializationContext jsonSerializationContext) {
-        JsonObject object = new JsonObject();
-        object.add("x", new JsonPrimitive(point.getX()));
-        object.add("y", new JsonPrimitive(point.getY()));
-        if (!MathUtils.isFuzzyZero(point.getZ())) {
-            object.add("z", new JsonPrimitive(point.getZ()));
+        final JsonElement element = jsonSerializationContext.serialize(point);
+        if (MathUtils.isFuzzyZero(point.getZ()) && element instanceof JsonObject) {
+            ((JsonObject) element).remove("z");
         }
-        return object;
+        return element;
     }
 }

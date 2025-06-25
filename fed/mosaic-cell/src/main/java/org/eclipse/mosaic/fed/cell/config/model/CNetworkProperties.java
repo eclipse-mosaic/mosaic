@@ -22,6 +22,7 @@ import org.eclipse.mosaic.lib.util.gson.DataFieldAdapter;
 
 import com.google.gson.annotations.JsonAdapter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * {@link CNetworkProperties} holds all coverage properties of one region of the radio access network (ran-part).
@@ -131,7 +132,7 @@ public class CNetworkProperties {
 
     @Override
     public String toString() {
-        ToStringBuilder builder = new ToStringBuilder(this).append("id", id)
+        ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("id", id)
                 .append("uplink.delay", uplink.delay.toString())
                 .append("uplink.capacity", uplink.capacity)
                 .append("downlink.unicast.delay", downlink.unicast.delay.toString());

@@ -63,7 +63,7 @@
                     "description": "The capacity of the uplink.",
                     "anyOf": [
                         { "type": "integer", "minimum": 0 },
-                        { "type": "string", "pattern": "^unlimited$"}
+                        { "type": "string", "pattern": "^(?:unlimited|[0-9.]+\\s*\\w+)$"}
                     ]
                 }
             },
@@ -87,7 +87,7 @@
                     "description": "The capacity of the downlink.",
                     "anyOf": [
                         { "type": "integer", "minimum": 0 },
-                        { "type": "string", "pattern": "^unlimited$"}
+                        { "type": "string", "pattern": "^(?:unlimited|[0-9.]+\\s*\\w+)$"}
                     ]
                 }
             },

@@ -31,14 +31,14 @@ public class MutableGeoPoint implements GeoPoint {
     private static final double LATITUDE_MIN = -LATITUDE_MAX;
 
     /**
-     * The longitude coordinate of this {@link MutableGeoPoint}.Unit: [degree (angle)].
-     */
-    public double longitude;
-
-    /**
      * The latitude coordinate of this {@link MutableGeoPoint}. Unit: [degree (angle)].
      */
     public double latitude;
+
+    /**
+     * The longitude coordinate of this {@link MutableGeoPoint}.Unit: [degree (angle)].
+     */
+    public double longitude;
 
     /**
      * The altitude coordinate of this {@link MutableGeoPoint}. Unit: meter.
