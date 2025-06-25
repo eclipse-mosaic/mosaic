@@ -16,11 +16,12 @@
 package org.eclipse.mosaic.lib.enums;
 
 /**
- * Causes to inform others about certain events. Inspired by CauseCodeType from ETSI DENM.
+ * An {@link EnvironmentEventCause} can be used to inform others about the reason for a specific hazardous event, such
+ * as an obstacle on the road, a roadworks area, a bad weather condition, and more. Inspired by CauseCodeType from ETSI DENM.
  *
  * @see <a href="https://etsi.org/deliver/etsi_en/302600_302699/30263703/01.03.01_60/en_30263703v010301p.pdf">en_30263703v010301p.pdf</a>
  */
-public enum EventCause {
+public enum EnvironmentEventCause {
 
     TRAFFIC_CONDITION(1),
     ACCIDENT(2),
@@ -43,7 +44,7 @@ public enum EventCause {
      *
      * @param id identifying integer
      */
-    EventCause(int id) {
+    EnvironmentEventCause(int id) {
         this.id = id;
     }
 
@@ -54,8 +55,8 @@ public enum EventCause {
      * @param id identifying integer
      * @return the enum mapped from an integer.
      */
-    public static EventCause fromId(int id) {
-        for (EventCause type : EventCause.values()) {
+    public static EnvironmentEventCause fromId(int id) {
+        for (EnvironmentEventCause type : EnvironmentEventCause.values()) {
             if (type.id == id) {
                 return type;
             }

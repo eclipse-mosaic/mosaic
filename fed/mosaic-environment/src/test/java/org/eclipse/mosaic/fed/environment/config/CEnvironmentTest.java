@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
@@ -91,7 +91,7 @@ public class CEnvironmentTest {
         assertEventDeserialization(
                 eventGeoRectangle,
                 Sensor.EVENT,
-                EventCause.OBSTACLE_ON_ROAD,
+                EnvironmentEventCause.OBSTACLE_ON_ROAD,
                 eventGeoRectangleExpectedLocation,
                 null,
                 0,
@@ -109,7 +109,7 @@ public class CEnvironmentTest {
         assertEventDeserialization(
                 eventGeoPolygon,
                 Sensor.EVENT,
-                EventCause.ROADWORKS,
+                EnvironmentEventCause.ROADWORKS,
                 eventGeoPolygonExpectedLocation,
                 null,
                 0,

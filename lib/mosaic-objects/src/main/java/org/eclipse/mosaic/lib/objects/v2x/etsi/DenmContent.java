@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.lib.objects.v2x.etsi;
 
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.objects.ToDataOutput;
@@ -50,7 +50,7 @@ public class DenmContent implements ToDataOutput, Serializable {
     /**
      * Cause of the event.
      */
-    private final EventCause eventCause;
+    private final EnvironmentEventCause eventCause;
 
     /**
      * Resulting speed because of the event.
@@ -74,11 +74,11 @@ public class DenmContent implements ToDataOutput, Serializable {
      */
     private final String extendedContainer;
 
-    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final EventCause eventCause, final float causedSpeed, final float senderDeceleration) {
+    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final EnvironmentEventCause eventCause, final float causedSpeed, final float senderDeceleration) {
         this(time, senderPosition, eventRoadId, eventCause, causedSpeed, senderDeceleration, null, null, null);
     }
 
-    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final EventCause eventCause, final float causedSpeed, final float senderDeceleration, final GeoPoint eventLocation, final GeoPolygon eventArea, final String extendedContainer) {
+    public DenmContent(final long time, final GeoPoint senderPosition, final String eventRoadId, final EnvironmentEventCause eventCause, final float causedSpeed, final float senderDeceleration, final GeoPoint eventLocation, final GeoPolygon eventArea, final String extendedContainer) {
         this.time = time;
         this.senderPosition = senderPosition;
         this.eventRoadId = eventRoadId;
@@ -105,7 +105,7 @@ public class DenmContent implements ToDataOutput, Serializable {
             this.eventRoadId = null;
         }
 
-        this.eventCause = EventCause.fromId(din.readInt());
+        this.eventCause = EnvironmentEventCause.fromId(din.readInt());
         this.causedSpeed = din.readFloat();
         this.senderDeceleration = din.readFloat();
 
@@ -151,7 +151,7 @@ public class DenmContent implements ToDataOutput, Serializable {
         return eventRoadId;
     }
 
-    public EventCause getEventCause() {
+    public EnvironmentEventCause getEventCause() {
         return eventCause;
     }
 

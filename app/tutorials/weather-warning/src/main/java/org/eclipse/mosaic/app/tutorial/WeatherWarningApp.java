@@ -26,7 +26,7 @@ import org.eclipse.mosaic.fed.application.app.api.navigation.NavigationModule;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.interactions.communication.V2xMessageTransmission;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.environment.Sensor;
@@ -216,7 +216,7 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
          * of the sending node, the geo position of the sending node, warning type and event strength.
          */
         Denm denm = new Denm(mr, new DenmContent(
-                getOs().getSimulationTime(), vehicleLongLat, roadId, EventCause.ADVERSE_WEATHER_CONDITION,
+                getOs().getSimulationTime(), vehicleLongLat, roadId, EnvironmentEventCause.ADVERSE_WEATHER_CONDITION,
                 SPEED, 0.0f, vehicleLongLat, null, null
         ), 200);
         getLog().infoSimTime(this, "Sending DENM");
