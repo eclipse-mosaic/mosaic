@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.lib.objects.v2x.etsi;
 
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.objects.v2x.EncodedPayload;
@@ -94,7 +94,7 @@ public class Denm extends V2xMessage {
      *
      * @return the cause of the warning event.
      */
-    public EventCause getEventCause() {
+    public EnvironmentEventCause getEventCause() {
         return this.denmContent.getEventCause();
     }
 
