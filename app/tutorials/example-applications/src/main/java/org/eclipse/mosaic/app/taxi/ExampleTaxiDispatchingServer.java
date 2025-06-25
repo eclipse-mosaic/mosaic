@@ -378,6 +378,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private void closeDbConnection() {
         try {
             dbConnection.close();
+            getLog().info("Closed database connection successfully");
         } catch (SQLException e) {
             getLog().error("Error closing connection to database", e);
         }
