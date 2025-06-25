@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.lib.objects.environment;
 
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.util.ConversionUtils;
 
 import org.apache.commons.lang3.StringUtils;
@@ -63,9 +63,9 @@ public class Sensor<T> {
     public final static Sensor<Double> ROAD_SURFACE_CONDITION = new Sensor<>("ROAD_SURFACE_CONDITION", ConversionUtils::toDouble);
 
     /**
-     * A sensor that senses hazardous events of a specific {@link EventCause}.
+     * A sensor that senses hazardous events of a specific {@link EnvironmentEventCause}.
      */
-    public final static Sensor<EventCause> EVENT = new Sensor<>("EVENT", Sensor::toEventCause);
+    public final static Sensor<EnvironmentEventCause> EVENT = new Sensor<>("EVENT", Sensor::toEventCause);
 
     private final String name;
     private final Function<Object, T> translator;
@@ -101,15 +101,15 @@ public class Sensor<T> {
         return translator.apply(value);
     }
 
-    private static @Nullable EventCause toEventCause(@Nullable Object o) {
+    private static @Nullable EnvironmentEventCause toEventCause(@Nullable Object o) {
         if (o == null) {
             return null;
-        } else if (o instanceof EventCause) {
-            return (EventCause) o;
+        } else if (o instanceof EnvironmentEventCause) {
+            return (EnvironmentEventCause) o;
         } else if (o instanceof String) {
-            return EventCause.valueOf(StringUtils.upperCase(((String) o)));
+            return EnvironmentEventCause.valueOf(StringUtils.upperCase(((String) o)));
         } else if (o instanceof Number) {
-            return EventCause.fromId(((Number) o).intValue());
+            return EnvironmentEventCause.fromId(((Number) o).intValue());
         }
         throw new IllegalArgumentException("Could not translate object of type " + o.getClass() + " to EventCause.");
     }

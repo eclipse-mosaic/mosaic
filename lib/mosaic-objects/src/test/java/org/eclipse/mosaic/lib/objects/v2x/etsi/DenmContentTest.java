@@ -21,7 +21,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.junit.EtsiPayloadConfigurationRule;
@@ -54,7 +54,7 @@ public class DenmContentTest {
 
         //First test scenario:
         Denm denm = new Denm(mock(MessageRouting.class),
-                new DenmContent(4 * TIME.SECOND, position, "1_1_2_0", EventCause.ACCIDENT, 5f, 6f, position, eventArea, "test"),
+                new DenmContent(4 * TIME.SECOND, position, "1_1_2_0", EnvironmentEventCause.ACCIDENT, 5f, 6f, position, eventArea, "test"),
                 200);
 
         EncodedPayload encodedMessage = denm.getPayload();
@@ -79,7 +79,7 @@ public class DenmContentTest {
 
         //Second test scenario:
         Denm denm2 = new Denm(mock(MessageRouting.class),
-                new DenmContent(4 * TIME.SECOND, position, "1_1_2_0", EventCause.ACCIDENT, 5f, 6f, null, null, null),
+                new DenmContent(4 * TIME.SECOND, position, "1_1_2_0", EnvironmentEventCause.ACCIDENT, 5f, 6f, null, null, null),
                 200);
 
         EncodedPayload encodedMessage2 = denm2.getPayload();

@@ -19,7 +19,7 @@ import org.eclipse.mosaic.fed.application.app.ConfigurableApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.environment.Sensor;
 import org.eclipse.mosaic.lib.objects.v2x.MessageRouting;
@@ -69,10 +69,10 @@ public class EmergencyBrakeApp extends ConfigurableApplication<CEmergencyBrakeAp
     @Override
     public void onVehicleUpdated(@Nullable VehicleData previousVehicleData, @Nonnull VehicleData updatedVehicleData) {
 
-        EventCause eventCause = getOs().getBasicSensorModule().getSensorValue(Sensor.EVENT).orElse(null);
+        EnvironmentEventCause eventCause = getOs().getBasicSensorModule().getSensorValue(Sensor.EVENT).orElse(null);
 
         // Initiate emergency brake if obstacle is detected
-        if (eventCause == EventCause.OBSTACLE_ON_ROAD && !emergencyBrake) {
+        if (eventCause == EnvironmentEventCause.OBSTACLE_ON_ROAD && !emergencyBrake) {
             stoppedAt = getOs().getSimulationTime();
             getOs().changeSpeedWithForcedAcceleration(getConfiguration().targetSpeed, getConfiguration().deceleration);
             emergencyBrake = true;
@@ -80,7 +80,7 @@ public class EmergencyBrakeApp extends ConfigurableApplication<CEmergencyBrakeAp
         }
 
         // Continue driving normal as soon emergency brake is done and no obstacle is detectable
-        if (emergencyBrake && eventCause != EventCause.OBSTACLE_ON_ROAD && idlePeriodOver(stoppedAt) && reachedSpeed(getConfiguration().targetSpeed)) {
+        if (emergencyBrake && eventCause != EnvironmentEventCause.OBSTACLE_ON_ROAD && idlePeriodOver(stoppedAt) && reachedSpeed(getConfiguration().targetSpeed)) {
             getOs().resetSpeed();
             stoppedAt = Long.MIN_VALUE;
             emergencyBrake = false;
@@ -144,7 +144,7 @@ public class EmergencyBrakeApp extends ConfigurableApplication<CEmergencyBrakeAp
                             .topological()
                             .build();
             Denm denm = new Denm(routing, new DenmContent(getOs().getSimulationTime(), vehicleLongLat, roadId,
-                    EventCause.DANGEROUS_SITUATION , curSpeed, curDeceleration * 9.81f, null,
+                    EnvironmentEventCause.DANGEROUS_SITUATION , curSpeed, curDeceleration * 9.81f, null,
                     null, null), 200);
             getLog().debug("Sender position: " + denm.getSenderPosition());
             getLog().debug("Sender speed at event time: " + denm.getCausedSpeed() + "m/s");

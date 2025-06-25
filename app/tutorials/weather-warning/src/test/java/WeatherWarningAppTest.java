@@ -29,7 +29,7 @@ import org.eclipse.mosaic.fed.application.ambassador.simulation.navigation.Routi
 import org.eclipse.mosaic.fed.application.ambassador.util.UnitLogger;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.fed.application.app.api.perception.BasicSensorModule;
-import org.eclipse.mosaic.lib.enums.EventCause;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 import org.eclipse.mosaic.lib.objects.addressing.AdHocMessageRoutingBuilder;
 import org.eclipse.mosaic.lib.objects.addressing.SourceAddressContainer;
@@ -171,7 +171,7 @@ public class WeatherWarningAppTest {
 
     private boolean assertDenm(Denm denm) {
         assertEquals(25 / 3.6f, denm.getCausedSpeed(), 0.1f);
-        assertEquals(EventCause.ADVERSE_WEATHER_CONDITION, denm.getEventCause());
+        assertEquals(EnvironmentEventCause.ADVERSE_WEATHER_CONDITION, denm.getEventCause());
         return true;
     }
 
