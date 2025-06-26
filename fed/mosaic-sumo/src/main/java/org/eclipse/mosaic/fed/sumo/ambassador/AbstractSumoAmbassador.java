@@ -44,6 +44,8 @@ import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
 import org.eclipse.mosaic.fed.sumo.util.TrafficSignManager;
 import org.eclipse.mosaic.interactions.application.SumoTraciRequest;
 import org.eclipse.mosaic.interactions.application.SumoTraciResponse;
+import org.eclipse.mosaic.interactions.mapping.AgentRegistration;
+import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioAgentRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioTrafficLightRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
 import org.eclipse.mosaic.interactions.traffic.InductionLoopDetectorSubscription;
@@ -523,6 +525,8 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             this.receiveInteraction((TrafficSignSpeedLimitChange) interaction);
         } else if (interaction.getTypeId().equals(TrafficSignLaneAssignmentChange.TYPE_ID)) {
             this.receiveInteraction((TrafficSignLaneAssignmentChange) interaction);
+        } else if (interaction.getTypeId().equals(AgentRegistration.TYPE_ID)) {
+            this.receiveInteraction((AgentRegistration) interaction);
         } else {
             log.warn(UNKNOWN_INTERACTION + interaction.getTypeId());
         }
@@ -1232,11 +1236,13 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             removeExternalVehiclesFromUpdates(vehicleUpdates);
             propagateNewRoutes(vehicleUpdates, time);
             propagateSumoVehiclesToRti(time);
+            propagatePedestriansToRti(time);
 
             nextTimeStep += sumoConfig.updateInterval * TIME.MILLI_SECOND;
             simulationStepResult.getVehicleUpdates().setNextUpdate(nextTimeStep);
 
             rti.triggerInteraction(vehicleUpdates);
+            rti.triggerInteraction(simulationStepResult.getPedestrianUpdates());
             rti.triggerInteraction(simulationStepResult.getTrafficDetectorUpdates());
             this.rti.triggerInteraction(simulationStepResult.getTrafficLightUpdates());
 
@@ -1293,6 +1299,7 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
     /**
      * Changes parameters of externally added vehicles.
      * So far only color change is supported.
+     *
      * @param vehicleParametersChange Stores a list of vehicle parameters that should be changed.
      * @throws InternalFederateException Throws an IllegalArgumentException if color could not be set correctly.
      */
@@ -1370,6 +1377,34 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
         return bridge.getSimulationControl().getDepartedVehicles().stream()
                 .filter(v -> !vehiclesAddedViaRti.contains(v)) // all vehicles not added via MOSAIC are added by SUMO
                 .toList();
+    }
+
+    private void propagatePedestriansToRti(long time) throws InternalFederateException {
+        List<String> pedestrians = bridge.getSimulationControl().getDepartedPersons();
+        String pedestrianType;
+        for (String pedestrianId : pedestrians) {
+            pedestrianType = bridge.getPersonControl().getPersonTypeId(pedestrianId);
+            try {
+                rti.triggerInteraction(new ScenarioAgentRegistration(time, pedestrianId, pedestrianType));
+            } catch (IllegalValueException e) {
+                throw new InternalFederateException(e);
+            }
+            if (sumoConfig.subscribeToAllPersons) { // this is required as pedestrians with no apps can't be subscribed to otherwise
+                bridge.getSimulationControl().subscribeForPerson(pedestrianId, time, this.getEndTime());
+            }
+        }
+    }
+
+    private void receiveInteraction(AgentRegistration agentRegistration) {
+        if (!sumoConfig.subscribeToAllPersons && agentRegistration.getMapping().hasApplication()) { // this is required as pedestrians with no apps can't be subscribed to otherwise
+            try {
+                bridge.getSimulationControl().subscribeForPerson(
+                        agentRegistration.getMapping().getName(), agentRegistration.getTime(), this.getEndTime()
+                );
+            } catch (InternalFederateException e) {
+                log.warn("Could not subscribe to unknown person " + agentRegistration.getMapping().getName());
+            }
+        }
     }
 
     /**

@@ -26,4 +26,15 @@ public class CommandRetrieveSimulationValue {
      * Id's of vehicles which departed in this time step.
      */
     public final static int VAR_DEPARTED_VEHICLES = 0x74;
+
+
+    /**
+     * Id's of vehicles which departed in this time step.
+     */
+    public final static int VAR_DEPARTED_PERSONS = 0x25;
+
+    /**
+     * Id's of vehicles which arrived in this time step.
+     */
+    public final static int VAR_ARRIVED_PERSONS = 0x27;
 }

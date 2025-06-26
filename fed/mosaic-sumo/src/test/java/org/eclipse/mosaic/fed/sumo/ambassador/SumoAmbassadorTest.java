@@ -39,6 +39,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.facades.RouteFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.SimulationFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.TrafficLightFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.VehicleFacade;
+import org.eclipse.mosaic.interactions.agent.AgentUpdates;
 import org.eclipse.mosaic.interactions.mapping.VehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioTrafficLightRegistration;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
@@ -347,6 +348,7 @@ public class SumoAmbassadorTest {
         VehicleUpdates vehicleUpdates = new VehicleUpdates(time, Lists.newArrayList(vehicles), Lists.newArrayList(), Lists.newArrayList());
         TraciSimulationStepResult traciSimulationResult = new TraciSimulationStepResult(
                 vehicleUpdates,
+                new AgentUpdates(time, Lists.newArrayList(), Lists.newArrayList()),
                 new TrafficDetectorUpdates(time, Lists.newArrayList(), Lists.newArrayList()),
                 new TrafficLightUpdates(time, new HashMap<>())
         );

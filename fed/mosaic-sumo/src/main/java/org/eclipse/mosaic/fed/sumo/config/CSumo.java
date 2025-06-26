@@ -88,6 +88,13 @@ public class CSumo implements Serializable {
     public boolean subscribeToAllVehicles = true;
 
     /**
+     * If set to {@code true} all persons will be subscribed (see
+     * {@link org.eclipse.mosaic.fed.sumo.bridge.facades.SimulationFacade#subscribeForPerson(String, long, long)}).
+     * This is currently required, if applications should be mapped onto persons.
+     */
+    public boolean subscribeToAllPersons = false;
+
+    /**
      * Prints out all traci calls.
      */
     public boolean debugTraciCalls = false;
