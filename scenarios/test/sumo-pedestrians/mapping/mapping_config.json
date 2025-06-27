@@ -1,0 +1,9 @@
+{
+    "prototypes": [
+        {
+            "name": "DefaultPerson",
+            "weight": 1.0,
+            "applications": [ "org.eclipse.mosaic.test.app.sumopedestrians.HelloWorldApp" ]
+        }
+    ]
+}

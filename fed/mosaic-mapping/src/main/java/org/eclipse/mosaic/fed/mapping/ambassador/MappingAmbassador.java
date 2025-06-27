@@ -15,12 +15,17 @@
 
 package org.eclipse.mosaic.fed.mapping.ambassador;
 
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+import static org.eclipse.mosaic.fed.mapping.ambassador.spawning.AgentSpawner.DEFAULT_WALKING_SPEED;
+
 import org.eclipse.mosaic.fed.mapping.ambassador.weighting.FixedOrderSelector;
 import org.eclipse.mosaic.fed.mapping.ambassador.weighting.StochasticSelector;
 import org.eclipse.mosaic.fed.mapping.ambassador.weighting.WeightedSelector;
 import org.eclipse.mosaic.fed.mapping.config.CMappingAmbassador;
 import org.eclipse.mosaic.fed.mapping.config.CPrototype;
+import org.eclipse.mosaic.interactions.mapping.AgentRegistration;
 import org.eclipse.mosaic.interactions.mapping.VehicleRegistration;
+import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioAgentRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioTrafficLightRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
 import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
@@ -106,6 +111,8 @@ public class MappingAmbassador extends AbstractFederateAmbassador {
                 handleInteraction((ScenarioTrafficLightRegistration) interaction);
             } else if (interaction.getTypeId().equals(ScenarioVehicleRegistration.TYPE_ID)) {
                 handleInteraction((ScenarioVehicleRegistration) interaction);
+            } else if (interaction.getTypeId().equals(ScenarioAgentRegistration.TYPE_ID)) {
+                handleInteraction((ScenarioAgentRegistration) interaction);
             }
         } catch (Exception e) {
             log.error("Exception", e);
@@ -145,7 +152,7 @@ public class MappingAmbassador extends AbstractFederateAmbassador {
                     }
                     typeDistributionSelectors.put(scenarioVehicle.getVehicleType().getName(), selector);
                 }
-                final CPrototype selected  = selector.nextItem();
+                final CPrototype selected = selector.nextItem();
                 final CPrototype predefined = framework.getPrototypeByName(selected.name);
                 sendVehicleRegistrationForScenarioVehicle(scenarioVehicle,
                         // use group/application list from predefined type, if not defined in type distribution
@@ -194,6 +201,82 @@ public class MappingAmbassador extends AbstractFederateAmbassador {
         try {
             log.info("Mapping Scenario Vehicle. time={}, name={}, type={}, apps={}",
                     framework.getTime(), scenarioVehicle.getName(), scenarioVehicle.getVehicleType().getName(), applications);
+            rti.triggerInteraction(vehicleRegistration);
+        } catch (Exception e) {
+            throw new InternalFederateException(e);
+        }
+    }
+
+    /**
+     * Extracts the prototype from the {@link ScenarioAgentRegistration} interaction and
+     * sends a {@link AgentRegistration} with the application list configured
+     * in the prototype.
+     */
+    private void handleInteraction(ScenarioAgentRegistration scenarioAgent) throws InternalFederateException {
+        if (framework != null) {
+
+            final List<CPrototype> typeDistribution = framework.getTypeDistributionByName(scenarioAgent.getType());
+            if (!typeDistribution.isEmpty()) {
+                WeightedSelector<CPrototype> selector = typeDistributionSelectors.get(scenarioAgent.getType());
+                if (selector == null) {
+                    if (mappingAmbassadorConfiguration.config != null && mappingAmbassadorConfiguration.config.fixedOrder) {
+                        selector = new FixedOrderSelector<>(typeDistribution);
+                    } else {
+                        selector = new StochasticSelector<>(typeDistribution, randomNumberGenerator);
+                    }
+                    typeDistributionSelectors.put(scenarioAgent.getType(), selector);
+                }
+                final CPrototype selected = selector.nextItem();
+                final CPrototype predefined = framework.getPrototypeByName(selected.name);
+                sendAgentRegistrationForScenarioAgent(scenarioAgent,
+                        // use group/application list from predefined type, if not defined in type distribution
+                        selected.group == null && predefined != null ? predefined.group : selected.group,
+                        selected.applications == null && predefined != null ? predefined.applications : selected.applications,
+                        selected.maxSpeed == null && predefined != null ? predefined.maxSpeed : selected.maxSpeed
+                );
+            } else {
+                final CPrototype prototype = framework.getPrototypeByName(scenarioAgent.getType());
+                if (prototype == null) {
+                    log.debug(
+                            "There is no such prototype \"{}\" configured. No application will be mapped for agent \"{}\".",
+                            scenarioAgent.getType(),
+                            scenarioAgent.getId()
+                    );
+                    return;
+                }
+
+                if (randomNumberGenerator.nextDouble() >= ObjectUtils.defaultIfNull(prototype.weight, 1.0)) {
+                    log.debug(
+                            "This scenario agent \"{}\" of prototype \"{}\" will not be equipped due to a weight condition of {}.",
+                            scenarioAgent.getId(),
+                            scenarioAgent.getType(),
+                            prototype.weight
+                    );
+                    return;
+                }
+                sendAgentRegistrationForScenarioAgent(scenarioAgent, prototype.group, prototype.applications, prototype.maxSpeed);
+            }
+
+        } else {
+            log.warn("No mapping configuration available. Skipping {}", scenarioAgent.getClass().getSimpleName());
+        }
+    }
+
+    private void sendAgentRegistrationForScenarioAgent(
+            ScenarioAgentRegistration scenarioAgent, String group, List<String> applications, Double walkingSpeed
+    ) throws InternalFederateException {
+        final AgentRegistration vehicleRegistration = new AgentRegistration(
+                scenarioAgent.getTime(),
+                scenarioAgent.getName(),
+                group,
+                null,
+                null,
+                applications,
+                defaultIfNull(walkingSpeed, DEFAULT_WALKING_SPEED)
+        );
+        try {
+            log.info("Mapping Scenario Agent. time={}, name={}, type={}, apps={}",
+                    framework.getTime(), scenarioAgent.getName(), scenarioAgent.getType(), applications);
             rti.triggerInteraction(vehicleRegistration);
         } catch (Exception e) {
             throw new InternalFederateException(e);

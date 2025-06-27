@@ -16,6 +16,7 @@
 package org.eclipse.mosaic.fed.sumo.bridge;
 
 
+import org.eclipse.mosaic.fed.sumo.bridge.facades.PersonFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.PoiFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.RouteFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.SimulationFacade;
@@ -45,6 +46,7 @@ public class LibSumoBridge implements Bridge {
     private final VehicleFacade vehicleControl;
     private final RouteFacade routeControl;
     private final PoiFacade poiControl;
+    private final PersonFacade personControl;
 
     /**
      * Constructor for the {@link LibSumoBridge}, initializing simulation and facades based on configuration.
@@ -67,6 +69,7 @@ public class LibSumoBridge implements Bridge {
         this.trafficLightControl = new TrafficLightFacade(this);
         this.routeControl = new RouteFacade(this);
         this.poiControl = new PoiFacade(this);
+        this.personControl = new PersonFacade(this);
     }
 
 
@@ -103,6 +106,11 @@ public class LibSumoBridge implements Bridge {
     @Override
     public PoiFacade getPoiControl() {
         return poiControl;
+    }
+
+    @Override
+    public PersonFacade getPersonControl() {
+        return personControl;
     }
 
     @Override

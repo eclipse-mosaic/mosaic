@@ -1,0 +1,6 @@
+<configuration>
+    <input>
+        <net-file value="ped.net.xml"/>
+        <route-files value="ped.rou.xml"/>
+    </input>
+</configuration>
