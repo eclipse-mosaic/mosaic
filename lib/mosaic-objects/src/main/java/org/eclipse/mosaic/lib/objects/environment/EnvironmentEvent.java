@@ -15,33 +15,33 @@
 
 package org.eclipse.mosaic.lib.objects.environment;
 
-import org.eclipse.mosaic.lib.enums.SensorType;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serializable;
+import javax.annotation.Nonnull;
 
 public final class EnvironmentEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public final SensorType type;
-    public final int strength;
+    public final String type;
+    public final Object value;
     public final long from;
     public final long until;
 
     /**
-     * Creates a new environment event.
+     * Creates a new environment event. The event type should correspond to the name of
+     * an existing {@link Sensor}.
      *
-     * @param type     sensor type
-     * @param strength sensor strength
-     * @param from     beginning time of the event
-     * @param until    ending time of the event
+     * @param type  event type
+     * @param value event type value
+     * @param from  beginning time of the event
+     * @param until ending time of the event
      */
-    public EnvironmentEvent(SensorType type, int strength, long from, long until) {
+    public EnvironmentEvent(@Nonnull String type, Object value, long from, long until) {
         this.type = type;
-        this.strength = strength;
+        this.value = value;
         this.from = from;
         this.until = until;
     }
@@ -50,7 +50,7 @@ public final class EnvironmentEvent implements Serializable {
     public int hashCode() {
         return new HashCodeBuilder(7, 37)
                 .append(type)
-                .append(strength)
+                .append(value)
                 .append(from)
                 .append(until)
                 .toHashCode();
@@ -70,8 +70,8 @@ public final class EnvironmentEvent implements Serializable {
 
         EnvironmentEvent rhs = (EnvironmentEvent) obj;
         return new EqualsBuilder()
-                .append(this.type, rhs.type)
-                .append(this.strength, rhs.strength)
+                .append(this.type, rhs.value)
+                .append(this.value, rhs.value)
                 .append(this.from, rhs.from)
                 .append(this.until, rhs.until)
                 .isEquals();
@@ -79,6 +79,6 @@ public final class EnvironmentEvent implements Serializable {
 
     @Override
     public String toString() {
-        return "EnvironmentEvent{" + "type=" + type + ", strength=" + strength + ", from=" + from + ", until=" + until + '}';
+        return "EnvironmentEvent{" + "type=" + type + ", value=" + value + ", from=" + from + ", until=" + until + '}';
     }
 }
