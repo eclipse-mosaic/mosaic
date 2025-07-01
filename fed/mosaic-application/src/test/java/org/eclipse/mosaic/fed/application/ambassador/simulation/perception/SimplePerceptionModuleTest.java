@@ -62,7 +62,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RunWith(Parameterized.class)
 public class SimplePerceptionModuleTest {
@@ -108,17 +107,11 @@ public class SimplePerceptionModuleTest {
                 .thenReturn(new CartesianRectangle(new MutableCartesianPoint(100, 90, 0), new MutableCartesianPoint(310, 115, 0)));
         SimulationKernel.SimulationKernel.setConfiguration(new CApplicationAmbassador());
 
-        VehicleIndex vehicleIndex;
-        switch (vehicleIndexType) {
-            case "tree":
-                vehicleIndex = new VehicleTree(20, 12);
-                break;
-            case "grid":
-                vehicleIndex = new VehicleGrid(5, 5);
-                break;
-            default:
-                vehicleIndex = null;
-        }
+        VehicleIndex vehicleIndex = switch (vehicleIndexType) {
+            case "tree" -> new VehicleTree(20, 12);
+            case "grid" -> new VehicleGrid(5, 5);
+            default -> null;
+        };
 
         trafficObjectIndex = new TrafficObjectIndex.Builder(mock((Logger.class)))
                 .withVehicleIndex(vehicleIndex)
@@ -265,7 +258,7 @@ public class SimplePerceptionModuleTest {
             when(trafficLightMock.getCurrentState()).thenReturn(TrafficLightState.GREEN);
             when(trafficLightMock.getIncomingLane()).thenReturn("E0_0");
             when(trafficLightMock.getOutgoingLane()).thenReturn("E1_0");
-            when(trafficLightMock.getId()).thenReturn(i++);
+            when(trafficLightMock.getIndex()).thenReturn(i++);
             trafficLightMocks.add(trafficLightMock);
         }
         TrafficLightGroup trafficLightGroup = new TrafficLightGroup("tls", trafficLightProgramsMocks, trafficLightMocks);
