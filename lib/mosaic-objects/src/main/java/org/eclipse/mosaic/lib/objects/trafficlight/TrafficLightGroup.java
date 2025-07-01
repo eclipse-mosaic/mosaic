@@ -26,6 +26,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,6 +41,7 @@ import javax.annotation.Nonnull;
  */
 public class TrafficLightGroup implements Serializable, ToDataOutput {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -78,7 +80,6 @@ public class TrafficLightGroup implements Serializable, ToDataOutput {
      * @throws InternalFederateException if it wasn't possible to construct the object from given data input
      */
     public TrafficLightGroup(DataInput dataInput) throws InternalFederateException {
-        TrafficLightGroup trafficLightGroup;
         try {
             String trafficLightGroupId = dataInput.readUTF();
 
@@ -187,7 +188,7 @@ public class TrafficLightGroup implements Serializable, ToDataOutput {
         for (TrafficLight signal : trafficLightList) {
 
             //write traffic light (signal) id
-            dataOutput.writeInt(signal.getId());
+            dataOutput.writeInt(signal.getIndex());
 
             //write geo position
             SerializationUtils.encodeGeoPoint(dataOutput, signal.getPosition());
@@ -203,7 +204,7 @@ public class TrafficLightGroup implements Serializable, ToDataOutput {
         }
 
         //write the amount of traffic light programs available for this group
-        dataOutput.writeInt(programs.values().size());
+        dataOutput.writeInt(programs.size());
 
         for (TrafficLightProgram trafficLightProgram : programs.values()) {
 
