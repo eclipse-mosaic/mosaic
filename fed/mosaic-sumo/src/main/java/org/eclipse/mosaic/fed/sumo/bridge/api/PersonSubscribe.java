@@ -30,7 +30,7 @@ public interface PersonSubscribe {
      * This method executes the command with the given arguments in order to subscribe to the provided person.
      *
      * @param bridge    Connection to SUMO.
-     * @param vehicleId The Id of the person.
+     * @param personId The Id of the person.
      * @param startTime The time to subscribe the person.
      * @param endTime   The end time of the subscription.
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.

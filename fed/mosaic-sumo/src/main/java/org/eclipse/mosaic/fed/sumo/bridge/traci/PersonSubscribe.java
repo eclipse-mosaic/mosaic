@@ -21,6 +21,7 @@ import static org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrieve
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
+import org.eclipse.mosaic.fed.sumo.bridge.SumoVersion;
 import org.eclipse.mosaic.fed.sumo.bridge.TraciVersion;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.Status;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandVariableSubscriptions;
@@ -30,6 +31,7 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * This class represents the SUMO command which allows to subscribe the vehicle to the application.
@@ -50,7 +52,6 @@ public class PersonSubscribe
      * Creates a new {@link PersonSubscribe} object.
      * Access needs to be public, because command is called using Reflection.
      *
-     * @param bridge            Connection to Traci.
      * @param subscriptionCodes The parameters for an applicable configuration.
      */
     @SuppressWarnings("WeakerAccess")
@@ -78,17 +79,17 @@ public class PersonSubscribe
     }
 
     /**
-     * This method executes the command with the given arguments in order to subscribe the vehicle to the application.
+     * This method executes the command with the given arguments in order to subscribe the person to the application.
      *
      * @param bridge    Connection to SUMO.
-     * @param vehicleId The Id of the Vehicle.
-     * @param startTime The time to subscribe the vehicle.
-     * @param endTime   The end time of the subscription of the vehicle in the application.
+     * @param personId  The Id of the person.
+     * @param startTime The time to subscribe the person.
+     * @param endTime   The end time of the subscription of the person in the application.
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
      */
-    public void execute(Bridge bridge, String vehicleId, long startTime, long endTime) throws CommandException, InternalFederateException {
-        super.execute(bridge, ((double) startTime) / TIME.SECOND, ((double) endTime) / TIME.SECOND, vehicleId);
+    public void execute(Bridge bridge, String personId, long startTime, long endTime) throws CommandException, InternalFederateException {
+        super.execute(bridge, ((double) startTime) / TIME.SECOND, ((double) endTime) / TIME.SECOND, personId);
     }
 
     @Override

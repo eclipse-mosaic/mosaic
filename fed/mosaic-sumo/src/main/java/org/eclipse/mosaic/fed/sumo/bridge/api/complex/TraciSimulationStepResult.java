@@ -23,18 +23,18 @@ import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 public class TraciSimulationStepResult {
 
     private final VehicleUpdates vehicleUpdates;
-    private final AgentUpdates pedestrianUpdates;
+    private final AgentUpdates personUpdates;
     private final TrafficDetectorUpdates trafficDetectorUpdates;
     private final TrafficLightUpdates trafficLightUpdates;
 
     public TraciSimulationStepResult(
             VehicleUpdates vehicleUpdates,
-            AgentUpdates pedestrianUpdates,
+            AgentUpdates personUpdates,
             TrafficDetectorUpdates trafficDetectorUpdates,
             TrafficLightUpdates trafficLightUpdates
     ) {
         this.vehicleUpdates = vehicleUpdates;
-        this.pedestrianUpdates = pedestrianUpdates;
+        this.personUpdates = personUpdates;
         this.trafficDetectorUpdates = trafficDetectorUpdates;
         this.trafficLightUpdates = trafficLightUpdates;
     }
@@ -43,8 +43,8 @@ public class TraciSimulationStepResult {
         return vehicleUpdates;
     }
 
-    public AgentUpdates getPedestrianUpdates() {
-        return pedestrianUpdates;
+    public AgentUpdates getPersonUpdates() {
+        return personUpdates;
     }
 
     public TrafficDetectorUpdates getTrafficDetectorUpdates() {

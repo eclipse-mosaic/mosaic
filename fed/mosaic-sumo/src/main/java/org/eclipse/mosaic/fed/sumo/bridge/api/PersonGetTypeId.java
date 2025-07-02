@@ -27,10 +27,10 @@ public interface PersonGetTypeId {
      * This method executes the command with the given arguments in order to get the Id of a pedestrian.
      *
      * @param bridge     Connection to SUMO.
-     * @param pedestrian Id of the pedestrian.
+     * @param personId Id of the pedestrian.
      * @return Id of the pedestrian type.
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
      */
-    String execute(Bridge bridge, String pedestrian) throws CommandException, InternalFederateException;
+    String execute(Bridge bridge, String personId) throws CommandException, InternalFederateException;
 }

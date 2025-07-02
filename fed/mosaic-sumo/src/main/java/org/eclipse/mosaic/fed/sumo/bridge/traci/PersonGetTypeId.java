@@ -50,10 +50,10 @@ public class PersonGetTypeId
     }
 
     @Override
-    public String execute(Bridge bridge, String person) throws CommandException, InternalFederateException {
-        return executeAndReturn(bridge, person).orElseThrow(
+    public String execute(Bridge bridge, String personId) throws CommandException, InternalFederateException {
+        return executeAndReturn(bridge, personId).orElseThrow(
                 () -> new CommandException(
-                        String.format(Locale.ENGLISH, "Could not read TypeId for person: %s.", person)
+                        String.format(Locale.ENGLISH, "Could not read TypeId for person: %s.", personId)
                 )
         );
     }

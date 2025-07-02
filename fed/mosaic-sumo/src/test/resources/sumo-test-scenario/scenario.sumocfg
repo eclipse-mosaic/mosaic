@@ -1,7 +1,14 @@
-<configuration>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2025-07-02 16:21:45 by Eclipse SUMO sumo Version 1.23.1
+-->
+
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
     <input>
         <net-file value="scenario.net.xml"/>
         <route-files value="scenario.rou.xml"/>
         <additional-files value="scenario.detector.xml,parking.add.xml"/>
     </input>
-</configuration>
+
+</sumoConfiguration>

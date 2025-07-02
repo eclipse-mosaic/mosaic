@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2022-11-30 10:44:02 by Eclipse SUMO netedit Version 1.15.0
+<!-- generated on 2025-07-02 16:21:42 by Eclipse SUMO netedit Version 1.23.1
 -->
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
@@ -14,9 +14,18 @@
     <route id="2" edges="1_4_3 1_3_2 1_2_1"/>
     <!-- Vehicles, persons and containers (sorted by depart) -->
     <vehicle id="1" type="PKW" depart="2.00" route="1"/>
+    <person id="p_0" depart="2.00" color="12,0,255">
+        <walk from="1_3_4" to="1_3_4"/>
+    </person>
+    <person id="p_1" depart="2.00" color="12,0,255">
+        <walk from="1_3_4" to="1_3_4"/>
+    </person>
+
     <vehicle id="0" type="PKW" depart="5.00" route="0"/>
-    <vehicle id="2" type="BUS" depart="10.00" route="2" line="testLine">
-        <stop busStop="bs_0" duration="5"/>
-        <stop busStop="bs_1" duration="5"/>
+
+    <vehicle id="2" type="BUS" depart="10.00" line="testLine" route="2">
+        <stop busStop="bs_0" duration="5.00"/>
+        <stop busStop="bs_1" duration="5.00"/>
     </vehicle>
+
 </routes>

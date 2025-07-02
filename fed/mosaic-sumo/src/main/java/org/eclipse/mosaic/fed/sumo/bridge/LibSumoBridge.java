@@ -33,7 +33,7 @@ import java.util.List;
 
 /**
  * Implementation of the SumoBridge which uses methods provided by SUMO via JNI.
- * The Jar file which provides the function is shipped with SUMO. This class expects a
+ * The Jar file which provides the function is shipped with SUMO. This class expects
  * the libsumojni library (dll or shared object) to be already loaded.
  */
 public class LibSumoBridge implements Bridge {

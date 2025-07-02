@@ -1242,7 +1242,8 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             simulationStepResult.getVehicleUpdates().setNextUpdate(nextTimeStep);
 
             rti.triggerInteraction(vehicleUpdates);
-            rti.triggerInteraction(simulationStepResult.getPedestrianUpdates());
+            // person updates will be sent in the form of AgentUpdates
+            rti.triggerInteraction(simulationStepResult.getPersonUpdates());
             rti.triggerInteraction(simulationStepResult.getTrafficDetectorUpdates());
             this.rti.triggerInteraction(simulationStepResult.getTrafficLightUpdates());
 

@@ -24,6 +24,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.InductionLoopSubscriptionR
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.InductionLoopVehicleData;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.LaneAreaSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.LeadFollowVehicle;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.PersonSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TrafficLightSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleContextSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleSubscriptionResult;
@@ -39,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.sumo.libsumo.ContextSubscriptionResults;
 import org.eclipse.sumo.libsumo.InductionLoop;
 import org.eclipse.sumo.libsumo.LaneArea;
+import org.eclipse.sumo.libsumo.Person;
 import org.eclipse.sumo.libsumo.Simulation;
 import org.eclipse.sumo.libsumo.StringDoublePair;
 import org.eclipse.sumo.libsumo.StringVector;
@@ -61,6 +63,7 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
     private final static Logger LOG = LoggerFactory.getLogger(SimulationSimulateStep.class);
 
     final static List<String> VEHICLE_SUBSCRIPTIONS = new ArrayList<>();
+    final static List<String> PERSON_SUBSCRIPTIONS = new ArrayList<>();
     final static List<String> INDUCTION_LOOP_SUBSCRIPTIONS = new ArrayList<>();
     final static List<String> LANE_AREA_SUBSCRIPTIONS = new ArrayList<>();
     final static List<String> TRAFFIC_LIGHT_SUBSCRIPTIONS = new ArrayList<>();
@@ -73,6 +76,7 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
 
     public SimulationSimulateStep(Bridge ignored, CSumo sumoConfiguration) {
         VEHICLE_SUBSCRIPTIONS.clear();
+        PERSON_SUBSCRIPTIONS.clear();
         INDUCTION_LOOP_SUBSCRIPTIONS.clear();
         LANE_AREA_SUBSCRIPTIONS.clear();
         TRAFFIC_LIGHT_SUBSCRIPTIONS.clear();
@@ -86,6 +90,7 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
 
     public SimulationSimulateStep() {
         VEHICLE_SUBSCRIPTIONS.clear();
+        PERSON_SUBSCRIPTIONS.clear();
         INDUCTION_LOOP_SUBSCRIPTIONS.clear();
         LANE_AREA_SUBSCRIPTIONS.clear();
         TRAFFIC_LIGHT_SUBSCRIPTIONS.clear();
@@ -103,11 +108,45 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
         Simulation.step((double) (time) / TIME.SECOND);
 
         readVehicles(results);
+        readPersons(results);
         readSurroundingVehiclesFromContextSubscriptions(results);
         readInductionLoops(results);
         readLaneAreas(results);
         readTrafficLights(results);
         return results;
+    }
+
+    private void readPersons(List<AbstractSubscriptionResult> results) {
+        StringVector arrivedPersonIds = Simulation.getArrivedPersonIDList();
+        for (String arrivedPersonId : arrivedPersonIds) {
+            PERSON_SUBSCRIPTIONS.remove(Bridge.PERSON_ID_TRANSFORMER.fromExternalId(arrivedPersonId));
+        }
+        arrivedPersonIds.delete();
+
+        String sumoPersonId;
+        String mosaicPersonId;
+        for (Iterator<String> subscriptionIterator = PERSON_SUBSCRIPTIONS.iterator(); subscriptionIterator.hasNext(); ) {
+            mosaicPersonId = subscriptionIterator.next();
+            sumoPersonId = Bridge.PERSON_ID_TRANSFORMER.toExternalId(mosaicPersonId);
+
+            PersonSubscriptionResult result = new PersonSubscriptionResult();
+            result.id = mosaicPersonId;
+
+            try {
+                result.position = getPosition(Person.getPosition(sumoPersonId, true));
+            } catch (IllegalArgumentException e) {
+                LOG.error("Could not read position from person. Unsubscribe.", e);
+                subscriptionIterator.remove();
+            }
+            if (result.position == null) {
+                continue;
+            }
+
+            result.speed = Person.getSpeed(sumoPersonId);
+            result.heading = Person.getAngle(sumoPersonId);
+
+            results.add(result);
+        }
     }
 
     private void readVehicles(List<AbstractSubscriptionResult> results) {
