@@ -34,5 +34,4 @@ public class SimulationGetDepartedVehicleIds implements org.eclipse.mosaic.fed.s
             departedIds.delete();
         }
     }
-
 }

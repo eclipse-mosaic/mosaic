@@ -22,11 +22,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * This class writes a vehicle ID to the TraCI connection during
- * command execution. The vehicle ID passed to this writer is
+ * This class writes a person ID to the TraCI connection during
+ * command execution. The person ID passed to this writer is
  * transformed according to the configured {@link IdTransformer}.
  *
- * @see Bridge#VEHICLE_ID_TRANSFORMER
+ * @see Bridge#PERSON_ID_TRANSFORMER
  */
 public class PersonIdTraciWriter extends StringTraciWriter {
 

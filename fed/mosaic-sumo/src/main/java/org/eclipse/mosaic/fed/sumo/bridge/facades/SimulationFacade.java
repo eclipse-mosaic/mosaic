@@ -167,7 +167,6 @@ public class SimulationFacade {
      * before the next simulation step.
      */
     private boolean updateBestLanesBeforeNextSimulationStep = false;
-    private boolean noRearSensorConfigured = true;
 
     /**
      * Creates a new {@link SimulationFacade} object.
@@ -645,7 +644,7 @@ public class SimulationFacade {
         return new PtVehicleData.Builder().withLineId(veh.line).nextStops(veh.nextStops).build();
     }
 
-    private List<String> findRemovedVehicles(long time) throws CommandException, InternalFederateException {
+    private List<String> findRemovedVehicles(long time) throws CommandException {
         final List<String> removedVehicles = new LinkedList<>();
         for (Iterator<SumoVehicleState> vehicleIt = sumoVehicles.values().iterator(); vehicleIt.hasNext(); ) {
             SumoVehicleState vehicle = vehicleIt.next();

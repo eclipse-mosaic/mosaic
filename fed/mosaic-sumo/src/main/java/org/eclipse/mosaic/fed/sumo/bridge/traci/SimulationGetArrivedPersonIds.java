@@ -28,7 +28,7 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 import java.util.List;
 
 /**
- * This class represents the SUMO command which allows to get the Id's of the vehicles departed the simulation.
+ * This class represents the SUMO command which allows to get the Id's of the persons departed the simulation.
  */
 public class SimulationGetArrivedPersonIds
         extends AbstractTraciCommand<List<String>>
@@ -56,11 +56,11 @@ public class SimulationGetArrivedPersonIds
     }
 
     /**
-     * This method executes the command with the given arguments in order to get the vehicles Id's
+     * This method executes the command with the given arguments in order to get the persons Id's
      * in the simulation, which departed the simulation.
      *
      * @param bridge Connection to SUMO.
-     * @return List of vehicle Id's.
+     * @return List of person Id's.
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
      */
