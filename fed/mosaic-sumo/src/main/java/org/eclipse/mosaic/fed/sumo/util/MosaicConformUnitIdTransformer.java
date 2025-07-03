@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 import java.util.function.Supplier;
 
 /**
- * Several components of Eclipse MOSAIC expect the identifier of the vehicles to
- * match the following expression: ^veh_[0-9]+$. However, predefined
- * scenarios usually come with custom vehicle ids which do not match this
+ * Several components of Eclipse MOSAIC expect the identifier of the units to
+ * match the following expression: ^[UNIT_PREFIX]_[0-9]+$. However, predefined
+ * scenarios usually come with custom unit ids which do not match this
  * pattern, so we need to transform them into the required format which is
  * accomplished by this class.
  */
@@ -44,27 +44,27 @@ public class MosaicConformUnitIdTransformer implements IdTransformer<String, Str
     }
 
     /**
-     * Takes a MOSAIC conform vehicle id (e.g. veh_1) and returns the saved external id in {@link #unitIdMap}.
-     * If a new vehicle from MOSAIC has to be added to an external simulator we use the same id.
+     * Takes a MOSAIC conform unit id (e.g., "veh_1", "agent_1") and returns the saved external id in {@link #unitIdMap}.
+     * If a new unit from MOSAIC has to be added to an external simulator we use the same id.
      *
-     * @param mosaicUnitId the MOSAIC conform vehicle id
+     * @param mosaicUnitId the MOSAIC conform unit id
      * @return the corresponding external id
      */
     @Override
     public String toExternalId(String mosaicUnitId) {
-        String externalVehicleId = unitIdMap.inverse().get(mosaicUnitId);
-        if (externalVehicleId == null) {
+        String externalUnitId = unitIdMap.inverse().get(mosaicUnitId);
+        if (externalUnitId == null) {
             unitIdMap.inverse().put(mosaicUnitId, mosaicUnitId);
-            externalVehicleId = mosaicUnitId; // return incoming id
+            externalUnitId = mosaicUnitId; // return incoming id
         }
-        return externalVehicleId;
+        return externalUnitId;
     }
 
     /**
-     * Takes an external vehicle id, creates a MOSAIC-conform vehicle id and adds it to {@link #unitIdMap}.
+     * Takes an external unit id, creates a MOSAIC-conform unit id and adds it to {@link #unitIdMap}.
      *
      * @param externalUnitId the id from the external traffic/vehicle simulator
-     * @return the created MOSAIC conform vehicle id
+     * @return the created MOSAIC conform unit id
      */
     @Override
     public String fromExternalId(String externalUnitId) {
