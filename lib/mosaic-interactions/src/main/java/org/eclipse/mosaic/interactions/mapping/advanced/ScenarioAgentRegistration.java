@@ -26,7 +26,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.io.Serial;
 
 /**
- * This extension of {@link Interaction} is sent by any simulator, which launches persons by
+ * This extension of {@link Interaction} is sent by any simulator, which launches agents/persons by
  * itself (e.g., SUMO by using predefined scenarios).
  */
 public final class ScenarioAgentRegistration extends Interaction {

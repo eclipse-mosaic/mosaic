@@ -265,7 +265,7 @@ public class MappingAmbassador extends AbstractFederateAmbassador {
     private void sendAgentRegistrationForScenarioAgent(
             ScenarioAgentRegistration scenarioAgent, String group, List<String> applications, Double walkingSpeed
     ) throws InternalFederateException {
-        final AgentRegistration vehicleRegistration = new AgentRegistration(
+        final AgentRegistration agentRegistration = new AgentRegistration(
                 scenarioAgent.getTime(),
                 scenarioAgent.getName(),
                 group,
@@ -277,7 +277,7 @@ public class MappingAmbassador extends AbstractFederateAmbassador {
         try {
             log.info("Mapping Scenario Agent. time={}, name={}, type={}, apps={}",
                     framework.getTime(), scenarioAgent.getName(), scenarioAgent.getType(), applications);
-            rti.triggerInteraction(vehicleRegistration);
+            rti.triggerInteraction(agentRegistration);
         } catch (Exception e) {
             throw new InternalFederateException(e);
         }

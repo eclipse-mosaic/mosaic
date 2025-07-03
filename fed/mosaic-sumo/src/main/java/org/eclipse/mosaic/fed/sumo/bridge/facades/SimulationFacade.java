@@ -321,8 +321,8 @@ public class SimulationFacade {
      * Subscribes for the given person. It will then be included in the AgentUpdates result of {@link #simulateStep}.
      *
      * @param personId the id of the person. Must be known to the simulation
-     * @param start        the time [ns] the subscription should start
-     * @param end          the time [ns] the subscription should end
+     * @param start    the time [ns] the subscription should start
+     * @param end      the time [ns] the subscription should end
      * @throws InternalFederateException if it wasn't possible to subscribe for the wanted person
      */
     public void subscribeForPerson(String personId, long start, long end) throws InternalFederateException {
