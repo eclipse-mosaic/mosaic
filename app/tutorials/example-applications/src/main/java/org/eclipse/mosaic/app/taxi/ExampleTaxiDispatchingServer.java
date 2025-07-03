@@ -28,10 +28,7 @@ import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
@@ -42,13 +39,19 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final int DISPATCHER_RECEIVED_ORDER_STATUS = 0;
     private static final int DISPATCHER_ASSIGNED_ORDER_STATUS = 1;
     private static final int DISPATCHER_ACCEPTED_ORDER_STATUS = 2;
+    private static final int DISPATCHER_PICKEDUP_ORDER_STATUS = 7;
+    private static final int DISPATCHER_COMPLETED_ORDER_STATUS = 8;
+    private static final int DISPATCHER_ASSIGNED_ROUTE_LEG_STATUS = 1;
+    private static final int DISPATCHER_STARTED_ROUTE_LEG_STATUS = 5;
+    private static final int DISPATCHER_COMPLETED_ROUTE_LEG_STATUS = 6;
     private static final String VEHICLE_MOSAIC_ID_PREFIX = "veh_";
     private static final int VEHICLE_ID_PREFIX_LENGTH = VEHICLE_MOSAIC_ID_PREFIX.length();
     private static final String ID_COLUMN_NAME = "id";
     private static final String COMMA_ID_DELIMITER = ",";
+    private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
+    private static int lastRegisteredTaxiDbIndex = 0;
+    private static int lastSavedReservationMosaicIndex = -1;
     private static Connection dbConnection;
-    private static int lastRegisteredTaxiIndex = 0;
-    private static int lastSavedReservationIndex = -1;
 
     @Override
     public void onStartup() {
@@ -71,14 +74,18 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             .toList();
 
         if (!emptyTaxis.isEmpty()) {
-            registerTaxisInDb(emptyTaxis);
+            checkForNotRegisteredTaxisInDb(emptyTaxis);
+            checkAlreadyDeliveredTaxis(emptyTaxis);
         }
+
+        checkEmptyToPickUpTaxis(taxis);
+        checkOccupiedTaxis(taxis);
 
         // select all unassigned reservations
         List<TaxiReservation> unassignedReservations = taxiReservations.stream()
             .filter(taxiRes -> taxiRes.getReservationState() == TaxiReservation.ONLY_NEW_RESERVATIONS ||
                 taxiRes.getReservationState() == TaxiReservation.ALREADY_RETRIEVED_RESERVATIONS)
-            .filter(taxiRes -> Integer.parseInt(taxiRes.getId()) > lastSavedReservationIndex)
+            .filter(taxiRes -> Integer.parseInt(taxiRes.getId()) > lastSavedReservationMosaicIndex)
             .toList();
 
         if (!unassignedReservations.isEmpty()) {
@@ -90,17 +97,9 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         if (!taxiDispatchDataList.isEmpty()) {
             for (TaxiDispatchData taxiDispatchData : taxiDispatchDataList) {
                 getOs().sendInteractionToRti(
-                    new TaxiDispatch(getOs().getSimulationTime(), taxiDispatchData.taxiId(), taxiDispatchData.customerIds())
+                    new TaxiDispatch(getOs().getSimulationTime(), taxiDispatchData.taxiId(), taxiDispatchData.reservationIds())
                 );
             }
-        }
-
-        List<TaxiVehicleData> assignedTaxis = taxis.stream()
-            .filter(taxi -> taxi.getState() == TaxiVehicleData.OCCUPIED_TAXIS)
-            .toList();
-
-        if(!assignedTaxis.isEmpty()) {
-            checkAssignedTaxis(assignedTaxis);
         }
     }
 
@@ -109,40 +108,18 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     }
 
-    private void checkTablesState(List<String> tableNames, boolean shouldTableBeEmpty) {
-        try {
-            for (String tableName : tableNames) {
-                PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
-                    "SELECT 1 FROM %s LIMIT 1".formatted(tableName));
-                ResultSet checkQueryResult = checkCustomerTable.executeQuery();
+    private void setTaxiFreeStatusInDbByIds(List<Integer> taxisToUpdateIds) {
+        List<String> idsToString = taxisToUpdateIds.stream()
+            .map(Objects::toString)
+            .toList();
 
-                if (shouldTableBeEmpty) {
-                    if (checkQueryResult.next()) {
-                        throw new RuntimeException("%s table is not empty!".formatted(tableName));
-                    }
-                } else {
-                    if (!checkQueryResult.next()) {
-                        throw new RuntimeException("%s table is empty!".formatted(tableName));
-                    }
-                }
-
-                checkQueryResult.close();
-                checkCustomerTable.close();
-            }
-        } catch(SQLException e) {
-            getLog().error("Error checking tables in DB", e);
-        }
-    }
-
-    private void updateTaxiStatusInDbByIds(String taxisToUpdateIds, int statusToUpdate) {
         try {
             PreparedStatement updateTaxiVehicles = dbConnection.prepareStatement(
-                "UPDATE cab SET status = ? WHERE id IN (%s)".formatted(taxisToUpdateIds));
+                "UPDATE cab SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_ID_DELIMITER, idsToString)));
 
-            updateTaxiVehicles.setInt(1, statusToUpdate);
-            int updatedRows = updateTaxiVehicles.executeUpdate();
+            updateTaxiVehicles.setInt(1, ExampleTaxiDispatchingServer.DISPATCHER_FREE_TAXI_STATUS);
 
-            if (updatedRows != taxisToUpdateIds.split(COMMA_ID_DELIMITER).length) {
+            if (updateTaxiVehicles.executeUpdate() != taxisToUpdateIds.size()) {
                 throw new RuntimeException("Not all statuses were updated!");
             }
             updateTaxiVehicles.close();
@@ -152,50 +129,52 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     }
 
     private List<TaxiDispatchData> fetchAvailableTaxiDispatchData() {
-        //Order status list
-        //RECEIVED = 0
-        //ASSIGNED = 1
-        //ACCEPTED = 2
-        //CANCELLED = 3
-        //REJECTED = 4
-        //ABANDONED = 5
-        //REFUSED = 6
-        //PICKEDUP = 7
-        //COMPLETED = 8
         try {
             PreparedStatement fetchOrders = dbConnection.prepareStatement(
-                "SELECT id, sumo_id, cab_id FROM taxi_order WHERE status = ?");
+                "SELECT taxi_order.id, taxi_order.sumo_id, taxi_order.cab_id " +
+                    "FROM taxi_order JOIN route ON taxi_order.route_id = route.id JOIN leg ON route.id = leg.route_id " +
+                    "WHERE taxi_order.status = ? ORDER BY route.id, leg.id");
             fetchOrders.setInt(1, DISPATCHER_ASSIGNED_ORDER_STATUS);
             ResultSet fetchedOrders = fetchOrders.executeQuery();
-            List<TaxiDispatchData> taxiDispatchDataList = new ArrayList<>();
-            List<String> orderIdsToUpdate = new ArrayList<>();
 
-            while (fetchedOrders.next()) {
-				orderIdsToUpdate.add(fetchedOrders.getString(ID_COLUMN_NAME));
-				taxiDispatchDataList.add(
-					new TaxiDispatchData(
-						VEHICLE_MOSAIC_ID_PREFIX + (fetchedOrders.getLong("cab_id") - 1),
-						List.of(String.valueOf(fetchedOrders.getLong("sumo_id")))));
-			}
-
-            fetchOrders.close();
-            fetchOrders.close();
-
-            if (!orderIdsToUpdate.isEmpty()) {
-                PreparedStatement updateOrders = dbConnection.prepareStatement(
-                    "UPDATE taxi_order SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_ID_DELIMITER, orderIdsToUpdate))
-                );
-                updateOrders.setInt(1, DISPATCHER_ACCEPTED_ORDER_STATUS);
-
-                int updatedRows = updateOrders.executeUpdate();
-                if (updatedRows != orderIdsToUpdate.size()) {
-                    throw new RuntimeException("Not all order statuses were set to 'ACCEPTED'!");
-                }
-
-                updateOrders.close();
+            if (!fetchedOrders.next()) {
+                return List.of();
             }
 
-            return taxiDispatchDataList;
+            List<TaxiDispatchData> taxiDispatchDataList = new ArrayList<>();
+            List<String> assignedOrderIds = new ArrayList<>(Collections.singleton(fetchedOrders.getString(ID_COLUMN_NAME)));
+            List<String> currentTaxiOrders = new ArrayList<>(Collections.singleton(fetchedOrders.getString("sumo_id")));
+            long currentCabId = fetchedOrders.getLong("cab_id");
+
+            while (fetchedOrders.next()) {
+                if (currentCabId != fetchedOrders.getLong("cab_id")) {
+                    taxiDispatchDataList.add(
+                        new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentCabId), currentTaxiOrders)
+                    );
+
+                    currentTaxiOrders = new ArrayList<>();
+                    currentCabId = fetchedOrders.getLong("cab_id");
+				    assignedOrderIds.add(fetchedOrders.getString(ID_COLUMN_NAME));
+                }
+
+                currentTaxiOrders.add(fetchedOrders.getString("sumo_id"));
+			}
+
+            taxiDispatchDataList.add(
+                new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentCabId), currentTaxiOrders)
+            );
+
+            fetchOrders.close();
+            fetchOrders.close();
+
+			if (assignedOrderIds.isEmpty() || assignedOrderIds.size() != taxiDispatchDataList.size()) {
+                throw new RuntimeException("Dispatch data is not set correctly!");
+			}
+
+            fetchAvailableRoutesAndUpdateCabLatestData(assignedOrderIds);
+            markOrdersAsAccepted(assignedOrderIds);
+
+			return taxiDispatchDataList;
         } catch(SQLException e) {
             getLog().error("Error while fetching available orders", e);
         }
@@ -203,14 +182,42 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         return List.of();
     }
 
-    private void fetchAvailableRoutes() {
+    private void fetchAvailableRoutesAndUpdateCabLatestData(List<String> orderIds) {
         try {
             PreparedStatement fetchRoutes = dbConnection.prepareStatement(
-                "SELECT l.id, from_stand, to_stand, place, distance, started, completed, " +
-                    "l.status, route_id, r.cab_id, passengers FROM leg l, route r " +
-                    "WHERE route_id=r.id and (l.status=1 OR l.status=5) ORDER by r.cab_id, route_id, place"
+                "SELECT taxi_order.id, taxi_order.cab_id, leg.id, leg.from_stand, leg.to_stand " +
+                    "FROM taxi_order JOIN route ON taxi_order.route_id = route.id JOIN leg ON route.id = leg.route_id " +
+                    "WHERE taxi_order.id IN (%s) ORDER BY route.id, leg.id".formatted(String.join(COMMA_ID_DELIMITER, orderIds))
             );
+
             ResultSet fetchedRoutes = fetchRoutes.executeQuery();
+            if (!fetchedRoutes.next()) {
+                return;
+            }
+
+            long currentCabId =  fetchedRoutes.getLong("cab_id");
+            ArrayList<Integer> legsToVisit = new ArrayList<>(Collections.singleton(fetchedRoutes.getInt("leg.id")));
+            ArrayList<Integer> busStopIds = new ArrayList<>(Collections.singleton(fetchedRoutes.getInt("to_stand")));
+
+            while (fetchedRoutes.next()) {
+                if (currentCabId != fetchedRoutes.getLong("cab_id")) {
+                    cabsLatestData.put(parseTaxiDbIndexToMosaicVehicleId(currentCabId),
+						new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null,
+							legsToVisit));
+
+                    //reset variables and save the new values there
+                    currentCabId = fetchedRoutes.getLong("cab_id");
+                    busStopIds = new ArrayList<>();
+                    legsToVisit = new ArrayList<>();
+                }
+
+                busStopIds.add(fetchedRoutes.getInt("to_stand"));
+                legsToVisit.add(fetchedRoutes.getInt("leg.id"));
+            }
+
+            cabsLatestData.put(parseTaxiDbIndexToMosaicVehicleId(currentCabId),
+				new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null, legsToVisit));
+
             fetchedRoutes.close();
             fetchRoutes.close();
         } catch(SQLException e) {
@@ -218,41 +225,132 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         }
     }
 
-    private void checkAssignedTaxis(List<TaxiVehicleData> taxis) {
-        String assignedTaxisIds = parseMosaicVehicleIdToDbIndex(taxis).stream()
-            .map(Object::toString)
-            .collect(Collectors.joining(COMMA_ID_DELIMITER));
-
-        if (assignedTaxisIds.isEmpty()) {
-            return;
-        }
-
-        updateTaxiStatusInDbByIds(assignedTaxisIds, DISPATCHER_ASSIGNED_TAXI_STATUS);
-        //TODO set current stop as location
-        //getBusStopsIndicesByEdge(taxis.get(0))
-    }
-
-    private void registerTaxisInDb(List<TaxiVehicleData> taxis) {
-        String idsToRegister = parseMosaicVehicleIdToDbIndex(taxis).stream()
-            .filter(id -> id > lastRegisteredTaxiIndex)
-            .map(Object::toString)
-            .collect(Collectors.joining(COMMA_ID_DELIMITER));
-
-        if (idsToRegister.isEmpty()) {
-            return;
-        }
-
-        updateTaxiStatusInDbByIds(idsToRegister, DISPATCHER_FREE_TAXI_STATUS);
-        lastRegisteredTaxiIndex += idsToRegister.split(COMMA_ID_DELIMITER).length;
-    }
-
-    private List<Integer> parseMosaicVehicleIdToDbIndex(List<TaxiVehicleData> taxis) {
-        return taxis.stream()
-            .map(TaxiVehicleData::getId)
-            .map(id -> id.substring(VEHICLE_ID_PREFIX_LENGTH))
-            .map(Integer::parseInt)
-            .map(id -> id + 1) //db indices start from 1 not from 0 like in Mosaic
+    private void checkAlreadyDeliveredTaxis(List<TaxiVehicleData> emptyTaxis) {
+        List<TaxiVehicleData> alreadyDeliveredTaxis = emptyTaxis.stream()
+            .filter(taxi -> Integer.parseInt(taxi.getNumberOfCustomersServed()) > 0)
             .toList();
+
+        if (alreadyDeliveredTaxis.isEmpty()) {
+            return;
+        }
+
+        for (TaxiVehicleData taxi : alreadyDeliveredTaxis) {
+            TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
+
+            if (latestData.getLastStatus() == TaxiVehicleData.OCCUPIED_TAXIS) {
+                latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
+                latestData.getEdgesToVisit().clear();
+                latestData.setCurrentLegId(null);
+                latestData.getNextLegIds().clear();
+            }
+        }
+
+        List<Integer> alreadyDeliveredIds = alreadyDeliveredTaxis.stream()
+            .map(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()))
+            .toList();
+        setTaxiFreeStatusInDbByIds(alreadyDeliveredIds);
+    }
+
+    private void checkOccupiedTaxis(List<TaxiVehicleData> taxis) {
+        List<TaxiVehicleData> occupiedTaxis = taxis.stream()
+            .filter(taxi -> taxi.getState() == TaxiVehicleData.OCCUPIED_TAXIS)
+            .toList();
+
+        if (occupiedTaxis.isEmpty()) {
+            return;
+        }
+
+        for (TaxiVehicleData taxi : occupiedTaxis) {
+            TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
+
+            if (latestData.getEdgesToVisit().isEmpty() && latestData.getNextLegIds().isEmpty()) {
+                continue; //taxi already delivered last customer, but have to wait for TraCI to send it with EMPTY status
+            }
+
+            if (latestData.getEdgesToVisit().get(0).equals(taxi.getVehicleData().getRoadPosition().getConnectionId())) {
+                latestData.getEdgesToVisit().remove(0);
+                Integer finishedLegId = latestData.getCurrentLegId();
+
+                //set current stop as cab location and mark legs as started/completed
+                updateCabLocation(taxi.getId(), finishedLegId);
+                markLegAsCompleted(finishedLegId);
+
+                Integer currentLegId = null;
+                if (latestData.getNextLegIds().isEmpty()) {
+                    //delivered final customer
+                    //update cab's last location, route
+                    updateRouteStatusByLegId(finishedLegId, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
+                } else {
+                    currentLegId = latestData.getNextLegIds().remove(0);
+                    markLegAsStarted(currentLegId);
+                }
+
+                latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
+                latestData.setCurrentLegId(currentLegId);
+            }
+        }
+    }
+
+    private void checkEmptyToPickUpTaxis(List<TaxiVehicleData> taxis) {
+        List<TaxiVehicleData> emptyToPickupTaxis = taxis.stream()
+            .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS)
+            .toList();
+
+        if (emptyToPickupTaxis.isEmpty()) {
+            return;
+        }
+
+        for (TaxiVehicleData taxi : emptyToPickupTaxis) {
+            TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
+            if (latestData.getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
+                continue;
+            }
+
+            //mark leg and route as started
+            Integer currentLeg = latestData.getNextLegIds().remove(0);
+            markLegAsStarted(currentLeg);
+            updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
+
+            latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
+            latestData.setCurrentLegId(currentLeg);
+        }
+    }
+
+    // DONE
+    private void checkForNotRegisteredTaxisInDb(List<TaxiVehicleData> emptyTaxis) {
+        List<TaxiVehicleData> taxisToRegister = emptyTaxis.stream()
+            .filter(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()) > lastRegisteredTaxiDbIndex)
+            .toList();
+
+        if (taxisToRegister.isEmpty()) {
+            return;
+        }
+
+        List<Integer> idsToRegister = emptyTaxis.stream()
+            .map(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()))
+            .toList();
+
+        setTaxiFreeStatusInDbByIds(idsToRegister);
+        lastRegisteredTaxiDbIndex += idsToRegister.size();
+
+		for (TaxiVehicleData taxiVehicleData : taxisToRegister) {
+            if (taxiVehicleData.getVehicleData() == null) {
+                throw new RuntimeException("On registering: Taxi with Veh Id %s not spawned on a free position! Vehicle data is null!".formatted(taxiVehicleData.getId()));
+            }
+
+			cabsLatestData.put(taxiVehicleData.getId(),
+				new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, null, null, null));
+		}
+    }
+
+    private String parseTaxiDbIndexToMosaicVehicleId(long taxiDbId) {
+        taxiDbId -= 1;
+        return VEHICLE_MOSAIC_ID_PREFIX + taxiDbId;
+    }
+
+    private Integer parseMosaicVehicleIdToTaxiDbIndex(String mosaicVehicleId) {
+        mosaicVehicleId = mosaicVehicleId.substring(VEHICLE_ID_PREFIX_LENGTH);
+        return Integer.parseInt(mosaicVehicleId) + 1; //db indices start from 1 not from 0 like in Mosaic
     }
 
     private void insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations) {
@@ -262,7 +360,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 "status, received, distance, customer_id, sumo_id) VALUES (?,?,?,?,true,?,?,?,?,?)");
 
             for (TaxiReservation reservation: newTaxiReservations) {
-                List<Integer> busStopsIndices = getBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
+                List<Integer> busStopsIndices = fetchBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
                 if (busStopsIndices.size() != 2) {
                     throw new RuntimeException("Number of fetched bus stops is not 2!");
                 }
@@ -288,13 +386,155 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 }
             }
             insertReservations.close();
-            lastSavedReservationIndex +=  newTaxiReservations.size();
+            lastSavedReservationMosaicIndex +=  newTaxiReservations.size();
         } catch (SQLException e) {
             getLog().error("Could not execute insert reservations query", e);
         }
     }
 
-    private List<Integer> getBusStopsIndicesByEdge(String fromEdgeId, String toEdgeId) {
+    private void markOrdersAsAccepted(List<String> orderIds) {
+        try {
+            PreparedStatement updateOrders = dbConnection.prepareStatement(
+                "UPDATE taxi_order SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_ID_DELIMITER, orderIds))
+            );
+            updateOrders.setInt(1, ExampleTaxiDispatchingServer.DISPATCHER_ACCEPTED_ORDER_STATUS);
+
+            if (updateOrders.executeUpdate() != orderIds.size()) {
+                throw new RuntimeException("Not all order statuses were set to 'ACCEPTED'!");
+            }
+            updateOrders.close();
+        } catch(SQLException e) {
+            getLog().error("Error while setting a new status to the orders", e);
+        }
+    }
+
+    private void updateOrderByRouteId(long routeId, int status, boolean isStarted) { //TODO have to fix the SQL
+        try {
+            String dbField = isStarted ? "started" : "completed";
+            PreparedStatement updateOrders = dbConnection.prepareStatement(
+                "UPDATE taxi_order SET %s = ?, status = ? WHERE route_id = ?".formatted(dbField)
+            );
+
+            updateOrders.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            updateOrders.setInt(2, status);
+            updateOrders.setLong(3, routeId);
+
+            if (updateOrders.executeUpdate() != 1) {
+                throw new RuntimeException("Order was not updated correctly using the route ID!");
+            }
+            updateOrders.close();
+        } catch(SQLException e) {
+            getLog().error("Error while updating order by route ID", e);
+        }
+    }
+
+    private void updateCabLocation(String mosaicVehicleId, Integer finishedLegId) {
+        try {
+            PreparedStatement updateCabLocation = dbConnection.prepareStatement(
+                "UPDATE cab SET location = (SELECT leg.to_stand FROM leg WHERE leg.id = ?) WHERE cab.id = ?"
+            );
+
+            updateCabLocation.setLong(1, finishedLegId);
+            updateCabLocation.setLong(2, parseMosaicVehicleIdToTaxiDbIndex(mosaicVehicleId));
+
+            if (updateCabLocation.executeUpdate() != 1) {
+                throw new RuntimeException("Cab's location was not updated correctly");
+            }
+            updateCabLocation.close();
+        } catch(SQLException e) {
+            getLog().error("Could not update cab location", e);
+        }
+    }
+
+    private void updateRouteStatusByLegId(Integer legId, int status) {
+        try {
+            PreparedStatement updateRoute = dbConnection.prepareStatement(
+                "UPDATE route SET status = ? WHERE route.id = (SELECT route_id FROM leg WHERE leg.id = ?)"
+            );
+
+            updateRoute.setInt(1, status);
+            updateRoute.setLong(2, legId);
+
+            if (updateRoute.executeUpdate() != 1) {
+                throw new RuntimeException("Route's status was not updated correctly!");
+            }
+            updateRoute.close();
+        } catch(SQLException e) {
+            getLog().error("Could not update route's status", e);
+        }
+    }
+
+    private void markLegAsStarted(Integer legId) {
+        try {
+            PreparedStatement updateLeg = dbConnection.prepareStatement(
+                "UPDATE leg SET started = ?, status = ? WHERE id = ?"
+            );
+
+            updateLeg.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            updateLeg.setInt(2, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
+            updateLeg.setLong(3, legId);
+
+            if (updateLeg.executeUpdate() != 1) {
+                throw new RuntimeException("Leg was not correctly marked as started!");
+            }
+            updateLeg.close();
+        } catch(SQLException e) {
+            getLog().error("Could not mark leg as started", e);
+        }
+    }
+
+    private void markLegAsCompleted(Integer legId) {
+        try {
+            PreparedStatement updateLeg = dbConnection.prepareStatement(
+                "UPDATE leg SET completed = ?, status = ? WHERE id = ?"
+            );
+
+            updateLeg.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            updateLeg.setInt(2, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
+            updateLeg.setLong(3, legId);
+
+            if (updateLeg.executeUpdate() != 1) {
+                throw new RuntimeException("Leg was not properly marked as completed!");
+            }
+            updateLeg.close();
+        } catch(SQLException e) {
+            getLog().error("Could not mark leg as completed", e);
+        }
+    }
+
+    private ArrayList<String> fetchBusStopEdgesByIds(List<Integer> busStopIds) {
+        ArrayList<String> busStopEdgeIds = new ArrayList<>(busStopIds.size());
+
+        try {
+            for (int busStopId : busStopIds) {
+                PreparedStatement fetchBusStopEdges = dbConnection.prepareStatement(
+                    "SELECT sumo_edge FROM stop WHERE id = ?"
+                );
+
+                fetchBusStopEdges.setLong(1, busStopId);
+                ResultSet fetchedBusStopEdges = fetchBusStopEdges.executeQuery();
+
+                if (fetchedBusStopEdges.next()) {
+                    busStopEdgeIds.add(fetchedBusStopEdges.getString("sumo_edge"));
+                } else {
+                    throw new RuntimeException("Number of fetched taxi locations is incorrect!");
+                }
+
+                fetchedBusStopEdges.close();
+                fetchBusStopEdges.close();
+            }
+
+            if (busStopEdgeIds.size() != busStopIds.size()) {
+                throw new RuntimeException("Number of fetched bus stops sumo_edge IDs is incorrect!");
+            }
+        } catch (SQLException e) {
+            getLog().error("Could not execute get cab locations query", e);
+        }
+
+        return busStopEdgeIds;
+    }
+
+    private List<Integer> fetchBusStopsIndicesByEdge(String fromEdgeId, String toEdgeId) {
         try {
             PreparedStatement selectStopsByEdgeId = dbConnection.prepareStatement(
                 "SELECT id, sumo_edge FROM stop WHERE sumo_edge IN (?, ?)");
@@ -361,6 +601,31 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         return (int) time;
     }
 
+    private void checkTablesState(List<String> tableNames, boolean shouldTableBeEmpty) {
+        try {
+            for (String tableName : tableNames) {
+                PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
+                    "SELECT 1 FROM %s LIMIT 1".formatted(tableName));
+                ResultSet checkQueryResult = checkCustomerTable.executeQuery();
+
+                if (shouldTableBeEmpty) {
+                    if (checkQueryResult.next()) {
+                        throw new RuntimeException("%s table is not empty!".formatted(tableName));
+                    }
+                } else {
+                    if (!checkQueryResult.next()) {
+                        throw new RuntimeException("%s table is empty!".formatted(tableName));
+                    }
+                }
+
+                checkQueryResult.close();
+                checkCustomerTable.close();
+            }
+        } catch(SQLException e) {
+            getLog().error("Error checking tables in DB", e);
+        }
+    }
+
     private void connectToDatabase() {
         Properties properties = new Properties();
         properties.setProperty("user", "kabina");
@@ -384,7 +649,53 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         }
     }
 
-    private record TaxiDispatchData(String taxiId, List<String> customerIds) {
+    private record TaxiDispatchData(String taxiId, List<String> reservationIds) {
 
     }
+
+    private static class TaxiLatestData {
+        private int lastStatus;
+        private ArrayList<String> edgesToVisit;
+        private Integer currentLegId;
+        private ArrayList<Integer> nextLegIds;
+
+        public TaxiLatestData(int lastStatus, ArrayList<String> edgesToVisit, Integer currentLegId, ArrayList<Integer> nextLegIds) {
+            this.lastStatus = lastStatus;
+            this.edgesToVisit = edgesToVisit;
+            this.currentLegId = currentLegId;
+            this.nextLegIds = nextLegIds;
+        }
+
+		public int getLastStatus() {
+			return lastStatus;
+		}
+
+		public void setLastStatus(int lastStatus) {
+			this.lastStatus = lastStatus;
+		}
+
+		public ArrayList<String> getEdgesToVisit() {
+			return edgesToVisit;
+		}
+
+		public void setEdgesToVisit(ArrayList<String> edgesToVisit) {
+			this.edgesToVisit = edgesToVisit;
+		}
+
+		public Integer getCurrentLegId() {
+			return currentLegId;
+		}
+
+		public void setCurrentLegId(Integer currentLegId) {
+			this.currentLegId = currentLegId;
+		}
+
+		public ArrayList<Integer> getNextLegIds() {
+			return nextLegIds;
+		}
+
+		public void setNextLegIds(ArrayList<Integer> nextLegIds) {
+			this.nextLegIds = nextLegIds;
+		}
+	}
 }
