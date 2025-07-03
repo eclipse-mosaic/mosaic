@@ -26,7 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class SumoPedestriansIT {
+public class SumoPersonsIT {
 
     @ClassRule
     public static MosaicSimulationRule simulationRule = new MosaicSimulationRule();
@@ -37,7 +37,7 @@ public class SumoPedestriansIT {
 
     @BeforeClass
     public static void runSimulation() {
-        simulationResult = simulationRule.executeTestScenario("sumo-pedestrians");
+        simulationResult = simulationRule.executeTestScenario("sumo-persons");
     }
 
     @Test

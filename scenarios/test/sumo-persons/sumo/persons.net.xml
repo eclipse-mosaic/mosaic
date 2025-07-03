@@ -4,12 +4,12 @@
 <neteditConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/neteditConfiguration.xsd">
 
     <input>
-        <route-files value="ped.rou.xml"/>
-        <sumo-net-file value="ped.net.xml"/>
+        <route-files value="persons.rou.xml"/>
+        <sumo-net-file value="persons.net.xml"/>
     </input>
 
     <output>
-        <output-file value="ped.net.xml"/>
+        <output-file value="persons.net.xml"/>
     </output>
 
     <processing>

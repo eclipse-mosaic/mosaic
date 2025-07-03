@@ -1231,21 +1231,21 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             setExternalVehiclesToLatestPositions(time);
             TraciSimulationStepResult simulationStepResult = bridge.getSimulationControl().simulateUntil(time);
 
-            VehicleUpdates vehicleUpdates = simulationStepResult.getVehicleUpdates();
+            VehicleUpdates vehicleUpdates = simulationStepResult.vehicleUpdates();
             log.trace("Leaving advance time: {}", time);
             removeExternalVehiclesFromUpdates(vehicleUpdates);
             propagateNewRoutes(vehicleUpdates, time);
             propagateSumoVehiclesToRti(time);
-            propagatePedestriansToRti(time);
+            propagatePersonsToRti(time);
 
             nextTimeStep += sumoConfig.updateInterval * TIME.MILLI_SECOND;
-            simulationStepResult.getVehicleUpdates().setNextUpdate(nextTimeStep);
+            simulationStepResult.vehicleUpdates().setNextUpdate(nextTimeStep);
 
             rti.triggerInteraction(vehicleUpdates);
             // person updates will be sent in the form of AgentUpdates
-            rti.triggerInteraction(simulationStepResult.getPersonUpdates());
-            rti.triggerInteraction(simulationStepResult.getTrafficDetectorUpdates());
-            this.rti.triggerInteraction(simulationStepResult.getTrafficLightUpdates());
+            rti.triggerInteraction(simulationStepResult.personUpdates());
+            rti.triggerInteraction(simulationStepResult.trafficDetectorUpdates());
+            this.rti.triggerInteraction(simulationStepResult.trafficLightUpdates());
 
             rti.requestAdvanceTime(nextTimeStep, 0, FederatePriority.higher(descriptor.getPriority()));
 
@@ -1380,24 +1380,24 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
                 .toList();
     }
 
-    private void propagatePedestriansToRti(long time) throws InternalFederateException {
-        List<String> pedestrians = bridge.getSimulationControl().getDepartedPersons();
-        String pedestrianType;
-        for (String pedestrianId : pedestrians) {
-            pedestrianType = bridge.getPersonControl().getPersonTypeId(pedestrianId);
+    private void propagatePersonsToRti(long time) throws InternalFederateException {
+        List<String> persons = bridge.getSimulationControl().getDepartedPersons();
+        String personType;
+        for (String personId : persons) {
+            personType = bridge.getPersonControl().getPersonTypeId(personId);
             try {
-                rti.triggerInteraction(new ScenarioAgentRegistration(time, pedestrianId, pedestrianType));
+                rti.triggerInteraction(new ScenarioAgentRegistration(time, personId, personType));
             } catch (IllegalValueException e) {
                 throw new InternalFederateException(e);
             }
-            if (sumoConfig.subscribeToAllPersons) { // this is required as pedestrians with no apps can't be subscribed to otherwise
-                bridge.getSimulationControl().subscribeForPerson(pedestrianId, time, this.getEndTime());
+            if (sumoConfig.subscribeToAllPersons) { // this is required as persons with no apps can't be subscribed to otherwise
+                bridge.getSimulationControl().subscribeForPerson(personId, time, this.getEndTime());
             }
         }
     }
 
     private void receiveInteraction(AgentRegistration agentRegistration) {
-        if (!sumoConfig.subscribeToAllPersons && agentRegistration.getMapping().hasApplication()) { // this is required as pedestrians with no apps can't be subscribed to otherwise
+        if (!sumoConfig.subscribeToAllPersons && agentRegistration.getMapping().hasApplication()) { // this is required as persons with no apps can't be subscribed to otherwise
             try {
                 bridge.getSimulationControl().subscribeForPerson(
                         agentRegistration.getMapping().getName(), agentRegistration.getTime(), this.getEndTime()

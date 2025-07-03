@@ -13,7 +13,7 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.test.app.sumopedestrians;
+package org.eclipse.mosaic.test.app.sumopersons;
 
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.AgentOperatingSystem;

@@ -18,7 +18,7 @@ package org.eclipse.mosaic.fed.sumo.bridge.api.complex;
 import org.eclipse.mosaic.lib.util.objects.Position;
 
 /**
- * This class summarizes the results of the pedestrian subscription.
+ * This class summarizes the results of the person subscription.
  */
 public class PersonSubscriptionResult extends AbstractSubscriptionResult {
 

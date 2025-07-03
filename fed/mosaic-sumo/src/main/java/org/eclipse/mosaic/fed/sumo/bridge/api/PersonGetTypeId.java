@@ -20,15 +20,15 @@ import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 /**
- * This class represents the SUMO command which allows to get the Id of the pedestrian type.
+ * This class represents the SUMO command which allows to get the Id of the person type.
  */
 public interface PersonGetTypeId {
     /**
-     * This method executes the command with the given arguments in order to get the Id of a pedestrian.
+     * This method executes the command with the given arguments in order to get the Id of a person.
      *
      * @param bridge     Connection to SUMO.
-     * @param personId Id of the pedestrian.
-     * @return Id of the pedestrian type.
+     * @param personId Id of the person.
+     * @return Id of the person type.
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
      */

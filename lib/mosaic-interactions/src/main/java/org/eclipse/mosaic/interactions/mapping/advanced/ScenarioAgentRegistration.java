@@ -23,12 +23,15 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.io.Serial;
+
 /**
- * This extension of {@link Interaction} is sent by any simulator, which launches pedestrians by
+ * This extension of {@link Interaction} is sent by any simulator, which launches persons by
  * itself (e.g., SUMO by using predefined scenarios).
  */
 public final class ScenarioAgentRegistration extends Interaction {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -40,11 +43,11 @@ public final class ScenarioAgentRegistration extends Interaction {
     private final String type;
 
     /**
-     * Creates a new interaction that informs that a pedestrian was added to the simulation by SUMO.
+     * Creates a new interaction that informs that a person was added to the simulation by SUMO.
      *
      * @param time Timestamp of this interaction, unit: [ns]
-     * @param name name of the pedestrian
-     * @param type the type name of the pedestrian
+     * @param name name of the person
+     * @param type the type name of the person
      */
     public ScenarioAgentRegistration(final long time, final String name, final String type) {
         super(time);

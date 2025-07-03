@@ -1,6 +1,6 @@
 {
     "simulation": {
-        "id": "ped",
+        "id": "person_scenario",
         "duration": "1000s",
         "randomSeed": 268965854,
         "projection": {

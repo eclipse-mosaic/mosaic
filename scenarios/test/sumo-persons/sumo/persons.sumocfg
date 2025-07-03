@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
-
     <input>
-        <net-file value="scenario.net.xml"/>
-        <route-files value="scenario.rou.xml"/>
-        <additional-files value="scenario.detector.xml,parking.add.xml"/>
+        <net-file value="persons.net.xml"/>
+        <route-files value="persons.rou.xml"/>
     </input>
-
 </sumoConfiguration>

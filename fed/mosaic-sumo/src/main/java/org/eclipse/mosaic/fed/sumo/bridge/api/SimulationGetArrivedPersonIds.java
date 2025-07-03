@@ -22,15 +22,15 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 import java.util.List;
 
 /**
- * This class represents the SUMO command which allows to get the Id's of the pedestrians departed the simulation.
+ * This class represents the SUMO command which allows to get the Id's of the persons departed the simulation.
  */
 public interface SimulationGetArrivedPersonIds {
     /**
-     * This method executes the command with the given arguments in order to get the pedestrians Id's
+     * This method executes the command with the given arguments in order to get the persons Id's
      * in the simulation, which departed the simulation.
      *
      * @param bridge Connection to SUMO.
-     * @return List of pedestrians Id's.
+     * @return List of persons Id's.
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
      */

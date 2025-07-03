@@ -3,7 +3,7 @@
         {
             "name": "DefaultPerson",
             "weight": 1.0,
-            "applications": [ "org.eclipse.mosaic.test.app.sumopedestrians.HelloWorldApp" ]
+            "applications": [ "org.eclipse.mosaic.test.app.sumopersons.HelloWorldApp" ]
         }
     ]
 }

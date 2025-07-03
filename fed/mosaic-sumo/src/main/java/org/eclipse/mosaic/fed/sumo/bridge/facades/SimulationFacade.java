@@ -220,30 +220,30 @@ public class SimulationFacade {
     }
 
     /**
-     * Returns a list of all pedestrian ids which departed in the previous time step.
+     * Returns a list of all person ids which departed in the previous time step.
      *
-     * @return a list of pedestrian ids.
-     * @throws InternalFederateException if departed pedestrian couldn't be retrieved
+     * @return a list of person ids.
+     * @throws InternalFederateException if departed person couldn't be retrieved
      */
     public final List<String> getDepartedPersons() throws InternalFederateException {
         try {
             return getDepartedPersonIds.execute(bridge);
         } catch (CommandException e) {
-            throw new InternalFederateException("Could not retrieve departed pedestrians", e);
+            throw new InternalFederateException("Could not retrieve departed persons", e);
         }
     }
 
     /**
-     * Returns a list of all pedestrian ids which arrived in the previous time step.
+     * Returns a list of all person ids which arrived in the previous time step.
      *
-     * @return a list of pedestrian ids.
-     * @throws InternalFederateException if arrived pedestrian couldn't be retrieved
+     * @return a list of person ids.
+     * @throws InternalFederateException if arrived person couldn't be retrieved
      */
     public final List<String> getArrivedPersons() throws InternalFederateException {
         try {
             return getArrivedPersonIds.execute(bridge);
         } catch (CommandException e) {
-            throw new InternalFederateException("Could not retrieve arrived pedestrians", e);
+            throw new InternalFederateException("Could not retrieve arrived persons", e);
         }
     }
 
@@ -318,18 +318,18 @@ public class SimulationFacade {
     }
 
     /**
-     * Subscribes for the given pedestrian. It will then be included in the AgentUpdates result of {@link #simulateStep}.
+     * Subscribes for the given person. It will then be included in the AgentUpdates result of {@link #simulateStep}.
      *
-     * @param pedestrianId the id of the pedestrian. Must be known to the simulation
+     * @param personId the id of the person. Must be known to the simulation
      * @param start        the time [ns] the subscription should start
      * @param end          the time [ns] the subscription should end
-     * @throws InternalFederateException if it wasn't possible to subscribe for the wanted pedestrian
+     * @throws InternalFederateException if it wasn't possible to subscribe for the wanted person
      */
-    public void subscribeForPerson(String pedestrianId, long start, long end) throws InternalFederateException {
+    public void subscribeForPerson(String personId, long start, long end) throws InternalFederateException {
         try {
-            personSubscribe.execute(bridge, pedestrianId, start, end);
+            personSubscribe.execute(bridge, personId, start, end);
         } catch (CommandException e) {
-            throw new InternalFederateException(String.format("Could not subscribe for pedestrian %s", pedestrianId), e);
+            throw new InternalFederateException(String.format("Could not subscribe for person %s", personId), e);
         }
     }
 
@@ -497,7 +497,7 @@ public class SimulationFacade {
             final List<VehicleData> addedVehicles = new LinkedList<>();
             final List<VehicleData> updatedVehicles = new LinkedList<>();
 
-            final List<AgentData> updatedPedestrians = new LinkedList<>();
+            final List<AgentData> updatedPersons = new LinkedList<>();
 
             final List<InductionLoopInfo> updatedInductionLoops = new ArrayList<>();
             final List<LaneAreaDetectorInfo> updatedLaneAreas = new ArrayList<>();
@@ -517,8 +517,8 @@ public class SimulationFacade {
                         updatedVehicles.add(sumoVehicle.currentVehicleData);
                     }
                 } else if (subscriptionResult instanceof PersonSubscriptionResult result) {
-                    final AgentData pedestrianData = processPersonSubscriptionResult(time, result);
-                    updatedPedestrians.add(pedestrianData);
+                    final AgentData personData = processPersonSubscriptionResult(time, result);
+                    updatedPersons.add(personData);
                 } else if (subscriptionResult instanceof InductionLoopSubscriptionResult result) {
                     final InductionLoopInfo inductionLoopInfo = processInductionLoopSubscriptionResult(time, result);
                     updatedInductionLoops.add(inductionLoopInfo);
@@ -539,16 +539,16 @@ public class SimulationFacade {
             }
 
             final List<String> removedVehicles = findRemovedVehicles(time);
-            final List<String> removedPedestrians = bridge.getSimulationControl().getArrivedPersons();
+            final List<String> removedPersons = bridge.getSimulationControl().getArrivedPersons();
 
             final VehicleUpdates vehicleUpdates = new VehicleUpdates(time, addedVehicles, updatedVehicles, removedVehicles);
-            final AgentUpdates pedestrianUpdates = new AgentUpdates(time, updatedPedestrians, removedPedestrians);
+            final AgentUpdates personUpdates = new AgentUpdates(time, updatedPersons, removedPersons);
             final TrafficDetectorUpdates trafficDetectorUpdates = new TrafficDetectorUpdates(time, updatedLaneAreas, updatedInductionLoops);
             final TrafficLightUpdates trafficLightUpdates = new TrafficLightUpdates(time, trafficLightGroupInfos);
 
             currentTeleportingList = null; // reset cached teleporting list for this time step
 
-            return new TraciSimulationStepResult(vehicleUpdates, pedestrianUpdates, trafficDetectorUpdates, trafficLightUpdates);
+            return new TraciSimulationStepResult(vehicleUpdates, personUpdates, trafficDetectorUpdates, trafficLightUpdates);
         } catch (CommandException e) {
             throw new InternalFederateException("Could not properly simulate step and read subscriptions", e);
         }
