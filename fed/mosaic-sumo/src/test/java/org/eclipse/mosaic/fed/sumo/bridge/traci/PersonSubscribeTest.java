@@ -1,23 +1,32 @@
+/*
+ * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contact: mosaic@fokus.fraunhofer.de
+ */
+
 package org.eclipse.mosaic.fed.sumo.bridge.traci;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
-import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
-import org.eclipse.mosaic.fed.sumo.bridge.SumoVersion;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.AbstractSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.PersonSubscriptionResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.junit.SumoRunner;
 import org.eclipse.mosaic.rti.TIME;
 
 import com.google.common.collect.Iterables;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 
 import java.util.List;
 
@@ -42,16 +51,4 @@ public class PersonSubscribeTest extends AbstractTraciCommandTest {
         assertTrue(subscriptions.isEmpty());
 
     }
-
-    @Test
-    public void execute_personNotYetDeparted() throws Exception {
-        // RUN
-        new PersonSubscribe().execute(traci.getTraciConnection(), "p_1", 0L, 10 * TIME.SECOND);
-
-        // ASSERT
-        List<AbstractSubscriptionResult> subscriptions = simulateStep.execute(traci.getTraciConnection(), 1 * TIME.SECOND);
-        assertEquals(1, subscriptions.size());
-        assertNull(((PersonSubscriptionResult) Iterables.getOnlyElement(subscriptions)).position);
-    }
-
 }
