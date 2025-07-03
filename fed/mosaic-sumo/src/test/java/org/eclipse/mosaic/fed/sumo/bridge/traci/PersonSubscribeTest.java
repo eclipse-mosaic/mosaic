@@ -16,7 +16,6 @@
 package org.eclipse.mosaic.fed.sumo.bridge.traci;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.AbstractSubscriptionResult;
