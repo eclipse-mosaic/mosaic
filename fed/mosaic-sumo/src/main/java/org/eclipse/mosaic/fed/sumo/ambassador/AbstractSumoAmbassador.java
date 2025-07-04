@@ -44,6 +44,8 @@ import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
 import org.eclipse.mosaic.fed.sumo.util.TrafficSignManager;
 import org.eclipse.mosaic.interactions.application.SumoTraciRequest;
 import org.eclipse.mosaic.interactions.application.SumoTraciResponse;
+import org.eclipse.mosaic.interactions.mapping.AgentRegistration;
+import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioAgentRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioTrafficLightRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
 import org.eclipse.mosaic.interactions.traffic.InductionLoopDetectorSubscription;
@@ -71,6 +73,7 @@ import org.eclipse.mosaic.interactions.vehicle.VehicleSpeedChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleStop;
 import org.eclipse.mosaic.lib.enums.VehicleClass;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
+import org.eclipse.mosaic.lib.math.Aggregator;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.traffic.SumoTraciResult;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroup;
@@ -523,6 +526,8 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             this.receiveInteraction((TrafficSignSpeedLimitChange) interaction);
         } else if (interaction.getTypeId().equals(TrafficSignLaneAssignmentChange.TYPE_ID)) {
             this.receiveInteraction((TrafficSignLaneAssignmentChange) interaction);
+        } else if (interaction.getTypeId().equals(AgentRegistration.TYPE_ID)) {
+            this.receiveInteraction((AgentRegistration) interaction);
         } else {
             log.warn(UNKNOWN_INTERACTION + interaction.getTypeId());
         }
@@ -1227,18 +1232,21 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             setExternalVehiclesToLatestPositions(time);
             TraciSimulationStepResult simulationStepResult = bridge.getSimulationControl().simulateUntil(time);
 
-            VehicleUpdates vehicleUpdates = simulationStepResult.getVehicleUpdates();
+            VehicleUpdates vehicleUpdates = simulationStepResult.vehicleUpdates();
             log.trace("Leaving advance time: {}", time);
             removeExternalVehiclesFromUpdates(vehicleUpdates);
             propagateNewRoutes(vehicleUpdates, time);
             propagateSumoVehiclesToRti(time);
+            propagatePersonsToRti(time);
 
             nextTimeStep += sumoConfig.updateInterval * TIME.MILLI_SECOND;
-            simulationStepResult.getVehicleUpdates().setNextUpdate(nextTimeStep);
+            simulationStepResult.vehicleUpdates().setNextUpdate(nextTimeStep);
 
             rti.triggerInteraction(vehicleUpdates);
-            rti.triggerInteraction(simulationStepResult.getTrafficDetectorUpdates());
-            this.rti.triggerInteraction(simulationStepResult.getTrafficLightUpdates());
+            // person updates will be sent in the form of AgentUpdates
+            rti.triggerInteraction(simulationStepResult.personUpdates());
+            rti.triggerInteraction(simulationStepResult.trafficDetectorUpdates());
+            this.rti.triggerInteraction(simulationStepResult.trafficLightUpdates());
 
             rti.requestAdvanceTime(nextTimeStep, 0, FederatePriority.higher(descriptor.getPriority()));
 
@@ -1293,6 +1301,7 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
     /**
      * Changes parameters of externally added vehicles.
      * So far only color change is supported.
+     *
      * @param vehicleParametersChange Stores a list of vehicle parameters that should be changed.
      * @throws InternalFederateException Throws an IllegalArgumentException if color could not be set correctly.
      */
@@ -1370,6 +1379,41 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
         return bridge.getSimulationControl().getDepartedVehicles().stream()
                 .filter(v -> !vehiclesAddedViaRti.contains(v)) // all vehicles not added via MOSAIC are added by SUMO
                 .toList();
+    }
+
+    private final List<String> personsPotentiallyEquippedWithApp = new ArrayList<>();
+
+    private void propagatePersonsToRti(long time) throws InternalFederateException {
+        List<String> persons = bridge.getSimulationControl().getDepartedPersons();
+        String personType;
+        for (String personId : persons) {
+            personType = bridge.getPersonControl().getPersonTypeId(personId);
+            try {
+                rti.triggerInteraction(new ScenarioAgentRegistration(time, personId, personType));
+            } catch (IllegalValueException e) {
+                throw new InternalFederateException(e);
+            }
+            if (sumoConfig.subscribeToAllPersons) { // this is required as persons with no apps can't be subscribed to otherwise
+                bridge.getSimulationControl().subscribeForPerson(personId, time, this.getEndTime());
+            } else {
+                personsPotentiallyEquippedWithApp.add(personId);
+            }
+        }
+    }
+
+    private void receiveInteraction(AgentRegistration agentRegistration) {
+        if (!sumoConfig.subscribeToAllPersons && agentRegistration.getMapping().hasApplication() // this is required as persons with no apps can't be subscribed to otherwise
+                // FIXME: This is a workaround as otherwise the ambassador will try to subscribe to Agents added by other simulators than SUMO, which is currently not possible
+                && personsPotentiallyEquippedWithApp.contains(agentRegistration.getMapping().getName())) {
+            try {
+                bridge.getSimulationControl().subscribeForPerson(
+                        agentRegistration.getMapping().getName(), agentRegistration.getTime(), this.getEndTime()
+                );
+                personsPotentiallyEquippedWithApp.remove(agentRegistration.getMapping().getName());
+            } catch (InternalFederateException e) {
+                log.warn("Could not subscribe to unknown person " + agentRegistration.getMapping().getName());
+            }
+        }
     }
 
     /**

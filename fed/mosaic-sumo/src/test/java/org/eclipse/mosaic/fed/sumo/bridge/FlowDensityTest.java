@@ -69,7 +69,7 @@ public class FlowDensityTest {
         double prevDensity = 0;
         for (int i = 0; i < 700; i++) {
             TrafficDetectorUpdates trafficDetectorUpdates =
-                    traci.getSimulationControl().simulateUntil(i * TIME.SECOND).getTrafficDetectorUpdates();
+                    traci.getSimulationControl().simulateUntil(i * TIME.SECOND).trafficDetectorUpdates();
 
             if (i % sumoConfig.trafficFlowMeasurementWindowInS == 0) {
                 double currentFlowIn = 0;

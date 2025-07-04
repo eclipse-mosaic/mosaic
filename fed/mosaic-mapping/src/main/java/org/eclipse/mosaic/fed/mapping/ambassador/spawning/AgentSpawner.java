@@ -41,7 +41,7 @@ public class AgentSpawner extends UnitSpawner {
 
     private static final Logger LOG = LoggerFactory.getLogger(AgentSpawner.class);
 
-    private static final double DEFAULT_WALKING_SPEED = SpeedUtils.kmh2ms(5);
+    public static final double DEFAULT_WALKING_SPEED = SpeedUtils.kmh2ms(5);
 
     private final GeoPoint origin;
     private final GeoPoint destination;

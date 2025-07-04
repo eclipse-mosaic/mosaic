@@ -15,12 +15,15 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.api.complex;
 
-import org.eclipse.mosaic.interactions.agent.AgentUpdates;
-import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
-import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
-import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
+import org.eclipse.mosaic.lib.util.objects.Position;
 
-public record TraciSimulationStepResult(VehicleUpdates vehicleUpdates, AgentUpdates personUpdates,
-                                        TrafficDetectorUpdates trafficDetectorUpdates, TrafficLightUpdates trafficLightUpdates) {
+/**
+ * This class summarizes the results of the person subscription.
+ */
+public class PersonSubscriptionResult extends AbstractSubscriptionResult {
 
+    public Position position;
+    public double heading;
+
+    public double speed;
 }
