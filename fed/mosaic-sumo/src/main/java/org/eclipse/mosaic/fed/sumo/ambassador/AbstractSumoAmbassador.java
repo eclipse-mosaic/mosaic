@@ -73,6 +73,7 @@ import org.eclipse.mosaic.interactions.vehicle.VehicleSpeedChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleStop;
 import org.eclipse.mosaic.lib.enums.VehicleClass;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
+import org.eclipse.mosaic.lib.math.Aggregator;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.traffic.SumoTraciResult;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroup;
@@ -1380,6 +1381,8 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
                 .toList();
     }
 
+    private final List<String> personsPotentiallyEquippedWithApp = new ArrayList<>();
+
     private void propagatePersonsToRti(long time) throws InternalFederateException {
         List<String> persons = bridge.getSimulationControl().getDepartedPersons();
         String personType;
@@ -1392,16 +1395,21 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             }
             if (sumoConfig.subscribeToAllPersons) { // this is required as persons with no apps can't be subscribed to otherwise
                 bridge.getSimulationControl().subscribeForPerson(personId, time, this.getEndTime());
+            } else {
+                personsPotentiallyEquippedWithApp.add(personId);
             }
         }
     }
 
     private void receiveInteraction(AgentRegistration agentRegistration) {
-        if (!sumoConfig.subscribeToAllPersons && agentRegistration.getMapping().hasApplication()) { // this is required as persons with no apps can't be subscribed to otherwise
+        if (!sumoConfig.subscribeToAllPersons && agentRegistration.getMapping().hasApplication() // this is required as persons with no apps can't be subscribed to otherwise
+                // FIXME: This is a workaround as otherwise the ambassador will try to subscribe to Agents added by other simulators than SUMO, which is currently not possible
+                && personsPotentiallyEquippedWithApp.contains(agentRegistration.getMapping().getName())) {
             try {
                 bridge.getSimulationControl().subscribeForPerson(
                         agentRegistration.getMapping().getName(), agentRegistration.getTime(), this.getEndTime()
                 );
+                personsPotentiallyEquippedWithApp.remove(agentRegistration.getMapping().getName());
             } catch (InternalFederateException e) {
                 log.warn("Could not subscribe to unknown person " + agentRegistration.getMapping().getName());
             }
