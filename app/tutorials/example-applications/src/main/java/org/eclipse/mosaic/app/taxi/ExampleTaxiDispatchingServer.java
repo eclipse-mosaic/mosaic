@@ -280,6 +280,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                     //delivered final customer
                     //update cab's last location, route
                     updateRouteStatusByLegId(finishedLegId, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
+                    updateOrderByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false);
                 } else {
                     currentLegId = latestData.getNextLegIds().remove(0);
                     markLegAsStarted(currentLegId);
@@ -310,6 +311,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             Integer currentLeg = latestData.getNextLegIds().remove(0);
             markLegAsStarted(currentLeg);
             updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
+            updateOrderByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
 
             latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
             latestData.setCurrentLegId(currentLeg);
@@ -408,16 +410,18 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         }
     }
 
-    private void updateOrderByRouteId(long routeId, int status, boolean isStarted) { //TODO have to fix the SQL
+    private void updateOrderByLegId(long legId, int status, boolean isStarted) {
         try {
             String dbField = isStarted ? "started" : "completed";
             PreparedStatement updateOrders = dbConnection.prepareStatement(
-                "UPDATE taxi_order SET %s = ?, status = ? WHERE route_id = ?".formatted(dbField)
+                "UPDATE taxi_order SET %s = ?, status = ? WHERE route_id = ".formatted(dbField) +
+                    "(SELECT route.id FROM route WHERE route.id = " +
+                    "(SELECT route_id FROM leg WHERE leg.id = ?))"
             );
 
             updateOrders.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             updateOrders.setInt(2, status);
-            updateOrders.setLong(3, routeId);
+            updateOrders.setLong(3, legId);
 
             if (updateOrders.executeUpdate() != 1) {
                 throw new RuntimeException("Order was not updated correctly using the route ID!");
