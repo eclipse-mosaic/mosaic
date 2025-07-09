@@ -34,8 +34,8 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * This class represents the SUMO command which allows to subscribe the vehicle to the application.
- * Several options for vehicle subscription are implemented in this class.
+ * This class represents the SUMO command which allows to subscribe the person to the application.
+ * Several options for person subscription are implemented in this class.
  */
 public class PersonSubscribe
         extends AbstractTraciCommand<Void>
