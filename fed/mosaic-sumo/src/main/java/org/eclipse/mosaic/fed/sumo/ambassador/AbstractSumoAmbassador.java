@@ -1398,7 +1398,7 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
 
     private void receiveInteraction(AgentRegistration agentRegistration) {
         String personId = agentRegistration.getMapping().getName();
-        if (agentRegistration.getMapping().hasApplication() // this is required as persons with no apps can't be subscribed to otherwise
+        if (agentRegistration.getMapping().hasApplication() // only subscribe to persons with mapped applications
                 // FIXME: This is a workaround as otherwise the ambassador will try to subscribe to Agents added by other simulators than SUMO, which is currently not possible
                 && personsSubscriptionCache.contains(personId)) {
             try {
