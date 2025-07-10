@@ -637,7 +637,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         properties.setProperty("connectTimeout", "5000");
 
         try {
-            dbConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/kabina?serverTimezone=UTC", properties);
+            dbConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/kabina", properties);
             getLog().info("Connected to database successfully");
         } catch (SQLException e) {
             getLog().error("Could not connect to database", e);

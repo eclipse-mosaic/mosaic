@@ -21,7 +21,10 @@
 	<person id="p2" depart="0.00" color="red">
 		<ride from="38763678_27559628_27559627" to="493264401_27559341_27559334" lines="taxi"/>
 	</person>
-	<person id="p3" depart="0.00" color="blue">
+	<person id="p3" depart="0.00" color="red">
+		<ride from="38763678_27559628_27559627" to="493264401_27559341_27559334" lines="taxi"/>
+	</person>
+	<person id="p4" depart="0.00" color="blue">
 		<ride from="1092670137_28997949_459659148" to="1092670183_27559365_27559350" lines="taxi"/>
 	</person>
 </routes>
