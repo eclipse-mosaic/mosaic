@@ -74,6 +74,11 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
     private final boolean fetchSignals;
     private final boolean fetchTrainData;
 
+    /**
+     * Constructor for {@link SimulationSimulateStep}, used
+     * @param ignored the {@link Bridge} ignored for the libsumo implementation
+     * @param sumoConfiguration configuration to see which subscriptions should be fetched
+     */
     public SimulationSimulateStep(Bridge ignored, CSumo sumoConfiguration) {
         VEHICLE_SUBSCRIPTIONS.clear();
         PERSON_SUBSCRIPTIONS.clear();
@@ -88,6 +93,9 @@ public class SimulationSimulateStep implements org.eclipse.mosaic.fed.sumo.bridg
         fetchTrainData = sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_TRAINS);
     }
 
+    /**
+     * Constructor for {@link SimulationSimulateStep} subscribing to all values.
+     */
     public SimulationSimulateStep() {
         VEHICLE_SUBSCRIPTIONS.clear();
         PERSON_SUBSCRIPTIONS.clear();
