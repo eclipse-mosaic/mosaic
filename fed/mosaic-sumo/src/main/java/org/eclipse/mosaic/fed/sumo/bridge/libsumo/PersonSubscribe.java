@@ -16,22 +16,14 @@
 package org.eclipse.mosaic.fed.sumo.bridge.libsumo;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
+import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
+import org.eclipse.mosaic.rti.api.InternalFederateException;
 
-import org.eclipse.sumo.libsumo.Simulation;
-import org.eclipse.sumo.libsumo.StringVector;
-
-import java.util.List;
-
-public class SimulationGetDepartedVehicleIds implements org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetDepartedVehicleIds {
-
-    public List<String> execute(Bridge bridge) {
-        final StringVector departedIds = Simulation.getDepartedIDList();
-        try {
-            return departedIds.stream()
-                    .map(Bridge.VEHICLE_ID_TRANSFORMER::fromExternalId)
-                    .toList();
-        } finally {
-            departedIds.delete();
+public class PersonSubscribe implements org.eclipse.mosaic.fed.sumo.bridge.api.PersonSubscribe {
+    @Override
+    public void execute(Bridge bridge, String personId, long startTime, long endTime) throws CommandException, InternalFederateException {
+        if (!SimulationSimulateStep.PERSON_SUBSCRIPTIONS.contains(personId)) {
+            SimulationSimulateStep.PERSON_SUBSCRIPTIONS.add(personId);
         }
     }
 }

@@ -15,35 +15,12 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.api.complex;
 
+import org.eclipse.mosaic.interactions.agent.AgentUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 
-public class TraciSimulationStepResult {
+public record TraciSimulationStepResult(VehicleUpdates vehicleUpdates, AgentUpdates personUpdates,
+                                        TrafficDetectorUpdates trafficDetectorUpdates, TrafficLightUpdates trafficLightUpdates) {
 
-    private final VehicleUpdates vehicleUpdates;
-    private final TrafficDetectorUpdates trafficDetectorUpdates;
-    private final TrafficLightUpdates trafficLightUpdates;
-
-    public TraciSimulationStepResult(
-            VehicleUpdates vehicleUpdates,
-            TrafficDetectorUpdates trafficDetectorUpdates,
-            TrafficLightUpdates trafficLightUpdates
-    ) {
-        this.vehicleUpdates = vehicleUpdates;
-        this.trafficDetectorUpdates = trafficDetectorUpdates;
-        this.trafficLightUpdates = trafficLightUpdates;
-    }
-
-    public VehicleUpdates getVehicleUpdates() {
-        return vehicleUpdates;
-    }
-
-    public TrafficDetectorUpdates getTrafficDetectorUpdates() {
-        return trafficDetectorUpdates;
-    }
-
-    public TrafficLightUpdates getTrafficLightUpdates() {
-        return trafficLightUpdates;
-    }
 }

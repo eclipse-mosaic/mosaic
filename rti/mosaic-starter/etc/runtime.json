@@ -12,6 +12,7 @@
             "start": false,
             "subscriptions": [
                 "AgentRegistration",
+                "AgentUpdates",
                 "RsuRegistration",
                 "TmcRegistration",
                 "ServerRegistration",
@@ -66,7 +67,8 @@
             "subscriptions": [
                 "VehicleRoutesInitialization",
                 "ScenarioTrafficLightRegistration",
-                "ScenarioVehicleRegistration"
+                "ScenarioVehicleRegistration",
+                "ScenarioAgentRegistration"
             ],
             "javaClasspathEntries": []
         },
@@ -182,7 +184,8 @@
                 "InductionLoopDetectorSubscription",
                 "LaneAreaDetectorSubscription",
                 "TrafficLightSubscription",
-                "VehicleSightDistanceConfiguration"
+                "VehicleSightDistanceConfiguration",
+                "AgentRegistration"
             ],
             "javaClasspathEntries": []
         },

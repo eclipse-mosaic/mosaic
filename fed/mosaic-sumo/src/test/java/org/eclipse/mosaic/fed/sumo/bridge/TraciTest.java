@@ -108,7 +108,7 @@ public class TraciTest {
         final TraciClientBridge traci = traciRule.getTraciClient();
 
         TraciSimulationStepResult result = traci.getSimulationControl().simulateUntil(TIME.SECOND);
-        assertVehicleInSimulation(result.getVehicleUpdates());
+        assertVehicleInSimulation(result.vehicleUpdates());
 
         // RUN
         traci.getSimulationControl().addVehicle("veh_0", "1", "PKW", "0", "0", "max");
@@ -116,7 +116,7 @@ public class TraciTest {
 
         // ASSERT
         result = traci.getSimulationControl().simulateUntil(2 * TIME.SECOND);
-        assertVehicleInSimulation(result.getVehicleUpdates(), "veh_0");
+        assertVehicleInSimulation(result.vehicleUpdates(), "veh_0");
 
         // RUN
         traci.getSimulationControl().addVehicle("veh_1", "0", "PKW", "0", "0", "max");
@@ -124,7 +124,7 @@ public class TraciTest {
 
         // ASSERT
         result = traci.getSimulationControl().simulateUntil(10 * TIME.SECOND);
-        assertVehicleInSimulation(result.getVehicleUpdates(), "veh_0", "veh_1");
+        assertVehicleInSimulation(result.vehicleUpdates(), "veh_0", "veh_1");
     }
 
     @Test
@@ -340,7 +340,7 @@ public class TraciTest {
 
         // ASSERT (by checking if vehicle is first edge on route)
         final TraciSimulationStepResult result = traci.getSimulationControl().simulateUntil(3 * TIME.SECOND);
-        assertVehicleInSimulation(result.getVehicleUpdates(), "veh_0");
+        assertVehicleInSimulation(result.vehicleUpdates(), "veh_0");
         assertEquals("2_5_2", traci.getSimulationControl().getLastKnownVehicleData("veh_0").getRoadPosition().getConnectionId());
     }
 
@@ -362,7 +362,7 @@ public class TraciTest {
         }
 
         // ASSERT (subscribe)
-        VehicleData info = Iterables.getFirst(result.getVehicleUpdates().getUpdated(), null);
+        VehicleData info = Iterables.getFirst(result.vehicleUpdates().getUpdated(), null);
         assertNotNull(info);
         assertNotNull(info.getVehicleSensors());
 
@@ -388,7 +388,7 @@ public class TraciTest {
         }
 
         // ASSERT back sensor without vehicle behind
-        VehicleData info = Iterables.getFirst(result.getVehicleUpdates().getUpdated(), null);
+        VehicleData info = Iterables.getFirst(result.vehicleUpdates().getUpdated(), null);
         assertNotNull(info);
         assertNotNull(info.getVehicleSensors());
 
@@ -405,7 +405,7 @@ public class TraciTest {
         }
 
         // ASSERT back sensor with vehicle in range
-        info = Iterables.getFirst(result.getVehicleUpdates().getUpdated(), null);
+        info = Iterables.getFirst(result.vehicleUpdates().getUpdated(), null);
         assertNotNull(info);
         assertNotNull(info.getVehicleSensors());
 
@@ -544,7 +544,7 @@ public class TraciTest {
         TraciSimulationStepResult simulationStepResult;
         for (int t = 1; t < 80; t++) {
             simulationStepResult = traci.getSimulationControl().simulateUntil(t * TIME.SECOND);
-            for (InductionLoopInfo inductionLoopInfo : simulationStepResult.getTrafficDetectorUpdates().getUpdatedInductionLoops()) {
+            for (InductionLoopInfo inductionLoopInfo : simulationStepResult.trafficDetectorUpdates().getUpdatedInductionLoops()) {
                 totalCountInductionLoop += inductionLoopInfo.getVehicleCount();
                 if (inductionLoopInfo.getName().equals("induction_loop_1")) {
                     flows.add(inductionLoopInfo.getTrafficFlow());
@@ -556,7 +556,7 @@ public class TraciTest {
                         "There should be two vehicle on lane at time " + t,
                         2,
                         Iterables.getOnlyElement(
-                                simulationStepResult.getTrafficDetectorUpdates().getUpdatedLaneAreaDetectors()
+                                simulationStepResult.trafficDetectorUpdates().getUpdatedLaneAreaDetectors()
                         ).getVehicleCount()
                 );
             }
@@ -580,7 +580,7 @@ public class TraciTest {
         TraciSimulationStepResult simulationStepResult;
         for (int t = 20; t < 40; t++) {
             simulationStepResult = traci.getSimulationControl().simulateUntil(t * TIME.SECOND);
-            for (VehicleData info : simulationStepResult.getVehicleUpdates().getUpdated()) {
+            for (VehicleData info : simulationStepResult.vehicleUpdates().getUpdated()) {
                 maxSpeedVeh = Math.max(maxSpeedVeh, info.getSpeed());
             }
         }
@@ -592,13 +592,13 @@ public class TraciTest {
 
         // let the vehicle decelerate
         VehicleData vehicleData =
-                Iterables.getOnlyElement(traci.getSimulationControl().simulateUntil(40 * TIME.SECOND).getVehicleUpdates().getUpdated());
+                Iterables.getOnlyElement(traci.getSimulationControl().simulateUntil(40 * TIME.SECOND).vehicleUpdates().getUpdated());
         assertEquals(32 / 3.6, vehicleData.getSpeed(), 0.2);
 
         maxSpeedVeh = 0;
         for (int t = 41; t < 80; t++) {
             simulationStepResult = traci.getSimulationControl().simulateUntil(t * TIME.SECOND);
-            for (VehicleData info : simulationStepResult.getVehicleUpdates().getUpdated()) {
+            for (VehicleData info : simulationStepResult.vehicleUpdates().getUpdated()) {
                 maxSpeedVeh = Math.max(maxSpeedVeh, info.getSpeed());
             }
         }

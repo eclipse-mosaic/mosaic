@@ -28,6 +28,16 @@ public class CommandVariableSubscriptions {
     public final static int RESPONSE_SUBSCRIBE_VEHICLE_VALUES = 0xe4;
 
     /**
+     * Command to subscribe person variable.
+     */
+    public final static int COMMAND_SUBSCRIBE_PERSON_VALUES = 0xde;
+
+    /**
+     * Command to subscribe person variable.
+     */
+    public final static int RESPONSE_SUBSCRIBE_PERSON_VALUES = 0xee;
+
+    /**
      * Command to subscribe induction loop variable.
      */
     public final static int COMMAND_SUBSCRIBE_INDUCTION_LOOP_VALUES = 0xd0;
