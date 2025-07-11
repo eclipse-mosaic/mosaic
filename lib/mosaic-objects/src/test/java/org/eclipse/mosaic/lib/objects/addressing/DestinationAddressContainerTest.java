@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
@@ -46,10 +46,10 @@ public class DestinationAddressContainerTest {
     @Test
     public void createTopocastDestinationAddress() {
         //SETUP + RUN
-        DestinationAddressContainer dac = new DestinationAddressContainer(DestinationType.AD_HOC_TOPOCAST, networkAddress, AdHocChannel.CCH, 1, null, ProtocolType.UDP);
+        DestinationAddressContainer dac = new DestinationAddressContainer(RoutingType.AD_HOC_TOPOCAST, networkAddress, AdHocChannel.CCH, 1, null, ProtocolType.UDP);
 
         //ASSERT
-        assertEquals(DestinationType.AD_HOC_TOPOCAST, dac.getType());
+        assertEquals(RoutingType.AD_HOC_TOPOCAST, dac.getRoutingType());
         assertEquals(networkAddress, dac.getAddress());
         assertEquals(AdHocChannel.CCH, dac.getAdhocChannelId());
         assertEquals(1, dac.getTimeToLive());
@@ -63,10 +63,10 @@ public class DestinationAddressContainerTest {
         GeoPoint center = GeoPoint.lonLat(13.0, 52.0);
 
         //RUN
-        DestinationAddressContainer dac = new DestinationAddressContainer(DestinationType.AD_HOC_GEOCAST, networkAddress, AdHocChannel.CCH, null, GEO_CIRCLE, ProtocolType.UDP);
+        DestinationAddressContainer dac = new DestinationAddressContainer(RoutingType.AD_HOC_GEOCAST, networkAddress, AdHocChannel.CCH, null, GEO_CIRCLE, ProtocolType.UDP);
 
         //ASSERT
-        assertEquals(DestinationType.AD_HOC_GEOCAST, dac.getType());
+        assertEquals(RoutingType.AD_HOC_GEOCAST, dac.getRoutingType());
         assertEquals(networkAddress, dac.getAddress());
         assertEquals(AdHocChannel.CCH, dac.getAdhocChannelId());
         assertEquals(-1, dac.getTimeToLive());
@@ -78,10 +78,10 @@ public class DestinationAddressContainerTest {
     @Test
     public void createGeocastDestinationAddressRectangle() {
         //RUN
-        DestinationAddressContainer dac = new DestinationAddressContainer(DestinationType.AD_HOC_GEOCAST, networkAddress, AdHocChannel.CCH, null, GEO_RECTANGLE, ProtocolType.UDP);
+        DestinationAddressContainer dac = new DestinationAddressContainer(RoutingType.AD_HOC_GEOCAST, networkAddress, AdHocChannel.CCH, null, GEO_RECTANGLE, ProtocolType.UDP);
 
         //ASSERT
-        assertEquals(DestinationType.AD_HOC_GEOCAST, dac.getType());
+        assertEquals(RoutingType.AD_HOC_GEOCAST, dac.getRoutingType());
         assertEquals(networkAddress, dac.getAddress());
         assertEquals(AdHocChannel.CCH, dac.getAdhocChannelId());
         assertEquals(-1, dac.getTimeToLive());

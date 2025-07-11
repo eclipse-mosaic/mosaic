@@ -1,0 +1,11 @@
+{
+    "sumoConfigurationFile": "tiergarten.sumocfg",
+    "additionalVehicleTypeParameters": {
+        "Car": {
+            "carFollowModel": "Krauss"
+        },
+        "TrafficLightCar": {
+            "carFollowModel": "Krauss"
+        }
+    }
+}

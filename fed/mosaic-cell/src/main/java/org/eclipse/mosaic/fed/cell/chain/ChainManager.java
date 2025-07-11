@@ -25,7 +25,7 @@ import org.eclipse.mosaic.fed.cell.viz.StreamListener;
 import org.eclipse.mosaic.fed.cell.viz.StreamListener.StreamParticipant;
 import org.eclipse.mosaic.fed.cell.viz.StreamListener.StreamProperties;
 import org.eclipse.mosaic.interactions.communication.V2xMessageTransmission;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
 import org.eclipse.mosaic.lib.util.scheduling.DefaultEventScheduler;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
@@ -141,7 +141,7 @@ public class ChainManager implements EventManager {
      * @param v2xMessageTransmission sendV2XMessage from MOSAIC (typically send by the applications).
      */
     public void startEvent(V2xMessageTransmission v2xMessageTransmission) {
-        DestinationType dstType = v2xMessageTransmission.getMessage().getRouting().getDestination().getType();
+        RoutingType dstType = v2xMessageTransmission.getMessage().getRouting().getDestination().getRoutingType();
         if (dstType.isCell()) {
             log.trace("CellMessageType: {}", dstType);
             // Introduce V2XMessage to first module in the chain (which is the UpstreamModule)

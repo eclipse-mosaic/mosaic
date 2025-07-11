@@ -89,7 +89,7 @@ public class TransmissionSimulator {
         }
 
         DestinationAddressContainer dac = interaction.getMessage().getRouting().getDestination();
-        switch (dac.getType()) {
+        switch (dac.getRoutingType()) {
             case AD_HOC_TOPOCAST:
                 if (log.isDebugEnabled()) {
                     log.debug("Send v2xMessage.id={} from node={} as Topocast (singlehop) @time={}",

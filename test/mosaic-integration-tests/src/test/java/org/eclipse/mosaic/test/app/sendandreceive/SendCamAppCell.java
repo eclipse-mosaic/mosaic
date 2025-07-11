@@ -16,7 +16,7 @@
 package org.eclipse.mosaic.test.app.sendandreceive;
 
 import org.eclipse.mosaic.fed.application.ambassador.simulation.communication.CellModuleConfiguration;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.rti.TIME;
 
 public class SendCamAppCell extends AbstractSenderApp {
@@ -25,7 +25,7 @@ public class SendCamAppCell extends AbstractSenderApp {
 
     @SuppressWarnings("unused") // used in mapping
     public SendCamAppCell(int durationInS) {
-        this(durationInS, DestinationType.CELL_GEOCAST.toString(), 50d);
+        this(durationInS, RoutingType.CELL_GEOCAST.toString(), 50d);
     }
 
     public SendCamAppCell(int durationInS, String addressingMode, double geoRadius) {
@@ -36,7 +36,7 @@ public class SendCamAppCell extends AbstractSenderApp {
         super(TIME.SECOND, durationInS * TIME.SECOND);
 
         this.cellModuleConfiguration = new CellModuleConfiguration()
-                .camConfiguration(DestinationType.valueOf(addressingMode), geoRadius)
+                .camConfiguration(RoutingType.valueOf(addressingMode), geoRadius)
                 .maxDownlinkBitrate(maxDownlinkBitrate)
                 .maxUplinkBitrate(maxUplinkBitrate);
     }

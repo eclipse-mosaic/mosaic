@@ -1,3 +1,16 @@
+//
+// Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0
+//
+// SPDX-License-Identifier: EPL-2.0
+//
+// Contact: mosaic@fokus.fraunhofer.de
+//
+//
+
 syntax = "proto2";
 
 package ClientServerChannelSpace;
@@ -5,144 +18,195 @@ package ClientServerChannelSpace;
 option java_package = "org.eclipse.mosaic.lib.coupling";
 option java_outer_classname = "ClientServerChannelProtos";
 
-//--> Commands
-//TODO: tag numbers from 1 to 15 take only one byte in protobuf. maybe optimize here?
 message CommandMessage {
-	enum CommandType {
-		UNDEF = -1;
-//--> Federation management
-        INIT = 1;
-		SHUT_DOWN = 2;
-//--> Update messages
-		UPDATE_NODE = 10;
-		REMOVE_NODE = 11;
-//--> Advance Time
-        ADVANCE_TIME = 20;
-        NEXT_EVENT = 21;
-		MSG_RECV = 22;
-//--> Communication
-        MSG_SEND = 30;        
-        CONF_RADIO = 31;		
-//--> General
-		END = 40;
-		SUCCESS = 41;
-	}	
-	required CommandType command_type = 1;
-}
-//Commands <--
+    enum CommandType {
+        UNDEF = -1;
 
-//--> Update messages
-message UpdateNode {
-	enum UpdateType {
-		ADD_RSU = 1;
-		ADD_VEHICLE = 2;
-		MOVE_NODE = 3;
-		REMOVE_NODE = 4;
-	}
-	required UpdateType update_type = 1;
-	required int64	time = 2;
-	message NodeData {
-		required int32 id = 1;
-		required double x = 2;
-		required double y = 3;
-	}	
-	repeated NodeData properties = 3;
-}
-//Update messages <--
+        INIT = 1;                   // once at start up
+        SHUT_DOWN = 2;              // once at shut down
+        SUCCESS = 3;                // used as 'cmd ack'
+        NEXT_EVENT = 4;
+        ADVANCE_TIME = 5;
+        END = 6;                    // used as 'advance time done'
 
-//--> Initialization process
+        /* Entities... */
+        ADD_NODE = 10;
+        UPDATE_NODE = 11;
+        REMOVE_NODE = 12;
+
+        /* Wifi Communication... */
+        CONF_WIFI_RADIO = 20;
+        SEND_WIFI_MSG = 21;
+        RECV_WIFI_MSG = 22;
+
+        /* Cellular Communication... */
+        CONF_CELL_RADIO = 30;
+        SEND_CELL_MSG = 31;
+        RECV_CELL_MSG = 32;
+    }
+    required CommandType command_type = 1;
+}
+
 message InitMessage {
-	required int64 start_time = 1;
-	required int64 end_time = 2;
+    required int64 simulation_start_time = 1;
+    required int64 simulation_end_time = 2;
+    required int32 protocol_version = 3;
 }
 
 message PortExchange {
-	required uint32 port_number = 1;
+    required uint32 port_number = 1;
 }
-//Initialization process <--
 
-//--> Time advance
 message TimeMessage {
-	required int64 time = 1;
+    required int64 time = 1;
 }
 
-message ReceiveMessage {
-	required int64 time = 1;
-	required uint32 node_id = 2;
-	required RadioChannel channel_id = 3;
-	required uint32 message_id = 4;
-	required float rssi = 5;
-}
-//Time advance <--
+/* Entities... */
 
-//--> Communication
+message AddNode {
+    required int64  time = 1;
+    enum NodeType {
+        RADIO_NODE = 1; // Vehicle, RSU, TL, CS
+        WIRED_NODE = 5; // Server, TMC
+        NODE_B = 10;
+        reserved 2, 3, 4, 6;
+    }
+    required NodeType type = 2;
+    required int32 node_id = 3;
+    required double x = 4;
+    required double y = 5;
+    required double z = 6;
+}
+
+message UpdateNode {
+    required int64  time = 1;
+    message NodeData {
+        required int32 id = 1;
+        required double x = 2;
+        required double y = 3;
+        required double z = 4;
+    }
+    repeated NodeData properties = 2;
+}
+
+message RemoveNode {
+    required int64 time = 1;
+    required int32 node_id = 2;
+}
+
+/* Wifi Communication... */
+
 enum RadioChannel {
-	PROTO_SCH1 = 0;
-	PROTO_SCH2 = 1;
-	PROTO_SCH3 = 2;
-	PROTO_CCH = 3;
-	PROTO_SCH4 = 4;
-	PROTO_SCH5 = 5;
-	PROTO_SCH6 = 6;
-	PROTO_UNDEF = 7;
+    PROTO_SCH1 = 0;
+    PROTO_SCH2 = 1;
+    PROTO_SCH3 = 2;
+    PROTO_CCH = 3;
+    PROTO_SCH4 = 4;
+    PROTO_SCH5 = 5;
+    PROTO_SCH6 = 6;
+    PROTO_UNDEF = 7;
 }
 
-message ConfigureRadioMessage {
-	required int64 time = 1;
-	required uint32 message_id = 2;
-	required uint32 external_id = 3;
-	enum RadioNumber {
-		NO_RADIO = 0;
-		SINGLE_RADIO = 1;
-		DUAL_RADIO = 2;
-	}
-	required RadioNumber radio_number = 4;
-	message RadioConfiguration {
-		required bool receiving_messages = 1; //Determines whether the radio receives messages or only routes
-		required uint32 ip_address = 2;
-		required uint32 subnet_address = 3;
-		required double transmission_power = 4;
-		enum RadioMode {
-			SINGLE_CHANNEL = 1;
-			DUAL_CHANNEL = 2;
-		}
-		required RadioMode radio_mode = 5;
-		required RadioChannel primary_radio_channel = 6;
-		optional RadioChannel secondary_radio_channel = 7;
-	}
-	required RadioConfiguration primary_radio_configuration = 5;
-	optional RadioConfiguration secondary_radio_configuration = 6;
+/*
+ * in ns3: currently only time, node_id, radio_number, primary_radio.tx_power are used
+ */
+message ConfigureWifiRadio {
+    required int64 time = 1;
+    required uint32 message_id = 2;
+    required uint32 node_id = 3;
+    enum RadioNumber {
+        NO_RADIO = 0;
+        SINGLE_RADIO = 1;
+        DUAL_RADIO = 2;
+    }
+    required RadioNumber radio_number = 4;
+    message RadioConfiguration {
+        required bool receiving_messages = 1; //Determines whether the radio receives messages or only routes
+        required uint32 ip_address = 2;
+        required uint32 subnet_address = 3;
+        required double transmission_power = 4;
+        enum RadioMode {
+            SINGLE_CHANNEL = 1;
+            DUAL_CHANNEL = 2;
+        }
+        required RadioMode radio_mode = 5;
+        required RadioChannel primary_radio_channel = 6;
+        optional RadioChannel secondary_radio_channel = 7;
+    }
+    required RadioConfiguration primary_radio_configuration = 5;
+    optional RadioConfiguration secondary_radio_configuration = 6;
 }
 
-message SendMessageMessage {
-	required int64 time = 1;
-	required uint32 node_id = 2;
-	required RadioChannel channel_id = 3;
-	required uint32 message_id = 4;
-	required uint64 length = 5;
-	
-	message TopoAddress {
-		required uint32 ip_address = 1;
-		required uint32 ttl = 2;
-	}
-	message GeoRectangleAddress {
-		required uint32 ip_address = 1;
-		required double a_X = 2;
-		required double a_Y = 3;
-		required double b_X = 4;
-		required double b_Y = 5;
-	}
-	message GeoCircleAddress {
-		required uint32 ip_address = 1;
-		required double center_X = 2;
-		required double center_Y = 3;
-		required double radius = 4;
-	}
-	oneof address {
-		TopoAddress topo_address = 6;
-		GeoRectangleAddress rectangle_address = 7;
-		GeoCircleAddress circle_address = 8;
-	}	
+/*
+ * in ns3: currently RadioChannel and TTL are unused, only TopoAddress implemented
+ */
+message SendWifiMessage {
+    required int64 time = 1;
+    required uint32 node_id = 2;
+    required RadioChannel channel_id = 3;
+    required uint32 message_id = 4;
+    required uint64 length = 5;
+    
+    message TopologicalAddress {
+        required uint32 ip_address = 1;
+        optional uint32 ttl = 2;
+    }
+    message GeoRectangleAddress {
+        required uint32 ip_address = 1;
+        required double a_X = 2;
+        required double a_Y = 3;
+        required double b_X = 4;
+        required double b_Y = 5;
+    }
+    message GeoCircleAddress {
+        required uint32 ip_address = 1;
+        required double center_X = 2;
+        required double center_Y = 3;
+        required double radius = 4;
+    }
+    oneof address {
+        TopologicalAddress topological_address = 6;
+        GeoRectangleAddress rectangle_address = 7;
+        GeoCircleAddress circle_address = 8;
+    }   
 }
-//Communication <--
 
+/*
+ * in ns3: currently RadioChannel and RSSI are unused
+ */
+message ReceiveWifiMessage {
+    required int64 time = 1;
+    required uint32 node_id = 2;
+    required RadioChannel channel_id = 3;
+    required uint32 message_id = 4;
+    required float rssi = 5;
+}
+
+/* Cellular Communication... */
+
+message ConfigureCellRadio {
+    required int64 time = 1;
+    required uint32 node_id = 2;
+    required uint32 ip_address = 3;
+    required uint32 subnet_address = 4; // unused, placeholder
+}
+
+message SendCellMessage {
+    required int64 time = 1;
+    required uint32 node_id = 2;
+    required uint32 message_id = 3;
+    required uint64 length = 4;
+
+    message TopologicalAddress {
+        required uint32 ip_address = 1;
+    }
+    oneof address {
+        TopologicalAddress topological_address = 5;
+    }
+}
+
+message ReceiveCellMessage {
+    required int64 time = 1;
+    required uint32 node_id = 2;
+    required uint32 message_id = 3;
+}

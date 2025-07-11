@@ -125,7 +125,7 @@ public class ConfigurationReader {
             File configFile = new File(configPath);
             return oiRegion.readFile(configFile, configBuilder);
         } catch (InstantiationException | JsonParseException ex) {
-            log.error("Could not read configuration " + configPath + "", ex);
+            log.error("Could not read configuration " + configPath, ex);
             throw new InternalFederateException(ex);
         }
     }
