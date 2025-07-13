@@ -27,6 +27,11 @@ import org.eclipse.mosaic.lib.routing.RoutingPosition;
 import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.sql.*;
 import java.util.*;
 
@@ -47,7 +52,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final String VEHICLE_MOSAIC_ID_PREFIX = "veh_";
     private static final int VEHICLE_ID_PREFIX_LENGTH = VEHICLE_MOSAIC_ID_PREFIX.length();
     private static final String ID_COLUMN_NAME = "id";
-    private static final String COMMA_ID_DELIMITER = ",";
+    private static final String COMMA_DELIMITER = ",";
     private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
     private static int lastRegisteredTaxiDbIndex = 0;
     private static int lastSavedReservationMosaicIndex = -1;
@@ -58,6 +63,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         connectToDatabase();
         checkTablesState(List.of("customer", "stop", "cab"), false);
         checkTablesState(List.of("taxi_order", "leg", "route", "freetaxi_order"), true);
+        createFileWithDistancesInMinutesBetweenStops();
     }
 
     @Override
@@ -115,7 +121,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
         try {
             PreparedStatement updateTaxiVehicles = dbConnection.prepareStatement(
-                "UPDATE cab SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_ID_DELIMITER, idsToString)));
+                "UPDATE cab SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_DELIMITER, idsToString)));
 
             updateTaxiVehicles.setInt(1, ExampleTaxiDispatchingServer.DISPATCHER_FREE_TAXI_STATUS);
 
@@ -187,7 +193,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             PreparedStatement fetchRoutes = dbConnection.prepareStatement(
                 "SELECT taxi_order.id, taxi_order.cab_id, leg.id, leg.from_stand, leg.to_stand " +
                     "FROM taxi_order JOIN route ON taxi_order.route_id = route.id JOIN leg ON route.id = leg.route_id " +
-                    "WHERE taxi_order.id IN (%s) ORDER BY route.id, leg.id".formatted(String.join(COMMA_ID_DELIMITER, orderIds))
+                    "WHERE taxi_order.id IN (%s) ORDER BY route.id, leg.id".formatted(String.join(COMMA_DELIMITER, orderIds))
             );
 
             ResultSet fetchedRoutes = fetchRoutes.executeQuery();
@@ -197,7 +203,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
             long currentCabId =  fetchedRoutes.getLong("cab_id");
             ArrayList<Integer> legsToVisit = new ArrayList<>(Collections.singleton(fetchedRoutes.getInt("leg.id")));
-            ArrayList<Integer> busStopIds = new ArrayList<>(Collections.singleton(fetchedRoutes.getInt("to_stand")));
+            ArrayList<String> busStopIds = new ArrayList<>(Collections.singleton(fetchedRoutes.getString("to_stand")));
 
             while (fetchedRoutes.next()) {
                 if (currentCabId != fetchedRoutes.getLong("cab_id")) {
@@ -211,7 +217,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                     legsToVisit = new ArrayList<>();
                 }
 
-                busStopIds.add(fetchedRoutes.getInt("to_stand"));
+                busStopIds.add(fetchedRoutes.getString("to_stand"));
                 legsToVisit.add(fetchedRoutes.getInt("leg.id"));
             }
 
@@ -280,7 +286,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                     //delivered final customer
                     //update cab's last location, route
                     updateRouteStatusByLegId(finishedLegId, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-                    updateOrderByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false);
+                    updateOrdersByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false);
                 } else {
                     currentLegId = latestData.getNextLegIds().remove(0);
                     markLegAsStarted(currentLegId);
@@ -311,7 +317,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             Integer currentLeg = latestData.getNextLegIds().remove(0);
             markLegAsStarted(currentLeg);
             updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-            updateOrderByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
+            updateOrdersByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
 
             latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
             latestData.setCurrentLegId(currentLeg);
@@ -397,7 +403,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private void markOrdersAsAccepted(List<String> orderIds) {
         try {
             PreparedStatement updateOrders = dbConnection.prepareStatement(
-                "UPDATE taxi_order SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_ID_DELIMITER, orderIds))
+                "UPDATE taxi_order SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_DELIMITER, orderIds))
             );
             updateOrders.setInt(1, ExampleTaxiDispatchingServer.DISPATCHER_ACCEPTED_ORDER_STATUS);
 
@@ -410,7 +416,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         }
     }
 
-    private void updateOrderByLegId(long legId, int status, boolean isStarted) {
+    private void updateOrdersByLegId(long legId, int status, boolean isStarted) {
         try {
             String dbField = isStarted ? "started" : "completed";
             PreparedStatement updateOrders = dbConnection.prepareStatement(
@@ -423,12 +429,12 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             updateOrders.setInt(2, status);
             updateOrders.setLong(3, legId);
 
-            if (updateOrders.executeUpdate() != 1) {
-                throw new RuntimeException("Order was not updated correctly using the route ID!");
+            if (updateOrders.executeUpdate() < 1) {
+                throw new RuntimeException("Orders were not updated correctly using the leg ID!");
             }
             updateOrders.close();
         } catch(SQLException e) {
-            getLog().error("Error while updating order by route ID", e);
+            getLog().error("Error while updating orders by leg ID", e);
         }
     }
 
@@ -506,27 +512,21 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         }
     }
 
-    private ArrayList<String> fetchBusStopEdgesByIds(List<Integer> busStopIds) {
+    private ArrayList<String> fetchBusStopEdgesByIds(ArrayList<String> busStopIds) {
         ArrayList<String> busStopEdgeIds = new ArrayList<>(busStopIds.size());
 
         try {
-            for (int busStopId : busStopIds) {
-                PreparedStatement fetchBusStopEdges = dbConnection.prepareStatement(
-                    "SELECT sumo_edge FROM stop WHERE id = ?"
-                );
+            String sql = String.format("SELECT sumo_edge FROM stop WHERE id IN (%1$s) ORDER BY FIELD(id, %1$s)",
+                String.join(COMMA_DELIMITER, busStopIds));
+            PreparedStatement fetchBusStopEdges = dbConnection.prepareStatement(sql);
+            ResultSet fetchedBusStopEdges = fetchBusStopEdges.executeQuery();
 
-                fetchBusStopEdges.setLong(1, busStopId);
-                ResultSet fetchedBusStopEdges = fetchBusStopEdges.executeQuery();
-
-                if (fetchedBusStopEdges.next()) {
-                    busStopEdgeIds.add(fetchedBusStopEdges.getString("sumo_edge"));
-                } else {
-                    throw new RuntimeException("Number of fetched taxi locations is incorrect!");
-                }
-
-                fetchedBusStopEdges.close();
-                fetchBusStopEdges.close();
+            while(fetchedBusStopEdges.next()) {
+                busStopEdgeIds.add(fetchedBusStopEdges.getString("sumo_edge"));
             }
+
+            fetchedBusStopEdges.close();
+            fetchBusStopEdges.close();
 
             if (busStopEdgeIds.size() != busStopIds.size()) {
                 throw new RuntimeException("Number of fetched bus stops sumo_edge IDs is incorrect!");
@@ -579,6 +579,43 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         return List.of();
     }
 
+    private List<String> fetchAllBusStopEdgeIds() {
+        ArrayList<String> busStopEdgeIds = new ArrayList<>();
+
+        try {
+            PreparedStatement countBusStopEdges = dbConnection.prepareStatement("SELECT COUNT(*) as total_rows FROM stop");
+            ResultSet countedRows = countBusStopEdges.executeQuery();
+
+            int rowsCount = countedRows.next() ? countedRows.getInt("total_rows") : 0;
+
+            if (rowsCount == 0) {
+                throw new RuntimeException("Wrong number of bus stops in the DB!");
+            }
+
+            countedRows.close();
+            countBusStopEdges.close();
+
+            PreparedStatement fetchAllBusStopEdges = dbConnection.prepareStatement("SELECT sumo_edge FROM stop");
+            ResultSet fetchedBusStopEdges = fetchAllBusStopEdges.executeQuery();
+
+            while(fetchedBusStopEdges.next()) {
+                busStopEdgeIds.add(fetchedBusStopEdges.getString("sumo_edge"));
+            }
+
+            fetchedBusStopEdges.close();
+            fetchAllBusStopEdges.close();
+
+            if (busStopEdgeIds.size() != rowsCount) {
+                throw new RuntimeException("Number of fetched bus stops sumo_edge IDs is incorrect!");
+            }
+        } catch (SQLException e) {
+            getLog().error("Could not execute get cab locations query", e);
+        }
+
+        return busStopEdgeIds;
+    }
+
+
     private long parsePerson(List<String> personList) {
         String person = personList.get(0);
         person = person.substring(1);
@@ -604,6 +641,44 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
         return (int) time;
     }
+
+    private void createFileWithDistancesInMinutesBetweenStops() {
+        String filePath = String.join(FileSystems.getDefault().getSeparator(),
+            List.of("..","..","scenarios","bundle","theodorHeuss","distances.txt")); // we start from the mosaic-starter directory
+        File file = new File(filePath);
+        String unixNewLineCharacter = "\n";
+
+		List<String> edges = fetchAllBusStopEdgeIds();
+		long start = System.currentTimeMillis();
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(file, false));
+			writer.append(String.valueOf(edges.size())).append(unixNewLineCharacter); //first element is total count of bus stops
+
+            // Kern needs indexes starting from one, therefore we
+			for (int i = 0; i < edges.size(); i++) {
+				for (int j = 0; j < edges.size(); j++) {
+                    if (i == j) {
+						writer.append("0");
+					} else {
+						writer.append(
+							String.valueOf(calculateDistanceInMinutesBetweenTwoStops(edges.get(i), edges.get(j))));
+					}
+
+					if (j == edges.size() - 1) {
+						writer.append(unixNewLineCharacter);
+                        continue;
+					}
+
+                    writer.append(COMMA_DELIMITER);
+				}
+			}
+			writer.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		long finish = System.currentTimeMillis();
+		System.out.println("Elapsed: " + (finish - start) + "\n");
+	}
 
     private void checkTablesState(List<String> tableNames, boolean shouldTableBeEmpty) {
         try {
