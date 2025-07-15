@@ -18,17 +18,49 @@ package org.eclipse.mosaic.fed.sumo.bridge.facades;
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.fed.sumo.bridge.SumoVersion;
+import org.eclipse.mosaic.fed.sumo.bridge.api.InductionLoopSubscribe;
+import org.eclipse.mosaic.fed.sumo.bridge.api.LaneAreaSubscribe;
+import org.eclipse.mosaic.fed.sumo.bridge.api.LaneGetLength;
+import org.eclipse.mosaic.fed.sumo.bridge.api.LaneGetShape;
+import org.eclipse.mosaic.fed.sumo.bridge.api.LaneSetAllow;
+import org.eclipse.mosaic.fed.sumo.bridge.api.LaneSetDisallow;
+import org.eclipse.mosaic.fed.sumo.bridge.api.LaneSetMaxSpeed;
+import org.eclipse.mosaic.fed.sumo.bridge.api.PersonSubscribe;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetArrivedPersonIds;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetDepartedPersonIds;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetDepartedVehicleIds;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetTrafficLightIds;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSimulateStep;
+import org.eclipse.mosaic.fed.sumo.bridge.api.TrafficLightSubscribe;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleAdd;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTeleportingList;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetRemove;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetUpdateBestLanes;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscribe;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscribeSurroundingVehicle;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSubscriptionSetFieldOfVision;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.AbstractSubscriptionResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.InductionLoopSubscriptionResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.LaneAreaSubscriptionResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.LeadFollowVehicle;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.PersonSubscriptionResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TraciSimulationStepResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TrafficLightSubscriptionResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleContextSubscriptionResult;
+import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.*;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.*;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.InductionLoop;
 import org.eclipse.mosaic.fed.sumo.util.TrafficLightStateDecoder;
 import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
+import org.eclipse.mosaic.interactions.agent.AgentUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 import org.eclipse.mosaic.lib.enums.DriveDirection;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
+import org.eclipse.mosaic.lib.objects.agent.AgentData;
 import org.eclipse.mosaic.lib.objects.pt.PtVehicleData;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.road.SimpleRoadPosition;
@@ -64,6 +96,8 @@ public class SimulationFacade {
 
     private final SimulationSimulateStep simulateStep;
     private final SimulationGetDepartedVehicleIds getDepartedVehicleIds;
+    private final SimulationGetDepartedPersonIds getDepartedPersonIds;
+    private final SimulationGetArrivedPersonIds getArrivedPersonIds;
     private final SimulationGetTrafficLightIds getTrafficLightIds;
     private final VehicleAdd vehicleAdd;
     private final VehicleSetRemove remove;
@@ -72,6 +106,7 @@ public class SimulationFacade {
     private final VehicleSubscribe vehicleSubscribe;
     private final VehicleSubscribeSurroundingVehicle vehicleSubscribeSurrounding;
     private final VehicleSubscriptionSetFieldOfVision vehicleSubscriptionFilterFieldOfVision;
+    private final PersonSubscribe personSubscribe;
     private final InductionLoopSubscribe inductionloopSubscribe;
     private final LaneAreaSubscribe laneAreaSubscribe;
     private final TrafficLightSubscribe trafficLightSubscribe;
@@ -126,7 +161,6 @@ public class SimulationFacade {
      * before the next simulation step.
      */
     private boolean updateBestLanesBeforeNextSimulationStep = false;
-    private boolean noRearSensorConfigured = true;
 
     /**
      * Creates a new {@link SimulationFacade} object.
@@ -140,6 +174,8 @@ public class SimulationFacade {
 
         this.simulateStep = bridge.getCommandRegister().getOrCreate(SimulationSimulateStep.class);
         this.getDepartedVehicleIds = bridge.getCommandRegister().getOrCreate(SimulationGetDepartedVehicleIds.class);
+        this.getDepartedPersonIds = bridge.getCommandRegister().getOrCreate(SimulationGetDepartedPersonIds.class);
+        this.getArrivedPersonIds = bridge.getCommandRegister().getOrCreate(SimulationGetArrivedPersonIds.class);
         this.getTrafficLightIds = bridge.getCommandRegister().getOrCreate(SimulationGetTrafficLightIds.class);
         this.vehicleAdd = bridge.getCommandRegister().getOrCreate(VehicleAdd.class);
         this.remove = bridge.getCommandRegister().getOrCreate(VehicleSetRemove.class);
@@ -148,6 +184,7 @@ public class SimulationFacade {
         this.inductionloopSubscribe = bridge.getCommandRegister().getOrCreate(InductionLoopSubscribe.class);
         this.laneAreaSubscribe = bridge.getCommandRegister().getOrCreate(LaneAreaSubscribe.class);
         this.vehicleSubscribe = bridge.getCommandRegister().getOrCreate(VehicleSubscribe.class);
+        this.personSubscribe = bridge.getCommandRegister().getOrCreate(PersonSubscribe.class);
         this.trafficLightSubscribe = bridge.getCommandRegister().getOrCreate(TrafficLightSubscribe.class);
 
 
@@ -175,6 +212,34 @@ public class SimulationFacade {
             return getDepartedVehicleIds.execute(bridge);
         } catch (CommandException e) {
             throw new InternalFederateException("Could not retrieve departed vehicles", e);
+        }
+    }
+
+    /**
+     * Returns a list of all person ids which departed in the previous time step.
+     *
+     * @return a list of person ids.
+     * @throws InternalFederateException if departed person couldn't be retrieved
+     */
+    public final List<String> getDepartedPersons() throws InternalFederateException {
+        try {
+            return getDepartedPersonIds.execute(bridge);
+        } catch (CommandException e) {
+            throw new InternalFederateException("Could not retrieve departed persons", e);
+        }
+    }
+
+    /**
+     * Returns a list of all person ids which arrived in the previous time step.
+     *
+     * @return a list of person ids.
+     * @throws InternalFederateException if arrived person couldn't be retrieved
+     */
+    public final List<String> getArrivedPersons() throws InternalFederateException {
+        try {
+            return getArrivedPersonIds.execute(bridge);
+        } catch (CommandException e) {
+            throw new InternalFederateException("Could not retrieve arrived persons", e);
         }
     }
 
@@ -245,6 +310,22 @@ public class SimulationFacade {
             vehicleSubscriptionFilterFieldOfVision.execute(bridge, openingAngle);
         } catch (CommandException e) {
             throw new InternalFederateException(String.format("Could not subscribe for vehicle %s", vehicleId), e);
+        }
+    }
+
+    /**
+     * Subscribes for the given person. It will then be included in the AgentUpdates result of {@link #simulateStep}.
+     *
+     * @param personId the id of the person. Must be known to the simulation
+     * @param start    the time [ns] the subscription should start
+     * @param end      the time [ns] the subscription should end
+     * @throws InternalFederateException if it wasn't possible to subscribe for the wanted person
+     */
+    public void subscribeForPerson(String personId, long start, long end) throws InternalFederateException {
+        try {
+            personSubscribe.execute(bridge, personId, start, end);
+        } catch (CommandException e) {
+            throw new InternalFederateException(String.format("Could not subscribe for person %s", personId), e);
         }
     }
 
@@ -412,6 +493,8 @@ public class SimulationFacade {
             final List<VehicleData> addedVehicles = new LinkedList<>();
             final List<VehicleData> updatedVehicles = new LinkedList<>();
 
+            final List<AgentData> updatedPersons = new LinkedList<>();
+
             final List<InductionLoopInfo> updatedInductionLoops = new ArrayList<>();
             final List<LaneAreaDetectorInfo> updatedLaneAreas = new ArrayList<>();
             final Map<String, TrafficLightGroupInfo> trafficLightGroupInfos = new HashMap<>();
@@ -429,6 +512,9 @@ public class SimulationFacade {
                     } else if (sumoVehicle.isUpdated()) {
                         updatedVehicles.add(sumoVehicle.currentVehicleData);
                     }
+                } else if (subscriptionResult instanceof PersonSubscriptionResult result) {
+                    final AgentData personData = processPersonSubscriptionResult(time, result);
+                    updatedPersons.add(personData);
                 } else if (subscriptionResult instanceof InductionLoopSubscriptionResult result) {
                     final InductionLoopInfo inductionLoopInfo = processInductionLoopSubscriptionResult(time, result);
                     updatedInductionLoops.add(inductionLoopInfo);
@@ -449,15 +535,17 @@ public class SimulationFacade {
             }
 
             final List<String> removedVehicles = findRemovedVehicles(time);
+            final List<String> removedPersons = bridge.getSimulationControl().getArrivedPersons();
 
             final VehicleUpdates vehicleUpdates = new VehicleUpdates(time, addedVehicles, updatedVehicles, removedVehicles);
+            final AgentUpdates personUpdates = new AgentUpdates(time, updatedPersons, removedPersons);
             final TrafficDetectorUpdates trafficDetectorUpdates = new TrafficDetectorUpdates(time, updatedLaneAreas, updatedInductionLoops);
             final TrafficLightUpdates trafficLightUpdates = new TrafficLightUpdates(time, trafficLightGroupInfos);
             final TaxiUpdates taxiUpdates = new TaxiUpdates(time, collectTaxiData(), collectTaxiReservations());
 
             currentTeleportingList = null; // reset cached teleporting list for this time step
 
-            return new TraciSimulationStepResult(vehicleUpdates, trafficDetectorUpdates, trafficLightUpdates, taxiUpdates);
+            return new TraciSimulationStepResult(vehicleUpdates, personUpdates, trafficDetectorUpdates, trafficLightUpdates, taxiUpdates);
         } catch (CommandException e) {
             throw new InternalFederateException("Could not properly simulate step and read subscriptions", e);
         }
@@ -591,6 +679,10 @@ public class SimulationFacade {
                 .vehicleData(inductionLoop.meanSpeed, inductionLoop.meanVehicleLength)
                 .traffic(count, calculateFlow(time, inductionLoop.id, count))
                 .create();
+    }
+
+    private AgentData processPersonSubscriptionResult(long time, PersonSubscriptionResult result) {
+        return new AgentData(time, result.id, result.position.getGeographicPosition(), null, null, AgentData.TripStatus.WALKING);
     }
 
     /**

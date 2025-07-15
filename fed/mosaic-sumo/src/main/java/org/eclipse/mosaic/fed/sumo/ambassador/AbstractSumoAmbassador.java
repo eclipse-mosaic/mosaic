@@ -44,6 +44,8 @@ import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
 import org.eclipse.mosaic.fed.sumo.util.TrafficSignManager;
 import org.eclipse.mosaic.interactions.application.SumoTraciRequest;
 import org.eclipse.mosaic.interactions.application.SumoTraciResponse;
+import org.eclipse.mosaic.interactions.mapping.AgentRegistration;
+import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioAgentRegistration;
 import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioTrafficLightRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
@@ -524,6 +526,8 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             this.receiveInteraction((TrafficSignSpeedLimitChange) interaction);
         } else if (interaction.getTypeId().equals(TrafficSignLaneAssignmentChange.TYPE_ID)) {
             this.receiveInteraction((TrafficSignLaneAssignmentChange) interaction);
+        } else if (interaction.getTypeId().equals(AgentRegistration.TYPE_ID)) {
+            this.receiveInteraction((AgentRegistration) interaction);
         } else if (interaction.getTypeId().equals(TaxiDispatch.TYPE_ID)) {
             this.receiveInteraction((TaxiDispatch) interaction);
         } else {
@@ -1234,19 +1238,22 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
             setExternalVehiclesToLatestPositions(time);
             TraciSimulationStepResult simulationStepResult = bridge.getSimulationControl().simulateUntil(time);
 
-            VehicleUpdates vehicleUpdates = simulationStepResult.getVehicleUpdates();
+            VehicleUpdates vehicleUpdates = simulationStepResult.vehicleUpdates();
             log.trace("Leaving advance time: {}", time);
             removeExternalVehiclesFromUpdates(vehicleUpdates);
             propagateNewRoutes(vehicleUpdates, time);
             propagateSumoVehiclesToRti(time);
+            propagatePersonsToRti(time);
 
             nextTimeStep += sumoConfig.updateInterval * TIME.MILLI_SECOND;
-            simulationStepResult.getVehicleUpdates().setNextUpdate(nextTimeStep);
+            simulationStepResult.vehicleUpdates().setNextUpdate(nextTimeStep);
 
             rti.triggerInteraction(vehicleUpdates);
-            rti.triggerInteraction(simulationStepResult.getTrafficDetectorUpdates());
-            rti.triggerInteraction(simulationStepResult.getTrafficLightUpdates());
-            rti.triggerInteraction(simulationStepResult.getTaxiUpdates());
+            // person updates will be sent in the form of AgentUpdates
+            rti.triggerInteraction(simulationStepResult.personUpdates());
+            rti.triggerInteraction(simulationStepResult.trafficDetectorUpdates());
+            rti.triggerInteraction(simulationStepResult.trafficLightUpdates());
+            rti.triggerInteraction(simulationStepResult.taxiUpdates());
 
             rti.requestAdvanceTime(nextTimeStep, 0, FederatePriority.higher(descriptor.getPriority()));
 
@@ -1301,6 +1308,7 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
     /**
      * Changes parameters of externally added vehicles.
      * So far only color change is supported.
+     *
      * @param vehicleParametersChange Stores a list of vehicle parameters that should be changed.
      * @throws InternalFederateException Throws an IllegalArgumentException if color could not be set correctly.
      */
@@ -1378,6 +1386,37 @@ public abstract class AbstractSumoAmbassador extends AbstractFederateAmbassador 
         return bridge.getSimulationControl().getDepartedVehicles().stream()
                 .filter(v -> !vehiclesAddedViaRti.contains(v)) // all vehicles not added via MOSAIC are added by SUMO
                 .toList();
+    }
+
+    private final List<String> personsSubscriptionCache = new ArrayList<>();
+
+    private void propagatePersonsToRti(long time) throws InternalFederateException {
+        List<String> persons = bridge.getSimulationControl().getDepartedPersons();
+        String personType;
+        for (String personId : persons) {
+            personType = bridge.getPersonControl().getPersonTypeId(personId);
+            try {
+                rti.triggerInteraction(new ScenarioAgentRegistration(time, personId, personType));
+            } catch (IllegalValueException e) {
+                throw new InternalFederateException(e);
+            }
+            personsSubscriptionCache.add(personId);
+        }
+    }
+
+    private void receiveInteraction(AgentRegistration agentRegistration) {
+        String personId = agentRegistration.getMapping().getName();
+        if (agentRegistration.getMapping().hasApplication() // only subscribe to persons with mapped applications
+                // FIXME: This is a workaround as otherwise the ambassador will try to subscribe to Agents added by
+                //  other simulators than SUMO, which is currently not possible
+                && personsSubscriptionCache.contains(personId)) {
+            try {
+                bridge.getSimulationControl().subscribeForPerson(personId, agentRegistration.getTime(), this.getEndTime());
+            } catch (InternalFederateException e) {
+                log.warn("Could not subscribe to unknown person {}", personId);
+            }
+            personsSubscriptionCache.remove(personId);
+        }
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,10 +17,17 @@ package org.eclipse.mosaic.fed.sumo.bridge.traci.constants;
 
 public class CommandRetrievePersonState {
 
-    /**
-     * Command for the tracking the given person.
-     */
     public final static int COMMAND = 0xae;
+
+    public final static SumoVar VAR_SPEED = SumoVar.var(0x40);
+
+    public final static SumoVar VAR_POSITION = SumoVar.var(0x42);
+
+    public final static SumoVar VAR_POSITION_3D = SumoVar.var(0x39);
+
+    public final static SumoVar VAR_ANGLE = SumoVar.var(0x43);
+
+    public final static SumoVar VAR_TYPE_ID = SumoVar.var(0x4f);
 
     /**
      * Taxi reservations within the scenario.

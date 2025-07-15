@@ -152,9 +152,7 @@ public class TraciClientBridge implements Bridge {
         return poiControl;
     }
 
-    /**
-     * Returns a facade which offers methods to control person objects in the simulation.
-     */
+    @Override
     public PersonFacade getPersonControl() {
         return personControl;
     }

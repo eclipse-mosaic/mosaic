@@ -18,12 +18,12 @@ package org.eclipse.mosaic.lib.util.objects;
 /**
  * Provides methods to transform IDs if the identifier scheme of a federate differs to MOSAIC.
  * For example, OMNeT++ uses sequential numbers as unit IDs, whereas MOSAIC conform IDs of the units
- * are based on their type of unit, e.g. ("rsu_0", "veh_0", "veh_1", etc.) *
+ * are based on their type of unit, e.g., ("rsu_0", "veh_0", "veh_1", etc.) *
  */
 public interface IdTransformer<ExternalT, InternalT> {
 
     /**
-     * Maps the internal MOSAIC conform unit ID (e.g. "veh_1") to the federate specific unit ID
+     * Maps the internal MOSAIC conform unit ID (e.g., "veh_1", "agent_1", ...) to the federate specific unit ID
      *
      * @param internalId the internal ID of type ExternalT
      * @return the federate specific external ID of a unit
@@ -31,10 +31,10 @@ public interface IdTransformer<ExternalT, InternalT> {
     ExternalT toExternalId(InternalT internalId);
 
     /**
-     * Maps the federate specific unit ID back to the internal MOSAIC conform unit ID (e.g. "veh_1")
+     * Maps the federate specific unit ID back to the internal MOSAIC conform unit ID (e.g., "veh_1", "agent_1", ...)
      *
      * @param externalId the federate specific external ID of a unit
-     * @return the MOSAIC conform unit ID, e.g. "veh_1"
+     * @return the MOSAIC conform unit ID, e.g., "veh_1"
      */
     InternalT fromExternalId(ExternalT externalId);
 

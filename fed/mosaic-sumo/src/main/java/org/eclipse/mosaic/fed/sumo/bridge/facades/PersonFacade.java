@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,6 +17,7 @@ package org.eclipse.mosaic.fed.sumo.bridge.facades;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
+import org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTypeId;
 import org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTaxiReservations;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
@@ -26,7 +27,7 @@ import java.util.List;
 public class PersonFacade {
 
     private final Bridge bridge;
-
+    private final PersonGetTypeId personGetTypeId;
     private final PersonGetTaxiReservations personGetTaxiReservations;
 
     /**
@@ -37,18 +38,26 @@ public class PersonFacade {
     public PersonFacade(Bridge bridge) {
         this.bridge = bridge;
 
+        this.personGetTypeId = bridge.getCommandRegister().getOrCreate(PersonGetTypeId.class);
         this.personGetTaxiReservations = bridge.getCommandRegister().getOrCreate(PersonGetTaxiReservations.class);
     }
 
-    /**
-     * This method gets the available taxi reservations for the requested state.
-     */
-    public List<TaxiReservation> getTaxiReservations(int reservationState) throws InternalFederateException {
+    public String getPersonTypeId(String personId) throws InternalFederateException {
         try {
-            return personGetTaxiReservations.execute(bridge, reservationState);
+            return personGetTypeId.execute(bridge, personId);
+        } catch (IllegalArgumentException | CommandException e) {
+            throw new InternalFederateException("Could not request type for person " + personId, e);
         }
-        catch(CommandException e) {
-            throw new InternalFederateException(String.format("Could not retrieve taxi reservations for state %s", reservationState), e);
-        }
-    }
+	}
+
+	/**
+	 * This method gets the available taxi reservations for the requested state.
+	 */
+	public List<TaxiReservation> getTaxiReservations(int reservationState) throws InternalFederateException {
+		try {
+			return personGetTaxiReservations.execute(bridge, reservationState);
+		} catch(CommandException e) {
+			throw new InternalFederateException(String.format("Could not retrieve taxi reservations for state %s", reservationState), e);
+		}
+	}
 }

@@ -35,6 +35,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.traci.writer.ByteTraciWriter;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.writer.DoubleTraciWriter;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.writer.IntegerTraciWriter;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.writer.ListTraciWriter;
+import org.eclipse.mosaic.fed.sumo.bridge.traci.writer.PersonIdTraciWriter;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.writer.StringTraciWriter;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.writer.VehicleIdTraciWriter;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
@@ -421,6 +422,17 @@ public abstract class AbstractTraciCommand<T> {
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandWriterBuilder writeVehicleIdParam() {
             command.writers.add(new VehicleIdTraciWriter());
+            return this;
+        }
+
+        /**
+         * Defines a writer for adding a Person ID parameter to the message construction.
+         * For this parameter, one argument needs to be passed to
+         * the {@link #execute(Bridge, Object...)} method.
+         */
+        @SuppressWarnings("UnusedReturnValue")
+        public final TraciCommandWriterBuilder writePersonIdParam() {
+            command.writers.add(new PersonIdTraciWriter());
             return this;
         }
 

@@ -38,6 +38,7 @@ public class AllSubscriptionsTraciReader extends AbstractTraciResultReader<Abstr
         childReader.put(CommandVariableSubscriptions.RESPONSE_SUBSCRIBE_LANE_AREA_VALUES, new LaneAreaSubscriptionTraciReader());
         childReader.put(CommandVariableSubscriptions.RESPONSE_SUBSCRIBE_TRAFFIC_LIGHT_VALUES, new TrafficLightSubscriptionReader());
         childReader.put(CommandVariableSubscriptions.RESPONSE_SUBSCRIBE_CONTEXT_VEHICLE_VALUES, new VehicleContextSubscriptionTraciReader());
+        childReader.put(CommandVariableSubscriptions.RESPONSE_SUBSCRIBE_PERSON_VALUES, new PersonSubscriptionTraciReader());
     }
 
     @Override

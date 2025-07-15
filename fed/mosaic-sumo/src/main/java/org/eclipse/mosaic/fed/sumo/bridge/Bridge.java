@@ -17,7 +17,8 @@ package org.eclipse.mosaic.fed.sumo.bridge;
 
 import org.eclipse.mosaic.fed.sumo.bridge.facades.*;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.AbstractTraciCommand;
-import org.eclipse.mosaic.fed.sumo.util.MosaicConformVehicleIdTransformer;
+import org.eclipse.mosaic.fed.sumo.util.MosaicConformUnitIdTransformer;
+import org.eclipse.mosaic.lib.objects.UnitNameGenerator;
 import org.eclipse.mosaic.lib.util.objects.IdTransformer;
 
 import java.io.DataInputStream;
@@ -35,7 +36,12 @@ public interface Bridge {
      * a custom transformer may be defined here, which converts the vehicle IDs known by SUMO to
      * vehicle IDs known by the consumer (e.g. MOSAIC) of this Bridge implementation.
      */
-    IdTransformer<String, String> VEHICLE_ID_TRANSFORMER = new MosaicConformVehicleIdTransformer();
+    IdTransformer<String, String> VEHICLE_ID_TRANSFORMER = new MosaicConformUnitIdTransformer(UnitNameGenerator::nextVehicleName);
+
+    /**
+     * Defines the {@link IdTransformer} which transforms the person IDs if required.
+     */
+    IdTransformer<String, String> PERSON_ID_TRANSFORMER = new MosaicConformUnitIdTransformer(UnitNameGenerator::nextAgentName);
 
     /**
      * Getter for the input stream of the socket connection to SUMO.
@@ -76,6 +82,11 @@ public interface Bridge {
     VehicleFacade getVehicleControl();
 
     /**
+     * Returns a facade which offers methods to control the persons in the simulation.
+     */
+    PersonFacade getPersonControl();
+
+    /**
      * Returns a facade which offers methods to control traffic lights in the simulation.
      */
     TrafficLightFacade getTrafficLightControl();
@@ -89,11 +100,6 @@ public interface Bridge {
      * Returns a facade which offers methods to add POIs to the SUMO GUI and change its properties.
      */
     PoiFacade getPoiControl();
-
-    /**
-     * Returns a facade which offers methods to control person objects in the simulation.
-     */
-    PersonFacade getPersonControl();
 
     /**
      * Closes the simulation.
