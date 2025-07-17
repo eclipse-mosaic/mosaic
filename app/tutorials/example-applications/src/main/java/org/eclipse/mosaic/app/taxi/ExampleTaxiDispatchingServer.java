@@ -652,19 +652,22 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 		long start = System.currentTimeMillis();
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file, false));
-			writer.append(String.valueOf(edges.size())).append(unixNewLineCharacter); //first element is total count of bus stops
+            //first element is total count of bus stops + 1 because of Kern
+			writer.append(String.valueOf(edges.size() + 1)).append(unixNewLineCharacter);
 
-            // Kern needs indexes starting from one, therefore we
-			for (int i = 0; i < edges.size(); i++) {
-				for (int j = 0; j < edges.size(); j++) {
-                    if (i == j) {
+            // Kern takes also stops with id=0, so we should fill the matrix here with an irrelevant value
+			for (int i = 0; i < edges.size() + 1; i++) {
+				for (int j = 0; j < edges.size() + 1; j++) {
+                    if (i == 0 || j == 0) {
+                        writer.append("100000");
+                    } else if (i == j) {
 						writer.append("0");
 					} else {
 						writer.append(
-							String.valueOf(calculateDistanceInMinutesBetweenTwoStops(edges.get(i), edges.get(j))));
+							String.valueOf(calculateDistanceInMinutesBetweenTwoStops(edges.get(i-1), edges.get(j-1))));
 					}
 
-					if (j == edges.size() - 1) {
+					if (j == edges.size()) {
 						writer.append(unixNewLineCharacter);
                         continue;
 					}
