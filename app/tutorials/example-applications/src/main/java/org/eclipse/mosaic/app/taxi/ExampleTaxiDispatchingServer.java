@@ -674,7 +674,6 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     // This method currently works only for a Windows system with WSL
     private void startDispatcher() {
-        //String wslPath = "/mnt/c/Users/Kotse/VSCodeProjects/kern_Github";
         String wslPath = "ABSOLUTE/PATH/TO/YOUR/WSL/MOUNTED/PROJECT"; // Something like /mnt/c/....
 
         // WSL command to go to the project's path and run it using cargo
