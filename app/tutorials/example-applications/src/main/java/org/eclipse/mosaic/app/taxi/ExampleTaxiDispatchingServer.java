@@ -27,10 +27,7 @@ import org.eclipse.mosaic.lib.routing.RoutingPosition;
 import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileSystems;
 import java.sql.*;
 import java.util.*;
@@ -60,10 +57,12 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     @Override
     public void onStartup() {
+        executePythonScripts(false);
         connectToDatabase();
         checkTablesState(List.of("customer", "stop", "cab"), false);
         checkTablesState(List.of("taxi_order", "leg", "route", "freetaxi_order"), true);
         createFileWithDistancesInMinutesBetweenStops();
+        startDispatcher();
     }
 
     @Override
@@ -378,7 +377,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 insertReservations.setInt(3, DISPATCHER_MAX_DETOUR_CONFIG);
                 insertReservations.setInt(4, DISPATCHER_MAX_WAIT_CONFIG);
                 insertReservations.setInt(5, DISPATCHER_RECEIVED_ORDER_STATUS);
-                insertReservations.setTimestamp(6, new Timestamp(System.currentTimeMillis())); // TODO check if there can't be a better method
+                insertReservations.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
                 insertReservations.setInt(7,
                     calculateDistanceInMinutesBetweenTwoStops(reservation.getFromEdge(), reservation.getToEdge()));
                 insertReservations.setLong(8, parsePerson(reservation.getPersonList()));
@@ -615,7 +614,6 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         return busStopEdgeIds;
     }
 
-
     private long parsePerson(List<String> personList) {
         String person = personList.get(0);
         person = person.substring(1);
@@ -637,29 +635,78 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             new RoutingPosition(startPoint),
             new RoutingPosition(finalPoint),
             new RoutingParameters());
-        double time = Math.ceil(response.getBestRoute().getTime() / 60);
+        double timeInMinutes = Math.ceil(response.getBestRoute().getTime() / 60);
 
-        return (int) time;
+        return (int) timeInMinutes;
+    }
+
+    private void executePythonScripts(boolean includeScriptLogs) {
+        try {
+            // Path to the script directory
+            String scriptDirPath = String.join(FileSystems.getDefault().getSeparator(),
+                System.getProperty("user.dir"), "..", "..", "scenarios", "bundle", "theodorHeuss", "pythonScripts");
+            File scriptDir = new File(scriptDirPath);
+
+            // Create the process and set the working directory to the script folder
+            ProcessBuilder pb = new ProcessBuilder("python", "executeScripts.py");
+            pb.directory(scriptDir);
+            pb.redirectErrorStream(true);
+
+            Process process = pb.start();
+
+            if (includeScriptLogs) {
+                // Read the output
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
+                while((line = reader.readLine()) != null) {
+                    System.out.println("Python output: " + line);
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("Python script execution failed: " + exitCode);
+            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Failed to execute python scripts: " + e.getMessage());
+        }
+    }
+
+    // This method currently works only for a Windows system with WSL
+    private void startDispatcher() {
+        //String wslPath = "/mnt/c/Users/Kotse/VSCodeProjects/kern_Github";
+        String wslPath = "ABSOLUTE/PATH/TO/YOUR/WSL/MOUNTED/PROJECT"; // Something like /mnt/c/....
+
+        // WSL command to go to the project's path and run it using cargo
+        String command = String.format("cd %s && cargo run", wslPath);
+
+        ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "-l", "-c", command);
+        processBuilder.inheritIO();
+
+        try {
+            Process process = processBuilder.start();
+			Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
+        } catch (IOException e) {
+            System.err.println("Failed to execute in WSL: " + e.getMessage());
+        }
     }
 
     private void createFileWithDistancesInMinutesBetweenStops() {
-        String filePath = String.join(FileSystems.getDefault().getSeparator(),
-            List.of("..","..","scenarios","bundle","theodorHeuss","distances.txt")); // we start from the mosaic-starter directory
-        File file = new File(filePath);
-        String unixNewLineCharacter = "\n";
+        String filePath = "ABSOLUTE/PATH/TO/YOUR/KERN/PROJECT/DIRECTORY";
+        File file = new File(filePath + FileSystems.getDefault().getSeparator() + "distances.txt");
 
 		List<String> edges = fetchAllBusStopEdgeIds();
 		long start = System.currentTimeMillis();
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file, false));
             //first element is total count of bus stops + 1 because of Kern
-			writer.append(String.valueOf(edges.size() + 1)).append(unixNewLineCharacter);
+			writer.append(String.valueOf(edges.size() + 1)).append("\n");
 
             // Kern takes also stops with id=0, so we should fill the matrix here with an irrelevant value
 			for (int i = 0; i < edges.size() + 1; i++) {
 				for (int j = 0; j < edges.size() + 1; j++) {
                     if (i == 0 || j == 0) {
-                        writer.append("100000");
+                        writer.append("10000");
                     } else if (i == j) {
 						writer.append("0");
 					} else {
@@ -668,7 +715,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 					}
 
 					if (j == edges.size()) {
-						writer.append(unixNewLineCharacter);
+						writer.append("\n");
                         continue;
 					}
 
@@ -680,7 +727,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 			throw new RuntimeException(e);
 		}
 		long finish = System.currentTimeMillis();
-		System.out.println("Elapsed: " + (finish - start) + "\n");
+		System.out.printf("Time elapsed while creating distances file: %s ms%n", finish - start);
 	}
 
     private void checkTablesState(List<String> tableNames, boolean shouldTableBeEmpty) {
@@ -737,47 +784,39 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     private static class TaxiLatestData {
         private int lastStatus;
-        private ArrayList<String> edgesToVisit;
+        private final ArrayList<String> edgesToVisit;
         private Integer currentLegId;
-        private ArrayList<Integer> nextLegIds;
+        private final ArrayList<Integer> nextLegIds;
 
-        public TaxiLatestData(int lastStatus, ArrayList<String> edgesToVisit, Integer currentLegId, ArrayList<Integer> nextLegIds) {
+        private TaxiLatestData(int lastStatus, ArrayList<String> edgesToVisit, Integer currentLegId, ArrayList<Integer> nextLegIds) {
             this.lastStatus = lastStatus;
             this.edgesToVisit = edgesToVisit;
             this.currentLegId = currentLegId;
             this.nextLegIds = nextLegIds;
         }
 
-		public int getLastStatus() {
+		private int getLastStatus() {
 			return lastStatus;
 		}
 
-		public void setLastStatus(int lastStatus) {
+		private void setLastStatus(int lastStatus) {
 			this.lastStatus = lastStatus;
 		}
 
-		public ArrayList<String> getEdgesToVisit() {
+		private ArrayList<String> getEdgesToVisit() {
 			return edgesToVisit;
 		}
 
-		public void setEdgesToVisit(ArrayList<String> edgesToVisit) {
-			this.edgesToVisit = edgesToVisit;
-		}
-
-		public Integer getCurrentLegId() {
+        private Integer getCurrentLegId() {
 			return currentLegId;
 		}
 
-		public void setCurrentLegId(Integer currentLegId) {
+        private void setCurrentLegId(Integer currentLegId) {
 			this.currentLegId = currentLegId;
 		}
 
-		public ArrayList<Integer> getNextLegIds() {
+        private ArrayList<Integer> getNextLegIds() {
 			return nextLegIds;
-		}
-
-		public void setNextLegIds(ArrayList<Integer> nextLegIds) {
-			this.nextLegIds = nextLegIds;
 		}
 	}
 }
