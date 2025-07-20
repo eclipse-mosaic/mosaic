@@ -58,8 +58,8 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final String ID_COLUMN_NAME = "id";
     private static final String COMMA_DELIMITER = ",";
     // FLAGS
-    private static final boolean SHOULD_CREATE_DISTANCES_FILE_FLAG = false;
-    private static final boolean SHOULD_INCLUDE_SCRIPT_LOGS_FLAG = true;
+    private static final boolean SHOULD_CREATE_DISTANCES_FILE_FLAG = true;
+    private static final boolean SHOULD_INCLUDE_SCRIPT_LOGS_FLAG = false;
     // GLOBAL VARIABLES
     private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
     private static int lastRegisteredTaxiDbIndex = 0;
@@ -691,7 +691,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 log.createNewFile();
             }
 
-            String wslPath = "ABSOLUTE/PATH/TO/YOUR/WSL/MOUNTED/PROJECT"; // Something like /mnt/c/....
+            String wslPath = "/mnt/c/Users/Kotse/VSCodeProjects/kern_Github"; // Something like /mnt/c/....
             // WSL command to go to the project's path and run it using cargo
             String command = String.format("cd %s && cargo run", wslPath);
             ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "-l", "-c", command);
@@ -737,7 +737,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     }
 
     private void createFileWithDistancesInMinutesBetweenStops() {
-        String filePath = "ABSOLUTE/PATH/TO/YOUR/KERN/PROJECT/DIRECTORY";
+        String filePath = "C:\\Users\\Kotse\\VSCodeProjects\\kern_Github";
         File file = new File(filePath + FileSystems.getDefault().getSeparator() + "distances.txt");
 
 		List<String> edges = fetchAllBusStopEdgeIds();
