@@ -28,28 +28,39 @@ import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
+    // DISPATCHER CONFIGS
     private static final int DISPATCHER_MAX_DETOUR_CONFIG = 70;
     private static final int DISPATCHER_MAX_WAIT_CONFIG = 15;
+    // TAXI STATUSES
     private static final int DISPATCHER_ASSIGNED_TAXI_STATUS = 0;
     private static final int DISPATCHER_FREE_TAXI_STATUS = 1;
+    // ORDER STATUSES
     private static final int DISPATCHER_RECEIVED_ORDER_STATUS = 0;
     private static final int DISPATCHER_ASSIGNED_ORDER_STATUS = 1;
     private static final int DISPATCHER_ACCEPTED_ORDER_STATUS = 2;
     private static final int DISPATCHER_PICKEDUP_ORDER_STATUS = 7;
     private static final int DISPATCHER_COMPLETED_ORDER_STATUS = 8;
+    // ROUTE AND LEG STATUSES
     private static final int DISPATCHER_ASSIGNED_ROUTE_LEG_STATUS = 1;
     private static final int DISPATCHER_STARTED_ROUTE_LEG_STATUS = 5;
     private static final int DISPATCHER_COMPLETED_ROUTE_LEG_STATUS = 6;
+    // HELP VARIABLES
     private static final String VEHICLE_MOSAIC_ID_PREFIX = "veh_";
     private static final int VEHICLE_ID_PREFIX_LENGTH = VEHICLE_MOSAIC_ID_PREFIX.length();
     private static final String ID_COLUMN_NAME = "id";
     private static final String COMMA_DELIMITER = ",";
+    // FLAGS
+    private static final boolean SHOULD_CREATE_DISTANCES_FILE_FLAG = false;
+    private static final boolean SHOULD_INCLUDE_SCRIPT_LOGS_FLAG = true;
+    // GLOBAL VARIABLES
     private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
     private static int lastRegisteredTaxiDbIndex = 0;
     private static int lastSavedReservationMosaicIndex = -1;
@@ -57,11 +68,13 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     @Override
     public void onStartup() {
-        executePythonScripts(false);
+        executePythonScripts();
         connectToDatabase();
         checkTablesState(List.of("customer", "stop", "cab"), false);
         checkTablesState(List.of("taxi_order", "leg", "route", "freetaxi_order"), true);
-        createFileWithDistancesInMinutesBetweenStops();
+        if (SHOULD_CREATE_DISTANCES_FILE_FLAG) {
+            createFileWithDistancesInMinutesBetweenStops();
+        }
         startDispatcher();
     }
 
@@ -640,12 +653,10 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         return (int) timeInMinutes;
     }
 
-    private void executePythonScripts(boolean includeScriptLogs) {
+    private void executePythonScripts() {
         try {
             // Path to the script directory
-            String scriptDirPath = String.join(FileSystems.getDefault().getSeparator(),
-                System.getProperty("user.dir"), "..", "..", "scenarios", "bundle", "theodorHeuss", "pythonScripts");
-            File scriptDir = new File(scriptDirPath);
+            File scriptDir = getFileInScenarioDirectory("pythonScripts");
 
             // Create the process and set the working directory to the script folder
             ProcessBuilder pb = new ProcessBuilder("python", "executeScripts.py");
@@ -654,7 +665,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
             Process process = pb.start();
 
-            if (includeScriptLogs) {
+            if (SHOULD_INCLUDE_SCRIPT_LOGS_FLAG) {
                 // Read the output
                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
@@ -668,26 +679,61 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 throw new RuntimeException("Python script execution failed: " + exitCode);
             }
         } catch (IOException | InterruptedException e) {
-            System.err.println("Failed to execute python scripts: " + e.getMessage());
+			getLog().error("Failed to execute python scripts: {}", e.getMessage());
         }
     }
 
     // This method currently works only for a Windows system with WSL
     private void startDispatcher() {
-        String wslPath = "ABSOLUTE/PATH/TO/YOUR/WSL/MOUNTED/PROJECT"; // Something like /mnt/c/....
-
-        // WSL command to go to the project's path and run it using cargo
-        String command = String.format("cd %s && cargo run", wslPath);
-
-        ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "-l", "-c", command);
-        processBuilder.inheritIO();
-
         try {
+            File log = getFileInScenarioDirectory("kern_github.log");
+            if (!log.exists()) {
+                log.createNewFile();
+            }
+
+            String wslPath = "ABSOLUTE/PATH/TO/YOUR/WSL/MOUNTED/PROJECT"; // Something like /mnt/c/....
+            // WSL command to go to the project's path and run it using cargo
+            String command = String.format("cd %s && cargo run", wslPath);
+            ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "-l", "-c", command);
+            processBuilder.redirectError(log).redirectOutput(log).redirectInput(log);
+
             Process process = processBuilder.start();
+
+            try (RandomAccessFile reader = new RandomAccessFile(log, "r")) {
+                String line;
+
+                while(true) {
+                    line = reader.readLine();
+
+                    if (line == null) {
+                        // No new line, wait a bit
+                        Thread.sleep(500);
+                        continue;
+                    }
+
+                    String decodedLine = new String(line.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+                    System.out.println(decodedLine);
+                    if (decodedLine.contains("Starting up with config")) {
+                        reader.close();
+                        break;
+                    }
+                }
+            }
+
 			Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
-        } catch (IOException e) {
-            System.err.println("Failed to execute in WSL: " + e.getMessage());
+        } catch (IOException | InterruptedException e) {
+			getLog().error("Failed to execute in WSL: {}", e.getMessage());
         }
+    }
+
+    private File getFileInScenarioDirectory(String fileName) {
+        return Paths.get(System.getProperty("user.dir")) // -> root/rti/mosaic-starter
+            .getParent()  // -> root/rti
+            .getParent()  // -> root
+            .resolve("scenarios/bundle")
+            .resolve("theodorHeuss") // Change this for other scenarios
+            .resolve(fileName)
+            .toFile();
     }
 
     private void createFileWithDistancesInMinutesBetweenStops() {
