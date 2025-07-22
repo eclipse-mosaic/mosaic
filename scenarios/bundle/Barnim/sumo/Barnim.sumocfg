@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <configuration>
     <input>
         <net-file value="Barnim.net.xml"/>
@@ -6,4 +8,8 @@
         <begin value="0"/>
         <end value="10000"/>
     </time>
+
+    <traci_server>
+        <num-clients value="2"/>
+    </traci_server>
 </configuration>

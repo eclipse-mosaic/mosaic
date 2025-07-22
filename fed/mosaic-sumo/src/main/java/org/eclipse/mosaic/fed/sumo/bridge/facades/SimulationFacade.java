@@ -30,6 +30,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetArrivedPersonIds;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetDepartedPersonIds;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetDepartedVehicleIds;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetTrafficLightIds;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSetOrder;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSimulateStep;
 import org.eclipse.mosaic.fed.sumo.bridge.api.TrafficLightSubscribe;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleAdd;
@@ -178,7 +179,14 @@ public class SimulationFacade {
         this.bridge = bridge;
         this.sumoConfiguration = sumoConfiguration;
 
-        this.simulateStep = bridge.getCommandRegister().getOrCreate(SimulationSimulateStep.class);
+        SimulationSetOrder setOrder = bridge.getCommandRegister().getOrCreate(SimulationSetOrder.class);
+        try {
+            setOrder.execute(bridge, 1);
+            this.simulateStep = bridge.getCommandRegister().getOrCreate(SimulationSimulateStep.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         this.getDepartedVehicleIds = bridge.getCommandRegister().getOrCreate(SimulationGetDepartedVehicleIds.class);
         this.getDepartedPersonIds = bridge.getCommandRegister().getOrCreate(SimulationGetDepartedPersonIds.class);
         this.getArrivedPersonIds = bridge.getCommandRegister().getOrCreate(SimulationGetArrivedPersonIds.class);

@@ -156,11 +156,11 @@
         },
         {
             "id": "sumo",
-            "classname": "org.eclipse.mosaic.fed.sumo.ambassador.SumoAmbassador",
+            "classname": "org.eclipse.mosaic.fed.sumo.ambassador.SumoGuiAmbassador",
             "configuration": "sumo_config.json",
             "priority": 50,
             "host": "local",
-            "port": 0,
+            "port": 8765,
             "deploy": true,
             "start": true,
             "subscriptions": [

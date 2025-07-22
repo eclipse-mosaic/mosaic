@@ -31,5 +31,7 @@ public class CommandSimulationControl {
      * The TraCI closes the connection to any client, stops simulation and shuts down SUMO.
      */
     public final static int COMMAND_CLOSE = 0x7f;
+
+    public final static int COMMAND_SET_ORDER = 0x03;
 }
 
