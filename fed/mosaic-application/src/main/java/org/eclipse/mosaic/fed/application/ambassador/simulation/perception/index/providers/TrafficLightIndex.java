@@ -121,7 +121,7 @@ public class TrafficLightIndex {
     }
 
     /**
-     * This is used as a "hack" to get a unique id for each traffic light signal, by combining the group id with the index
+     * This is used as a workaround to get a unique id for each traffic light signal, by combining the group id with the index
      */
     private String calculateTrafficLightId(String trafficLightGroupId, int trafficLightIndex) {
         return trafficLightGroupId + "_" + trafficLightIndex;
