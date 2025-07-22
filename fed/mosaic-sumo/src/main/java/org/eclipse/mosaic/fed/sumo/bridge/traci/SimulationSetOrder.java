@@ -16,7 +16,7 @@ public class SimulationSetOrder extends AbstractTraciCommand<Void> implements or
 
         write()
                 .command(CommandSimulationControl.COMMAND_SET_ORDER)
-                .writeIntParamWithType();
+                .writeIntParam();
     }
 
     @Override
