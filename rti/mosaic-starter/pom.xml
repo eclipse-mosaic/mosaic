@@ -178,6 +178,23 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <!-- copy bundle/.../bin/fed to bin/fed -->
+                    <execution>
+                        <id>copy-resources-bin-fed</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/bin/fed</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.parent.basedir}/bundle/src/assembly/resources/fed</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
