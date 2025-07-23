@@ -30,7 +30,7 @@ COPY ./ns* ./
 
 RUN ./ns3_installer.sh --yes 
 RUN mkdir -p ns3config
-RUN chmod -R 755 run.sh ns-allinone-3* && chmod -R 777 ns3config
+RUN chmod -R 755 run.sh ns* && chmod -R 777 ns3config
 
 VOLUME ["/home/mosaic/bin/fed/ns3/ns3config"]
 
