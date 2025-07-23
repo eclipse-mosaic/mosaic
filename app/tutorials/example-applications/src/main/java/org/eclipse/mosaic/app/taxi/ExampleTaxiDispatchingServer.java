@@ -15,8 +15,12 @@
 
 package org.eclipse.mosaic.app.taxi;
 
+import org.eclipse.mosaic.app.taxi.util.DataBaseCommunication;
+import org.eclipse.mosaic.app.taxi.util.TaxiDispatchData;
+import org.eclipse.mosaic.app.taxi.util.TaxiLatestData;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.TaxiServerApplication;
+import org.eclipse.mosaic.fed.application.app.api.navigation.RoutingModule;
 import org.eclipse.mosaic.fed.application.app.api.os.ServerOperatingSystem;
 import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
@@ -27,36 +31,24 @@ import org.eclipse.mosaic.lib.routing.RoutingPosition;
 import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.nio.file.Paths;
-import java.sql.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.eclipse.mosaic.app.taxi.util.Constants.*;
+import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.executePythonScripts;
+import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.startDispatcher;
+import static org.eclipse.mosaic.app.taxi.util.ParserUtil.parseMosaicVehicleIdToTaxiDbIndex;
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
     // DISPATCHER CONFIGS
-    private static final int DISPATCHER_MAX_DETOUR_CONFIG = 70;
-    private static final int DISPATCHER_MAX_WAIT_CONFIG = 15;
-    // TAXI STATUSES
-    private static final int DISPATCHER_ASSIGNED_TAXI_STATUS = 0;
-    private static final int DISPATCHER_FREE_TAXI_STATUS = 1;
-    // ORDER STATUSES
-    private static final int DISPATCHER_RECEIVED_ORDER_STATUS = 0;
-    private static final int DISPATCHER_ASSIGNED_ORDER_STATUS = 1;
-    private static final int DISPATCHER_ACCEPTED_ORDER_STATUS = 2;
-    private static final int DISPATCHER_PICKEDUP_ORDER_STATUS = 7;
-    private static final int DISPATCHER_COMPLETED_ORDER_STATUS = 8;
-    // ROUTE AND LEG STATUSES
-    private static final int DISPATCHER_ASSIGNED_ROUTE_LEG_STATUS = 1;
-    private static final int DISPATCHER_STARTED_ROUTE_LEG_STATUS = 5;
-    private static final int DISPATCHER_COMPLETED_ROUTE_LEG_STATUS = 6;
-    // HELP VARIABLES
-    private static final String VEHICLE_MOSAIC_ID_PREFIX = "veh_";
-    private static final int VEHICLE_ID_PREFIX_LENGTH = VEHICLE_MOSAIC_ID_PREFIX.length();
-    private static final String ID_COLUMN_NAME = "id";
-    private static final String COMMA_DELIMITER = ",";
+    public static final int DISPATCHER_MAX_DETOUR_CONFIG = 70;
+    public static final int DISPATCHER_MAX_WAIT_CONFIG = 10;
     // FLAGS
     private static final boolean SHOULD_CREATE_DISTANCES_FILE_FLAG = true;
     private static final boolean SHOULD_INCLUDE_SCRIPT_LOGS_FLAG = false;
@@ -64,23 +56,23 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
     private static int lastRegisteredTaxiDbIndex = 0;
     private static int lastSavedReservationMosaicIndex = -1;
-    private static Connection dbConnection;
+    private static DataBaseCommunication dataBaseCommunication;
 
     @Override
     public void onStartup() {
-        executePythonScripts();
-        connectToDatabase();
-        checkTablesState(List.of("customer", "stop", "cab"), false);
-        checkTablesState(List.of("taxi_order", "leg", "route", "freetaxi_order"), true);
+        executePythonScripts(getLog(), SHOULD_INCLUDE_SCRIPT_LOGS_FLAG);
+        dataBaseCommunication = new DataBaseCommunication(getLog());
+        dataBaseCommunication.checkTablesState(List.of("customer", "stop", "cab"), false);
+        dataBaseCommunication.checkTablesState(List.of("taxi_order", "leg", "route", "freetaxi_order"), true);
         if (SHOULD_CREATE_DISTANCES_FILE_FLAG) {
             createFileWithDistancesInMinutesBetweenStops();
         }
-        startDispatcher();
+        startDispatcher(getLog());
     }
 
     @Override
     public void onShutdown() {
-        closeDbConnection();
+        dataBaseCommunication.closeDbConnection();
     }
 
     @Override
@@ -107,10 +99,10 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             .toList();
 
         if (!unassignedReservations.isEmpty()) {
-            insertNewReservationsInDb(unassignedReservations);
+            lastSavedReservationMosaicIndex += dataBaseCommunication.insertNewReservationsInDb(unassignedReservations, getOs().getRoutingModule());
         }
 
-        List<TaxiDispatchData> taxiDispatchDataList = fetchAvailableTaxiDispatchData();
+        List<TaxiDispatchData> taxiDispatchDataList = dataBaseCommunication.fetchAvailableTaxiDispatchData(cabsLatestData);
 
         if (!taxiDispatchDataList.isEmpty()) {
             for (TaxiDispatchData taxiDispatchData : taxiDispatchDataList) {
@@ -124,123 +116,6 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     @Override
     public void processEvent(Event event) throws Exception {
 
-    }
-
-    private void setTaxiFreeStatusInDbByIds(List<Integer> taxisToUpdateIds) {
-        List<String> idsToString = taxisToUpdateIds.stream()
-            .map(Objects::toString)
-            .toList();
-
-        try {
-            PreparedStatement updateTaxiVehicles = dbConnection.prepareStatement(
-                "UPDATE cab SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_DELIMITER, idsToString)));
-
-            updateTaxiVehicles.setInt(1, ExampleTaxiDispatchingServer.DISPATCHER_FREE_TAXI_STATUS);
-
-            if (updateTaxiVehicles.executeUpdate() != taxisToUpdateIds.size()) {
-                throw new RuntimeException("Not all statuses were updated!");
-            }
-            updateTaxiVehicles.close();
-        } catch(SQLException e) {
-            getLog().error("Error updating taxi status", e);
-        }
-    }
-
-    private List<TaxiDispatchData> fetchAvailableTaxiDispatchData() {
-        try {
-            PreparedStatement fetchOrders = dbConnection.prepareStatement(
-                "SELECT taxi_order.id, taxi_order.sumo_id, taxi_order.cab_id " +
-                    "FROM taxi_order JOIN route ON taxi_order.route_id = route.id JOIN leg ON route.id = leg.route_id " +
-                    "WHERE taxi_order.status = ? ORDER BY route.id, leg.id");
-            fetchOrders.setInt(1, DISPATCHER_ASSIGNED_ORDER_STATUS);
-            ResultSet fetchedOrders = fetchOrders.executeQuery();
-
-            if (!fetchedOrders.next()) {
-                return List.of();
-            }
-
-            List<TaxiDispatchData> taxiDispatchDataList = new ArrayList<>();
-            List<String> assignedOrderIds = new ArrayList<>(Collections.singleton(fetchedOrders.getString(ID_COLUMN_NAME)));
-            List<String> currentTaxiOrders = new ArrayList<>(Collections.singleton(fetchedOrders.getString("sumo_id")));
-            long currentCabId = fetchedOrders.getLong("cab_id");
-
-            while (fetchedOrders.next()) {
-                if (currentCabId != fetchedOrders.getLong("cab_id")) {
-                    taxiDispatchDataList.add(
-                        new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentCabId), currentTaxiOrders)
-                    );
-
-                    currentTaxiOrders = new ArrayList<>();
-                    currentCabId = fetchedOrders.getLong("cab_id");
-				    assignedOrderIds.add(fetchedOrders.getString(ID_COLUMN_NAME));
-                }
-
-                currentTaxiOrders.add(fetchedOrders.getString("sumo_id"));
-			}
-
-            taxiDispatchDataList.add(
-                new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentCabId), currentTaxiOrders)
-            );
-
-            fetchOrders.close();
-            fetchOrders.close();
-
-			if (assignedOrderIds.isEmpty() || assignedOrderIds.size() != taxiDispatchDataList.size()) {
-                throw new RuntimeException("Dispatch data is not set correctly!");
-			}
-
-            fetchAvailableRoutesAndUpdateCabLatestData(assignedOrderIds);
-            markOrdersAsAccepted(assignedOrderIds);
-
-			return taxiDispatchDataList;
-        } catch(SQLException e) {
-            getLog().error("Error while fetching available orders", e);
-        }
-
-        return List.of();
-    }
-
-    private void fetchAvailableRoutesAndUpdateCabLatestData(List<String> orderIds) {
-        try {
-            PreparedStatement fetchRoutes = dbConnection.prepareStatement(
-                "SELECT taxi_order.id, taxi_order.cab_id, leg.id, leg.from_stand, leg.to_stand " +
-                    "FROM taxi_order JOIN route ON taxi_order.route_id = route.id JOIN leg ON route.id = leg.route_id " +
-                    "WHERE taxi_order.id IN (%s) ORDER BY route.id, leg.id".formatted(String.join(COMMA_DELIMITER, orderIds))
-            );
-
-            ResultSet fetchedRoutes = fetchRoutes.executeQuery();
-            if (!fetchedRoutes.next()) {
-                return;
-            }
-
-            long currentCabId =  fetchedRoutes.getLong("cab_id");
-            ArrayList<Integer> legsToVisit = new ArrayList<>(Collections.singleton(fetchedRoutes.getInt("leg.id")));
-            ArrayList<String> busStopIds = new ArrayList<>(Collections.singleton(fetchedRoutes.getString("to_stand")));
-
-            while (fetchedRoutes.next()) {
-                if (currentCabId != fetchedRoutes.getLong("cab_id")) {
-                    cabsLatestData.put(parseTaxiDbIndexToMosaicVehicleId(currentCabId),
-						new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null,
-							legsToVisit));
-
-                    //reset variables and save the new values there
-                    currentCabId = fetchedRoutes.getLong("cab_id");
-                    busStopIds = new ArrayList<>();
-                    legsToVisit = new ArrayList<>();
-                }
-
-                busStopIds.add(fetchedRoutes.getString("to_stand"));
-                legsToVisit.add(fetchedRoutes.getInt("leg.id"));
-            }
-
-            cabsLatestData.put(parseTaxiDbIndexToMosaicVehicleId(currentCabId),
-				new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null, legsToVisit));
-
-            fetchedRoutes.close();
-            fetchRoutes.close();
-        } catch(SQLException e) {
-            getLog().error("Error while fetching available routes", e);
-        }
     }
 
     private void checkAlreadyDeliveredTaxis(List<TaxiVehicleData> emptyTaxis) {
@@ -266,7 +141,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         List<Integer> alreadyDeliveredIds = alreadyDeliveredTaxis.stream()
             .map(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()))
             .toList();
-        setTaxiFreeStatusInDbByIds(alreadyDeliveredIds);
+        dataBaseCommunication.setTaxiFreeStatusInDbByIds(alreadyDeliveredIds);
     }
 
     private void checkOccupiedTaxis(List<TaxiVehicleData> taxis) {
@@ -290,18 +165,18 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                 Integer finishedLegId = latestData.getCurrentLegId();
 
                 //set current stop as cab location and mark legs as started/completed
-                updateCabLocation(taxi.getId(), finishedLegId);
-                markLegAsCompleted(finishedLegId);
+                dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
+                dataBaseCommunication.markLegAsCompleted(finishedLegId);
 
                 Integer currentLegId = null;
                 if (latestData.getNextLegIds().isEmpty()) {
                     //delivered final customer
                     //update cab's last location, route
-                    updateRouteStatusByLegId(finishedLegId, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-                    updateOrdersByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false);
+                    dataBaseCommunication.updateRouteStatusByLegId(finishedLegId, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
+                    dataBaseCommunication.updateOrdersByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false);
                 } else {
                     currentLegId = latestData.getNextLegIds().remove(0);
-                    markLegAsStarted(currentLegId);
+                    dataBaseCommunication.markLegAsStarted(currentLegId);
                 }
 
                 latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
@@ -327,16 +202,15 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
             //mark leg and route as started
             Integer currentLeg = latestData.getNextLegIds().remove(0);
-            markLegAsStarted(currentLeg);
-            updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-            updateOrdersByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
+            dataBaseCommunication.markLegAsStarted(currentLeg);
+            dataBaseCommunication.updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
+            dataBaseCommunication.updateOrdersByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
 
             latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
             latestData.setCurrentLegId(currentLeg);
         }
     }
 
-    // DONE
     private void checkForNotRegisteredTaxisInDb(List<TaxiVehicleData> emptyTaxis) {
         List<TaxiVehicleData> taxisToRegister = emptyTaxis.stream()
             .filter(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()) > lastRegisteredTaxiDbIndex)
@@ -350,7 +224,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
             .map(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()))
             .toList();
 
-        setTaxiFreeStatusInDbByIds(idsToRegister);
+        dataBaseCommunication.setTaxiFreeStatusInDbByIds(idsToRegister);
         lastRegisteredTaxiDbIndex += idsToRegister.size();
 
 		for (TaxiVehicleData taxiVehicleData : taxisToRegister) {
@@ -363,288 +237,18 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 		}
     }
 
-    private String parseTaxiDbIndexToMosaicVehicleId(long taxiDbId) {
-        taxiDbId -= 1;
-        return VEHICLE_MOSAIC_ID_PREFIX + taxiDbId;
-    }
-
-    private Integer parseMosaicVehicleIdToTaxiDbIndex(String mosaicVehicleId) {
-        mosaicVehicleId = mosaicVehicleId.substring(VEHICLE_ID_PREFIX_LENGTH);
-        return Integer.parseInt(mosaicVehicleId) + 1; //db indices start from 1 not from 0 like in Mosaic
-    }
-
-    private void insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations) {
-        try {
-            PreparedStatement insertReservations = dbConnection.prepareStatement(
-                "INSERT INTO taxi_order (from_stand, to_stand, max_loss, max_wait, shared, " +
-                "status, received, distance, customer_id, sumo_id) VALUES (?,?,?,?,true,?,?,?,?,?)");
-
-            for (TaxiReservation reservation: newTaxiReservations) {
-                List<Integer> busStopsIndices = fetchBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
-                if (busStopsIndices.size() != 2) {
-                    throw new RuntimeException("Number of fetched bus stops is not 2!");
-                }
-
-                insertReservations.setInt(1, busStopsIndices.get(0));
-                insertReservations.setInt(2, busStopsIndices.get(1));
-                insertReservations.setInt(3, DISPATCHER_MAX_DETOUR_CONFIG);
-                insertReservations.setInt(4, DISPATCHER_MAX_WAIT_CONFIG);
-                insertReservations.setInt(5, DISPATCHER_RECEIVED_ORDER_STATUS);
-                insertReservations.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-                insertReservations.setInt(7,
-                    calculateDistanceInMinutesBetweenTwoStops(reservation.getFromEdge(), reservation.getToEdge()));
-                insertReservations.setLong(8, parsePerson(reservation.getPersonList()));
-                insertReservations.setLong(9, Long.parseLong(reservation.getId()));
-                insertReservations.addBatch();
-                insertReservations.clearParameters();
-            }
-
-            int[] insertedReservationsResults = insertReservations.executeBatch();
-            for (int batchCommandResult : insertedReservationsResults) {
-                if (batchCommandResult < 0) {
-                    throw new RuntimeException("Some reservations were not inserted correctly!");
-                }
-            }
-            insertReservations.close();
-            lastSavedReservationMosaicIndex +=  newTaxiReservations.size();
-        } catch (SQLException e) {
-            getLog().error("Could not execute insert reservations query", e);
-        }
-    }
-
-    private void markOrdersAsAccepted(List<String> orderIds) {
-        try {
-            PreparedStatement updateOrders = dbConnection.prepareStatement(
-                "UPDATE taxi_order SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_DELIMITER, orderIds))
-            );
-            updateOrders.setInt(1, ExampleTaxiDispatchingServer.DISPATCHER_ACCEPTED_ORDER_STATUS);
-
-            if (updateOrders.executeUpdate() != orderIds.size()) {
-                throw new RuntimeException("Not all order statuses were set to 'ACCEPTED'!");
-            }
-            updateOrders.close();
-        } catch(SQLException e) {
-            getLog().error("Error while setting a new status to the orders", e);
-        }
-    }
-
-    private void updateOrdersByLegId(long legId, int status, boolean isStarted) {
-        try {
-            String dbField = isStarted ? "started" : "completed";
-            PreparedStatement updateOrders = dbConnection.prepareStatement(
-                "UPDATE taxi_order SET %s = ?, status = ? WHERE route_id = ".formatted(dbField) +
-                    "(SELECT route.id FROM route WHERE route.id = " +
-                    "(SELECT route_id FROM leg WHERE leg.id = ?))"
-            );
-
-            updateOrders.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-            updateOrders.setInt(2, status);
-            updateOrders.setLong(3, legId);
-
-            if (updateOrders.executeUpdate() < 1) {
-                throw new RuntimeException("Orders were not updated correctly using the leg ID!");
-            }
-            updateOrders.close();
-        } catch(SQLException e) {
-            getLog().error("Error while updating orders by leg ID", e);
-        }
-    }
-
-    private void updateCabLocation(String mosaicVehicleId, Integer finishedLegId) {
-        try {
-            PreparedStatement updateCabLocation = dbConnection.prepareStatement(
-                "UPDATE cab SET location = (SELECT leg.to_stand FROM leg WHERE leg.id = ?) WHERE cab.id = ?"
-            );
-
-            updateCabLocation.setLong(1, finishedLegId);
-            updateCabLocation.setLong(2, parseMosaicVehicleIdToTaxiDbIndex(mosaicVehicleId));
-
-            if (updateCabLocation.executeUpdate() != 1) {
-                throw new RuntimeException("Cab's location was not updated correctly");
-            }
-            updateCabLocation.close();
-        } catch(SQLException e) {
-            getLog().error("Could not update cab location", e);
-        }
-    }
-
-    private void updateRouteStatusByLegId(Integer legId, int status) {
-        try {
-            PreparedStatement updateRoute = dbConnection.prepareStatement(
-                "UPDATE route SET status = ? WHERE route.id = (SELECT route_id FROM leg WHERE leg.id = ?)"
-            );
-
-            updateRoute.setInt(1, status);
-            updateRoute.setLong(2, legId);
-
-            if (updateRoute.executeUpdate() != 1) {
-                throw new RuntimeException("Route's status was not updated correctly!");
-            }
-            updateRoute.close();
-        } catch(SQLException e) {
-            getLog().error("Could not update route's status", e);
-        }
-    }
-
-    private void markLegAsStarted(Integer legId) {
-        try {
-            PreparedStatement updateLeg = dbConnection.prepareStatement(
-                "UPDATE leg SET started = ?, status = ? WHERE id = ?"
-            );
-
-            updateLeg.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-            updateLeg.setInt(2, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-            updateLeg.setLong(3, legId);
-
-            if (updateLeg.executeUpdate() != 1) {
-                throw new RuntimeException("Leg was not correctly marked as started!");
-            }
-            updateLeg.close();
-        } catch(SQLException e) {
-            getLog().error("Could not mark leg as started", e);
-        }
-    }
-
-    private void markLegAsCompleted(Integer legId) {
-        try {
-            PreparedStatement updateLeg = dbConnection.prepareStatement(
-                "UPDATE leg SET completed = ?, status = ? WHERE id = ?"
-            );
-
-            updateLeg.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-            updateLeg.setInt(2, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-            updateLeg.setLong(3, legId);
-
-            if (updateLeg.executeUpdate() != 1) {
-                throw new RuntimeException("Leg was not properly marked as completed!");
-            }
-            updateLeg.close();
-        } catch(SQLException e) {
-            getLog().error("Could not mark leg as completed", e);
-        }
-    }
-
-    private ArrayList<String> fetchBusStopEdgesByIds(ArrayList<String> busStopIds) {
-        ArrayList<String> busStopEdgeIds = new ArrayList<>(busStopIds.size());
-
-        try {
-            String sql = String.format("SELECT sumo_edge FROM stop WHERE id IN (%1$s) ORDER BY FIELD(id, %1$s)",
-                String.join(COMMA_DELIMITER, busStopIds));
-            PreparedStatement fetchBusStopEdges = dbConnection.prepareStatement(sql);
-            ResultSet fetchedBusStopEdges = fetchBusStopEdges.executeQuery();
-
-            while(fetchedBusStopEdges.next()) {
-                busStopEdgeIds.add(fetchedBusStopEdges.getString("sumo_edge"));
-            }
-
-            fetchedBusStopEdges.close();
-            fetchBusStopEdges.close();
-
-            if (busStopEdgeIds.size() != busStopIds.size()) {
-                throw new RuntimeException("Number of fetched bus stops sumo_edge IDs is incorrect!");
-            }
-        } catch (SQLException e) {
-            getLog().error("Could not execute get cab locations query", e);
-        }
-
-        return busStopEdgeIds;
-    }
-
-    private List<Integer> fetchBusStopsIndicesByEdge(String fromEdgeId, String toEdgeId) {
-        try {
-            PreparedStatement selectStopsByEdgeId = dbConnection.prepareStatement(
-                "SELECT id, sumo_edge FROM stop WHERE sumo_edge IN (?, ?)");
-
-            selectStopsByEdgeId.setString(1, fromEdgeId);
-            selectStopsByEdgeId.setString(2, toEdgeId);
-            ResultSet selectedStops = selectStopsByEdgeId.executeQuery();
-
-            long fromStop;
-            long toStop;
-            if (!selectedStops.next()) {
-                throw new RuntimeException("Number of fetched bus stops is not 2!");
-            } else {
-                if (fromEdgeId.equals(selectedStops.getString("sumo_edge"))) {
-                    fromStop = selectedStops.getLong(ID_COLUMN_NAME);
-                    if (!selectedStops.next()) {
-                        throw new RuntimeException("Number of fetched bus stops is not 2!");
-                    }
-                    toStop = selectedStops.getLong(ID_COLUMN_NAME);
-                }
-                else {
-                    toStop = selectedStops.getLong(ID_COLUMN_NAME);
-                    if (!selectedStops.next()) {
-                        throw new RuntimeException("Number of fetched bus stops is not 2!");
-                    }
-                    fromStop = selectedStops.getLong(ID_COLUMN_NAME);
-                }
-            }
-
-            selectedStops.close();
-            selectStopsByEdgeId.close();
-
-            return List.of((int) fromStop, (int) toStop);
-        } catch (SQLException e) {
-            getLog().error("Could not execute select stops query", e);
-        }
-
-        return List.of();
-    }
-
-    private List<String> fetchAllBusStopEdgeIds() {
-        ArrayList<String> busStopEdgeIds = new ArrayList<>();
-
-        try {
-            PreparedStatement countBusStopEdges = dbConnection.prepareStatement("SELECT COUNT(*) as total_rows FROM stop");
-            ResultSet countedRows = countBusStopEdges.executeQuery();
-
-            int rowsCount = countedRows.next() ? countedRows.getInt("total_rows") : 0;
-
-            if (rowsCount == 0) {
-                throw new RuntimeException("Wrong number of bus stops in the DB!");
-            }
-
-            countedRows.close();
-            countBusStopEdges.close();
-
-            PreparedStatement fetchAllBusStopEdges = dbConnection.prepareStatement("SELECT sumo_edge FROM stop");
-            ResultSet fetchedBusStopEdges = fetchAllBusStopEdges.executeQuery();
-
-            while(fetchedBusStopEdges.next()) {
-                busStopEdgeIds.add(fetchedBusStopEdges.getString("sumo_edge"));
-            }
-
-            fetchedBusStopEdges.close();
-            fetchAllBusStopEdges.close();
-
-            if (busStopEdgeIds.size() != rowsCount) {
-                throw new RuntimeException("Number of fetched bus stops sumo_edge IDs is incorrect!");
-            }
-        } catch (SQLException e) {
-            getLog().error("Could not execute get cab locations query", e);
-        }
-
-        return busStopEdgeIds;
-    }
-
-    private long parsePerson(List<String> personList) {
-        String person = personList.get(0);
-        person = person.substring(1);
-        return Long.parseLong(person);
-    }
-
     // TODO check if this distance is good enough for the dispatcher
-    private int calculateDistanceInMinutesBetweenTwoStops(String fromStopEdge,  String toStopEdge) {
-        GeoPoint startPoint = getOs().getRoutingModule()
+    public static int calculateDistanceInMinutesBetweenTwoStops(String fromStopEdge, String toStopEdge, RoutingModule routingModule) {
+        GeoPoint startPoint = routingModule
             .getConnection(fromStopEdge)
             .getStartNode()
             .getPosition();
-        GeoPoint finalPoint = getOs().getRoutingModule()
+        GeoPoint finalPoint = routingModule
             .getConnection(toStopEdge)
             .getEndNode()
             .getPosition();
 
-        RoutingResponse response = getOs().getRoutingModule().calculateRoutes(
+        RoutingResponse response = routingModule.calculateRoutes(
             new RoutingPosition(startPoint),
             new RoutingPosition(finalPoint),
             new RoutingParameters());
@@ -653,94 +257,11 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         return (int) timeInMinutes;
     }
 
-    private void executePythonScripts() {
-        try {
-            // Path to the script directory
-            File scriptDir = getFileInScenarioDirectory("pythonScripts");
-
-            // Create the process and set the working directory to the script folder
-            ProcessBuilder pb = new ProcessBuilder("python", "executeScripts.py");
-            pb.directory(scriptDir);
-            pb.redirectErrorStream(true);
-
-            Process process = pb.start();
-
-            if (SHOULD_INCLUDE_SCRIPT_LOGS_FLAG) {
-                // Read the output
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while((line = reader.readLine()) != null) {
-                    System.out.println("Python output: " + line);
-                }
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new RuntimeException("Python script execution failed: " + exitCode);
-            }
-        } catch (IOException | InterruptedException e) {
-			getLog().error("Failed to execute python scripts: {}", e.getMessage());
-        }
-    }
-
-    // This method currently works only for a Windows system with WSL
-    private void startDispatcher() {
-        try {
-            File log = getFileInScenarioDirectory("kern_github.log");
-            if (!log.exists()) {
-                log.createNewFile();
-            }
-
-            String wslPath = "/mnt/c/Users/Kotse/VSCodeProjects/kern_Github"; // Something like /mnt/c/....
-            // WSL command to go to the project's path and run it using cargo
-            String command = String.format("cd %s && cargo run", wslPath);
-            ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "-l", "-c", command);
-            processBuilder.redirectError(log).redirectOutput(log).redirectInput(log);
-
-            Process process = processBuilder.start();
-
-            try (RandomAccessFile reader = new RandomAccessFile(log, "r")) {
-                String line;
-
-                while(true) {
-                    line = reader.readLine();
-
-                    if (line == null) {
-                        // No new line, wait a bit
-                        Thread.sleep(500);
-                        continue;
-                    }
-
-                    String decodedLine = new String(line.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-                    System.out.println(decodedLine);
-                    if (decodedLine.contains("Starting up with config")) {
-                        reader.close();
-                        break;
-                    }
-                }
-            }
-
-			Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
-        } catch (IOException | InterruptedException e) {
-			getLog().error("Failed to execute in WSL: {}", e.getMessage());
-        }
-    }
-
-    private File getFileInScenarioDirectory(String fileName) {
-        return Paths.get(System.getProperty("user.dir")) // -> root/rti/mosaic-starter
-            .getParent()  // -> root/rti
-            .getParent()  // -> root
-            .resolve("scenarios/bundle")
-            .resolve("theodorHeuss") // Change this for other scenarios
-            .resolve(fileName)
-            .toFile();
-    }
-
     private void createFileWithDistancesInMinutesBetweenStops() {
         String filePath = "C:\\Users\\Kotse\\VSCodeProjects\\kern_Github";
         File file = new File(filePath + FileSystems.getDefault().getSeparator() + "distances.txt");
 
-		List<String> edges = fetchAllBusStopEdgeIds();
+		List<String> edges = dataBaseCommunication.fetchAllBusStopEdgeIds();
 		long start = System.currentTimeMillis();
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file, false));
@@ -756,7 +277,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 						writer.append("0");
 					} else {
 						writer.append(
-							String.valueOf(calculateDistanceInMinutesBetweenTwoStops(edges.get(i-1), edges.get(j-1))));
+							String.valueOf(calculateDistanceInMinutesBetweenTwoStops(edges.get(i-1), edges.get(j-1), getOs().getRoutingModule())));
 					}
 
 					if (j == edges.size()) {
@@ -764,7 +285,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
                         continue;
 					}
 
-                    writer.append(COMMA_DELIMITER);
+                    writer.append(",");
 				}
 			}
 			writer.close();
@@ -773,95 +294,5 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 		}
 		long finish = System.currentTimeMillis();
 		System.out.printf("Time elapsed while creating distances file: %s ms%n", finish - start);
-	}
-
-    private void checkTablesState(List<String> tableNames, boolean shouldTableBeEmpty) {
-        try {
-            for (String tableName : tableNames) {
-                PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
-                    "SELECT 1 FROM %s LIMIT 1".formatted(tableName));
-                ResultSet checkQueryResult = checkCustomerTable.executeQuery();
-
-                if (shouldTableBeEmpty) {
-                    if (checkQueryResult.next()) {
-                        throw new RuntimeException("%s table is not empty!".formatted(tableName));
-                    }
-                } else {
-                    if (!checkQueryResult.next()) {
-                        throw new RuntimeException("%s table is empty!".formatted(tableName));
-                    }
-                }
-
-                checkQueryResult.close();
-                checkCustomerTable.close();
-            }
-        } catch(SQLException e) {
-            getLog().error("Error checking tables in DB", e);
-        }
-    }
-
-    private void connectToDatabase() {
-        Properties properties = new Properties();
-        properties.setProperty("user", "kabina");
-        properties.setProperty("password", "kaboot");
-        properties.setProperty("connectTimeout", "5000");
-
-        try {
-            dbConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/kabina", properties);
-            getLog().info("Connected to database successfully");
-        } catch (SQLException e) {
-            getLog().error("Could not connect to database", e);
-        }
-    }
-
-    private void closeDbConnection() {
-        try {
-            dbConnection.close();
-            getLog().info("Closed database connection successfully");
-        } catch (SQLException e) {
-            getLog().error("Error closing connection to database", e);
-        }
-    }
-
-    private record TaxiDispatchData(String taxiId, List<String> reservationIds) {
-
-    }
-
-    private static class TaxiLatestData {
-        private int lastStatus;
-        private final ArrayList<String> edgesToVisit;
-        private Integer currentLegId;
-        private final ArrayList<Integer> nextLegIds;
-
-        private TaxiLatestData(int lastStatus, ArrayList<String> edgesToVisit, Integer currentLegId, ArrayList<Integer> nextLegIds) {
-            this.lastStatus = lastStatus;
-            this.edgesToVisit = edgesToVisit;
-            this.currentLegId = currentLegId;
-            this.nextLegIds = nextLegIds;
-        }
-
-		private int getLastStatus() {
-			return lastStatus;
-		}
-
-		private void setLastStatus(int lastStatus) {
-			this.lastStatus = lastStatus;
-		}
-
-		private ArrayList<String> getEdgesToVisit() {
-			return edgesToVisit;
-		}
-
-        private Integer getCurrentLegId() {
-			return currentLegId;
-		}
-
-        private void setCurrentLegId(Integer currentLegId) {
-			this.currentLegId = currentLegId;
-		}
-
-        private ArrayList<Integer> getNextLegIds() {
-			return nextLegIds;
-		}
 	}
 }
