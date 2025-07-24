@@ -37,8 +37,8 @@ public class TrafficLightTest{
     }
 
     @Test
-    public void getId() {
-        assertEquals("Traffic light id didn't match the expected one", 0, trafficLight.getId());
+    public void getIndex() {
+        assertEquals("Traffic light id didn't match the expected one", 0, trafficLight.getIndex());
     }
 
     @Test

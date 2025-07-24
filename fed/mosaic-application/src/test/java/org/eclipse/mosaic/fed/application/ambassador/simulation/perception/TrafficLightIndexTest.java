@@ -20,7 +20,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.mosaic.fed.application.ambassador.SimulationKernelRule;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.navigation.CentralNavigationComponent;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.TrafficLightObject;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.TrafficLightIndex;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
@@ -35,14 +34,12 @@ import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroup;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroupInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightProgram;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightState;
-import org.eclipse.mosaic.lib.util.scheduling.EventManager;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -77,7 +74,7 @@ public class TrafficLightIndexTest {
             when(trafficLightMock.getCurrentState()).thenReturn(TrafficLightState.GREEN);
             when(trafficLightMock.getIncomingLane()).thenReturn("E0_0");
             when(trafficLightMock.getOutgoingLane()).thenReturn("E1_0");
-            when(trafficLightMock.getId()).thenReturn((int) position.getZ()); // on purpose
+            when(trafficLightMock.getIndex()).thenReturn((int) position.getZ()); // on purpose
             trafficLightMocks.add(trafficLightMock);
         }
         TrafficLightGroup trafficLightGroup = new TrafficLightGroup("tls", trafficLightProgramsMocks, trafficLightMocks);
