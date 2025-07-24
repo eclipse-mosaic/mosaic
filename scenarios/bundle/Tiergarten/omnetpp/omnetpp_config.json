@@ -1,21 +1,3 @@
 {
-    "federateConfigurationFile": "omnetpp.ini",
-    "messages": {
-        "destinationType": {
-            "AD_HOC_GEOCAST": false,
-            "AD_HOC_TOPOCAST": true,
-            "CELL_GEOCAST": false,
-            "CELL_GEOCAST_MBMS": false,
-            "CELL_TOPOCAST": false
-        },
-        "destinationAddress": {
-            "ipv4UnicastAddress": false,
-            "ipv4BroadcastAddress": true,
-            "ipv4AnycastAddress" : false
-        },
-        "protocolType": {
-            "UDP": true,
-            "TCP": false
-        }
-    }
+    "federateConfigurationFile": "omnetpp.ini"
 }

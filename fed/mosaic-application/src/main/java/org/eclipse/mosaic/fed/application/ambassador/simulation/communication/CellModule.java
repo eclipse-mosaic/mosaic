@@ -156,7 +156,7 @@ public class CellModule extends AbstractCommunicationModule<CellModuleConfigurat
             log.warn("sendV2XMessage: Cell communication disabled (!cellModule.isEnabled()).");
             return;
         }
-        if (!msg.getRouting().getDestination().getType().isCell()) {
+        if (!msg.getRouting().getDestination().getRoutingType().isCell()) {
             log.warn("sendV2XMessage: Message {} provided to Cell module is no Cell message.", msg.getId());
             return;
         }

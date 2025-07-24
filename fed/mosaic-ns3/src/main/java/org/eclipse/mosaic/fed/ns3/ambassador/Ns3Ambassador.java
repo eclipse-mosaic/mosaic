@@ -15,20 +15,29 @@
 
 package org.eclipse.mosaic.fed.ns3.ambassador;
 
+import org.eclipse.mosaic.fed.cell.config.gson.ConfigBuilderFactory;
+import org.eclipse.mosaic.fed.ns3.ambassador.config.CNodeB;
 import org.eclipse.mosaic.interactions.communication.AdHocCommunicationConfiguration;
 import org.eclipse.mosaic.lib.coupling.AbstractNetworkAmbassador;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
+import org.eclipse.mosaic.lib.enums.AddressType;
+import org.eclipse.mosaic.lib.enums.ProtocolType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.objects.communication.AdHocConfiguration;
 import org.eclipse.mosaic.lib.objects.communication.AdHocConfiguration.RadioMode;
 import org.eclipse.mosaic.lib.objects.communication.InterfaceConfiguration;
+import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
 import org.eclipse.mosaic.rti.api.FederateExecutor;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 import org.eclipse.mosaic.rti.api.federatestarter.DockerFederateExecutor;
 import org.eclipse.mosaic.rti.api.federatestarter.ExecutableFederateExecutor;
-import org.eclipse.mosaic.rti.api.federatestarter.NopFederateExecutor;
 import org.eclipse.mosaic.rti.api.parameters.AmbassadorParameter;
 import org.eclipse.mosaic.rti.config.CLocalHost.OperatingSystem;
 
+import com.google.gson.JsonParseException;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import javax.annotation.Nonnull;
@@ -45,6 +54,10 @@ public class Ns3Ambassador extends AbstractNetworkAmbassador {
      */
     public Ns3Ambassador(AmbassadorParameter ambassadorParameter) {
         super(ambassadorParameter, "NS-3 Ambassador", "NS-3 Federate");
+
+        supportedRoutingAddress.add(Pair.of(RoutingType.AD_HOC_TOPOCAST, AddressType.IPV4_BROADCAST));
+        supportedRoutingAddress.add(Pair.of(RoutingType.CELL_TOPOCAST, AddressType.IPV4_UNICAST));
+        supportedProtocols.add(ProtocolType.UDP);
     }
 
     @Nonnull
@@ -74,6 +87,52 @@ public class Ns3Ambassador extends AbstractNetworkAmbassador {
         );
         return dockerFederateExecutor;
     }
+
+    @Override
+    public void initialize(long startTime, long endTime) throws InternalFederateException {
+        super.initialize(startTime, endTime);
+
+        readConfigurations();
+
+        log.info("Finished Initialization, waiting for Interactions...");
+    }
+
+    /**
+     * Digest the configs in regions.json before the simulation starts.
+     */
+    private void readConfigurations() throws InternalFederateException {
+        log.debug("Read Configuration");
+
+        if (log.isTraceEnabled()) {
+            log.trace("Opening configuration file {}", ambassadorParameter.configuration);
+        }
+
+        /* read eNB positions and signal down to ns3 */
+        if (this.config.regionConfigurationFile == null || this.config.regionConfigurationFile.isEmpty()) {
+            log.warn("No configuration for eNodeBs given. Ignore.");
+            return;
+        }
+        
+        CNodeB nodeBs;
+        try {
+            File configFile = new File(String.valueOf(Paths.get(this.ambassadorParameter.configuration.getParent(), this.config.regionConfigurationFile)));
+            nodeBs = new ObjectInstantiation<CNodeB>(CNodeB.class, log).readFile(configFile, ConfigBuilderFactory.getConfigBuilder());
+        } catch (InstantiationException | NullPointerException | JsonParseException ex) {
+            log.error("Could not read configuration {}", this.config.regionConfigurationFile, ex);
+            throw new InternalFederateException(ex);
+        }
+
+        for (CNodeB.CNodeBProperties enb : nodeBs.regions) {
+            if (enb.geoPosition != null) {
+                super.addNodeBToSimulation(enb.geoPosition.toCartesian());
+            } else if (enb.cartesianPosition != null) {
+                super.addNodeBToSimulation(enb.cartesianPosition);
+            } else {
+                throw new InternalFederateException("NodeB has neither GeoPosition nor CartesianPosition set.");
+            }
+        }
+    }
+
 
     @Override
     protected synchronized void process(AdHocCommunicationConfiguration interaction) throws InternalFederateException {
