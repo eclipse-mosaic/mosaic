@@ -19,6 +19,8 @@ import org.eclipse.mosaic.lib.geo.GeoPoint;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -58,7 +60,7 @@ public class TrafficLight implements Serializable {
     /**
      * Constructor that initializes the main instance variables.
      *
-     * @param index           Signal id within the traffic light group
+     * @param index        Signal index within the traffic light group
      * @param position     geo position of the traffic light. Can also be position of the according junction when received from TraCI
      * @param incomingLane an incoming lane controlled by the traffic light
      * @param outgoingLane an outgoing lane controlled by the traffic light
@@ -140,13 +142,13 @@ public class TrafficLight implements Serializable {
 
     @Override
     public String toString() {
-        return "TrafficLightSignal{"
-                + "id=" + index
-                + ", currentState=" + currentState
-                + ", incomingLane=" + incomingLane
-                + ", outgoingLane=" + outgoingLane
-                + ", position=" + position
-                + '}';
+        return new ToStringBuilder(ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("index", index)
+                .append("currentState", currentState)
+                .append("incomingLane", incomingLane)
+                .append("outgoingLane", outgoingLane)
+                .append("position", position)
+                .build();
     }
 
 }
