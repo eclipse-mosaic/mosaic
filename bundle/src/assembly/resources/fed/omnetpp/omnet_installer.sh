@@ -41,7 +41,7 @@ set -o nounset
 set -o errtrace
 set -o errexit
 set -o pipefail
-# trap clean_up INT
+trap clean_up INT
 
 # Required programs and libraries
 required_programs=(unzip tar bison flex protoc gcc python uv)
@@ -51,13 +51,13 @@ omnet_federate_url="https://github.com/mosaic-addons/omnetpp-federate/archive/re
 omnet_src_url="https://github.com/omnetpp/omnetpp/releases/download/omnetpp-6.1.0/omnetpp-6.1.0-linux-x86_64.tgz"
 inet_src_url="https://github.com/inet-framework/inet/releases/download/v4.5.4/inet-4.5.4-src.tgz"
 
-premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-alpha15/premake-5.0.0-alpha15-linux.tar.gz"
+premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-linux.tar.gz"
 premake5_tar="$(basename "$premake5_url")"
 premake5_autoconf_url="https://github.com/Blizzard/premake-autoconf/archive/master.zip"
 premake5_autoconf_zip="$(basename "$premake5_autoconf_url")"
 
 # User arguments
-arg_installation_type=USER # USER or DEVELOPER. If not defined by program argument, user will be asked during installtion process.
+arg_installation_type=UNSET # USER or DEVELOPER. If not defined by program argument, user will be asked during installtion process.
 arg_integration_testing=false
 arg_quiet=false
 arg_uninstall=false
@@ -511,7 +511,7 @@ ask_for_dependencies() {
     # else
     #   info "Not asking user if INET is already installed and linked in LD_LIBRARY_PATH, due to program argument '--quiet'."
     # fi
-    extract_path_to_inet
+    # extract_path_to_inet
   fi
 
   if [ "$arg_quiet" == "false" ]; then
@@ -952,9 +952,6 @@ build_omnet_federate() {
   if [ -f ClientServerChannelMessages.pb.cc ]; then
     rm ClientServerChannelMessages.pb.cc
   fi
-  
-  echo "INFO Applying INET compatibility fix..."
-  # sed -i -e "s|buildoptions { \"-std=c++17\"}|buildoptions { \"-std=c++17\", \"-include\", \"${inet_src_dir}/src/inet/common/precompiled_debug.h\" }|" premake5.lua
 
   sed -i -e "s|/usr/local|.|" premake5.lua
   sed -i -e "s|\"/usr/include\"|\"/usr/include\", \"${omnetpp_src_dir}/include\", \"${inet_src_dir}/src\"|" premake5.lua
