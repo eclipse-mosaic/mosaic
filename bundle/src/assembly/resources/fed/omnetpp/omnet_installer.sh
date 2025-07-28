@@ -25,20 +25,23 @@
 #
 # ----------------------------------------
 
-check_shell() {
-  if [ -z "$BASH_VERSION" ]; then
-    fail "This script requires the BASH shell"
-    exit 1
-  fi
-}
-
-check_shell
+if [ -z "$BASH_VERSION" ]; then
+  fail "This script requires the BASH shell"
+  exit 1
+fi
 
 # ----------------------------------------
 #
 # Global Variables
 #
 # ----------------------------------------
+
+umask 027
+set -o nounset
+set -o errtrace
+set -o errexit
+set -o pipefail
+# trap clean_up INT
 
 # Required programs and libraries
 required_programs=(unzip tar bison flex protoc gcc python uv)
@@ -450,8 +453,6 @@ extract_path_to_omnetpp() {
     else
       info "omnetpp-6.1/lib is already in the \$LD_LIBRARY_PATH environment variable."
     fi
-
-    # Check if
   fi
 
   omnetpp_src_dir_bin="$(echo "$PATH" | grep -m 1 -o -P "[^:]*\/omnetpp-6\.1/bin" | head -1)"
@@ -535,17 +536,6 @@ ask_for_dependencies() {
   fi
 }
 
-umask 027
-set -o nounset
-set -o errtrace
-set -o errexit
-set -o pipefail
-# trap clean_up INT
-
-get_program_arguments "$@"
-user_configuration
-configure_paths
-ask_for_dependencies
 
 # ----------------------------------------
 #
@@ -727,12 +717,6 @@ check_directory() {
   fi
 }
 
-uninstall # Uninstall and exit if porgram argument says so
-#print_info
-set_environment_variables
-check_install
-check_required_programs "${required_programs[*]}"
-check_directory
 
 # ----------------------------------------
 #
@@ -1000,6 +984,20 @@ build_omnet_federate() {
   rm -rf "${omnetpp_federate_src_dir}"
 
 }
+
+# Run everything
+# ----------------------------------------
+
+get_program_arguments "$@"
+user_configuration
+configure_paths
+ask_for_dependencies
+
+uninstall # Uninstall and exit if program argument says so
+set_environment_variables
+check_install
+check_required_programs "${required_programs[*]}"
+check_directory
 
 # Install OMNeT++
 if [ "$omnetpp_install_ok" == "false" ] && [ "$arg_skip_omnetpp_installation" == "false" ]; then
