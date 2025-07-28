@@ -17,7 +17,8 @@ RUN \
     python3 \
     python-is-python3 \
     unzip \
-    wget
+    wget && \
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
 WORKDIR /home/mosaic/bin/fed/omnetpp
 
@@ -25,9 +26,9 @@ COPY ./*.tgz omnet_installer.sh ./
 
 RUN \
     ls -all && \
-    ./omnet_installer.sh -q -t USER -o "/home/mosaic/bin/fed/omnetpp/omnetpp-5.5.1-src-linux.tgz" -i "/home/mosaic/bin/fed/omnetpp/inet-4.1.1-src.tgz" && \
+    ./omnet_installer.sh -q -t USER -o "/home/mosaic/bin/fed/omnetpp/omnetpp-6.1.0-linux-x86_64.tgz" -i "/home/mosaic/bin/fed/omnetpp/inet-4.5.4-src.tgz" && \
     mkdir -p omnetpp-federate/simulations && \
-    chmod -R 755 inet omnetpp-5.5.1 && \
+    chmod -R 755 inet omnetpp-6.1 && \
     chmod -R 777 omnetpp-federate
 
 EXPOSE 40001 40002
