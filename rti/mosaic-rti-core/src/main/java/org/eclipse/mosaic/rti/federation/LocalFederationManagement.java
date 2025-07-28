@@ -271,8 +271,8 @@ public class LocalFederationManagement implements FederationManagement {
         // possible output from the federates' output stream (e.g. port number...)
         // note: error- and input streams were read in this class now due to conflicting stream access
         handle.getAmbassador().connectToFederate(LOCALHOST,
-                new CloseShieldInputStream(p.getInputStream()), // prevent streams from closing by ambassador
-                new CloseShieldInputStream(p.getErrorStream())
+                CloseShieldInputStream.wrap(p.getInputStream()), // prevent streams from closing by ambassador
+                CloseShieldInputStream.wrap(p.getErrorStream())
         );
 
         // read the federates stdout in an extra thread and add this to our logging instance

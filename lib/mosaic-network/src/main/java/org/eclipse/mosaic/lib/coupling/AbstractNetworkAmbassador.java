@@ -184,13 +184,13 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
 
             while ((matchedOutPort = outputScanner.findInLine(outPortPattern)) == null
                     && (matchedError = outputScanner.findInLine(errorPattern)) == null) {
-                log.trace(outputScanner.nextLine());
+                log.debug("Federate stdout: " + outputScanner.nextLine());
             }
 
             // do not close outputScanner, as it would close the underlying stream.
 
             if (matchedOutPort != null) {
-                log.trace("Found string \"{}\" in stdout", matchedOutPort);
+                log.debug("Found string \"{}\" in stdout", matchedOutPort);
                 int port = Integer.parseInt(matchedOutPort.split("=")[1]);
                 port = getHostPortFromDockerPort(port);
                 connectToFederate(host, port);
