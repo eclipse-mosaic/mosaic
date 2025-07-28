@@ -27,13 +27,13 @@ import org.eclipse.mosaic.rti.api.parameters.FederateDescriptor;
 import ch.qos.logback.classic.LoggerContext;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -44,6 +44,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * This implementation of <code>FederationManagement</code> allows local
@@ -254,33 +255,31 @@ public class LocalFederationManagement implements FederationManagement {
             watchDog.attachProcess(p);
         }
 
-        // determine the federate's name by its class
-        String federateName = StringUtils.capitalize(handle.getId());
-
-        // read error output of process in an extra thread
-        ProcessLoggingThread errorLoggingThread = new ProcessLoggingThread(
-                federateName, p.getErrorStream(), LoggerFactory.getLogger(federateName + "Error")::error
-        );
-        errorLoggingThread.start();
-        loggingThreads.put(handle.getId(), errorLoggingThread);
-
-        // FIXME: Omnetpp/Ns3 ambassadors must read from the input stream. As we cannot simply split the stream,
-        //        we need to call connectToFederate before starting the ProcessLoggingThread
-        //
-        // call connectToFederateMethod of the current federate an extract
-        // possible output from the federates' output stream (e.g. port number...)
-        // note: error- and input streams were read in this class now due to conflicting stream access
-        handle.getAmbassador().connectToFederate(LOCALHOST,
-                CloseShieldInputStream.wrap(p.getInputStream()), // prevent streams from closing by ambassador
-                CloseShieldInputStream.wrap(p.getErrorStream())
-        );
+        final String federateName = StringUtils.capitalize(handle.getId());
 
         // read the federates stdout in an extra thread and add this to our logging instance
-        ProcessLoggingThread outputLoggingThread = new ProcessLoggingThread(
-                federateName, p.getInputStream(), LoggerFactory.getLogger(federateName + "Output")::info
+        final InputStream teedStdOut = createProcessLogging(
+                handle.getId(), p.getInputStream(), LoggerFactory.getLogger(federateName + "Output")::info
         );
-        outputLoggingThread.start();
-        loggingThreads.put(handle.getId(), outputLoggingThread);
+
+        // read error output of process in an extra thread
+        final InputStream teedErrOut = createProcessLogging(
+                handle.getId(), p.getErrorStream(), LoggerFactory.getLogger(federateName + "Error")::error
+        );
+
+        // call connectToFederateMethod of the current federate an extract
+        // possible output from the federates' output stream (e.g. port number...)
+        handle.getAmbassador().connectToFederate(LOCALHOST, teedStdOut, teedErrOut);
+    }
+
+    private InputStream createProcessLogging(String federateId, InputStream processStream, Consumer<String> lineConsumer) {
+        final ProcessLoggingThread loggingThread = new ProcessLoggingThread(
+                StringUtils.capitalize(federateId), processStream, lineConsumer
+        );
+        final InputStream teedProcessStream = loggingThread.teeInputStream();
+        loggingThread.start();
+        loggingThreads.put(federateId, loggingThread);
+        return teedProcessStream;
     }
 
     /**

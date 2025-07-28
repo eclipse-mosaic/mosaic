@@ -184,7 +184,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
 
             while ((matchedOutPort = outputScanner.findInLine(outPortPattern)) == null
                     && (matchedError = outputScanner.findInLine(errorPattern)) == null) {
-                log.debug("Federate stdout: " + outputScanner.nextLine());
+                outputScanner.nextLine();
             }
 
             // do not close outputScanner, as it would close the underlying stream.
