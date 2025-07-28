@@ -8,13 +8,17 @@ import java.nio.file.Paths;
 
 public class ExternalFilesUtil {
 
-	public static void executePythonScripts(UnitLogger unitLogger, boolean shouldIncludeScriptLogs) {
+	public static void executePythonScripts(UnitLogger unitLogger, boolean shouldIncludeScriptLogs, String scenarioName) {
 		try {
 			// Path to the script directory
-			File scriptDir = getFileInScenarioDirectory("pythonScripts");
+			File scriptDir = Paths.get(System.getProperty("user.dir")) // -> root/rti/mosaic-starter
+				.getParent()  // -> root/rti
+				.getParent()  // -> root
+				.resolve("scenarios/bundle/pythonScripts")
+				.toFile();
 
 			// Create the process and set the working directory to the script folder
-			ProcessBuilder pb = new ProcessBuilder("python", "executeScripts.py");
+			ProcessBuilder pb = new ProcessBuilder("python", "executeScripts.py", scenarioName);
 			pb.directory(scriptDir);
 			pb.redirectErrorStream(true);
 
@@ -39,9 +43,9 @@ public class ExternalFilesUtil {
 	}
 
 	// This method currently works only for a Windows system with WSL
-	public static void startDispatcher(UnitLogger unitLogger) {
+	public static void startDispatcher(UnitLogger unitLogger, String scenarioName) {
 		try {
-			File log = getFileInScenarioDirectory("kern_github.log");
+			File log = getDispatcherLogFileInScenarioDirectory(scenarioName);
 			if (!log.exists()) {
 				log.createNewFile();
 			}
@@ -81,13 +85,13 @@ public class ExternalFilesUtil {
 		}
 	}
 
-	private static File getFileInScenarioDirectory(String fileName) {
+	private static File getDispatcherLogFileInScenarioDirectory(String scenarioName) {
 		return Paths.get(System.getProperty("user.dir")) // -> root/rti/mosaic-starter
 			.getParent()  // -> root/rti
 			.getParent()  // -> root
 			.resolve("scenarios/bundle")
-			.resolve("theodorHeuss") // Change this for other scenarios
-			.resolve(fileName)
+			.resolve(scenarioName) // Change this for other scenarios
+			.resolve("dispatcher.log")
 			.toFile();
 	}
 }

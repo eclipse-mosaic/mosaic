@@ -1,24 +1,24 @@
-import os, setupTables
+import os, setupTables, sys
+
 from lxml import etree
 from mysql.connector.pooling import PooledMySQLConnection
 
 my_db_connection: PooledMySQLConnection
-# Path to your SUMO rou.xml file
-ROU_FILE = "../sumo/theodorHeuss.rou.xml"
-UNKNOW_TAXI_STATUS = 2
+UNKNOWN_TAXI_STATUS = 2
 TAXI_CAPACITY: int
 
 # === Insert the cab into the DB ===
-def add_cab_to_db(cab_sumo_id):
-    insert_values_query = "INSERT INTO cab (location, name, status, seats) VALUES (1,'{}',{},{})".format(cab_sumo_id, UNKNOW_TAXI_STATUS, TAXI_CAPACITY)
+def add_cab_to_db(cab_sumo_id: str):
+    insert_values_query = "INSERT INTO cab (location, name, status, seats) VALUES (1,'{}',{},{})".format(cab_sumo_id, UNKNOWN_TAXI_STATUS, TAXI_CAPACITY)
     my_db_connection.cursor().execute(insert_values_query)
     my_db_connection.commit()
 
-def main():
+def main(scenario_name: str):
     print("Executing script:", os.path.basename(__file__))
     global my_db_connection, TAXI_CAPACITY
     # === Parse the rou.xml file ===
-    rou_tree = etree.parse(ROU_FILE)
+    rou_file = "../{0}/sumo/{0}.rou.xml".format(scenario_name)
+    rou_tree = etree.parse(rou_file)
 
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
@@ -37,4 +37,11 @@ def main():
     my_db_connection.close()
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Wrong number of input arguments. Input should be \"{} <SCENARIO_NAME>\"".format(os.path.basename(__file__)))
+
+    try:
+        float(sys.argv[1])
+        print("Please provide a valid scenario name of type string!")
+    except ValueError:
+        main(sys.argv[1])

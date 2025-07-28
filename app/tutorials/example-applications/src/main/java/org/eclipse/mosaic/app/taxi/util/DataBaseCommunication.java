@@ -48,13 +48,12 @@ public class DataBaseCommunication {
 		}
 	}
 
-	public void checkTablesState(List<String> tableNames, boolean shouldTableBeEmpty) {
+	public void checkTablesState(final List<String> tableNames, final boolean shouldTableBeEmpty) {
 		try {
 			for (String tableName : tableNames) {
 				PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
 					"SELECT 1 FROM %s LIMIT 1".formatted(tableName));
 				ResultSet checkQueryResult = checkCustomerTable.executeQuery();
-
 				if (shouldTableBeEmpty) {
 					if (checkQueryResult.next()) {
 						throw new RuntimeException("%s table is not empty!".formatted(tableName));
@@ -376,8 +375,8 @@ public class DataBaseCommunication {
 
 				insertReservations.setInt(1, busStopsIndices.get(0));
 				insertReservations.setInt(2, busStopsIndices.get(1));
-				insertReservations.setInt(3, DISPATCHER_MAX_DETOUR_CONFIG);
-				insertReservations.setInt(4, DISPATCHER_MAX_WAIT_CONFIG);
+				insertReservations.setInt(3, ORDER_MAX_DETOUR_IN_PERCENTAGE_DISPATCHER_CONFIG);
+				insertReservations.setInt(4, ORDER_MAX_WAIT_IN_MINUTES_DISPATCHER_CONFIG);
 				insertReservations.setInt(5, DISPATCHER_RECEIVED_ORDER_STATUS);
 				insertReservations.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
 				insertReservations.setInt(7,

@@ -1,12 +1,9 @@
-import os, math, setupTables
+import os, math, setupTables, sys
 from lxml import etree
 from mysql.connector.pooling import PooledMySQLConnection
 from pyproj import Transformer, CRS
 
 my_db_connection: PooledMySQLConnection
-# Path to your files
-NET_FILE = "../sumo/theodorHeuss.net.xml"
-ADD_FILE = "../sumo/theodorHeuss.bus.add.xml"
 
 # === Helper to interpolate position along polyline ===
 def get_point_along_shape(shape, distance):
@@ -31,11 +28,12 @@ def add_bus_stop_to_db(stop, lat, lon):
     my_db_connection.cursor().execute(insert_values_query, values)
     my_db_connection.commit()
 
-def main():
+def main(scenario_name: str):
     print("Executing script:", os.path.basename(__file__))
     global my_db_connection
     # === Load projection and netOffset from net.xml ===
-    net_tree = etree.parse(NET_FILE)
+    net_file = "../{0}/sumo/{0}.net.xml".format(scenario_name)
+    net_tree = etree.parse(net_file)
     location = net_tree.find("location")
 
     net_offset_x, net_offset_y = map(float, location.attrib["netOffset"].split(","))
@@ -58,7 +56,8 @@ def main():
             lane_shapes[lane_id] = shape
 
     # === Parse bus stops and compute coordinates ===
-    add_tree = etree.parse(ADD_FILE)
+    add_file = "../{0}/sumo/{0}.bus.add.xml".format(scenario_name)
+    add_tree = etree.parse(add_file)
     bus_stops = add_tree.findall(".//busStop")
 
     setupTables.setup_db_connection()
@@ -87,4 +86,11 @@ def main():
     my_db_connection.close()
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Wrong number of input arguments. Input should be \"{} <SCENARIO_NAME>\"".format(os.path.basename(__file__)))
+
+    try:
+        float(sys.argv[1])
+        print("Please provide a valid scenario name of type string!")
+    except ValueError:
+        main(sys.argv[1])

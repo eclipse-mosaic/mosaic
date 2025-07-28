@@ -49,7 +49,6 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TrafficLightSubscriptionRe
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleContextSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.*;
-import org.eclipse.mosaic.fed.sumo.bridge.api.complex.*;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.InductionLoop;
 import org.eclipse.mosaic.fed.sumo.util.TrafficLightStateDecoder;
@@ -782,15 +781,16 @@ public class SimulationFacade {
         String occupiedTime = bridge.getVehicleControl().getParameter(id, "device.taxi.occupiedTime");
         String currentCustomers = bridge.getVehicleControl().getParameter(id, "device.taxi.currentCustomers");
 
-        return new TaxiVehicleData.Builder()
-                .withId(id)
-                .withState(taxiState)
-                .withPersonCapacity(bridge.getVehicleControl().getPersonCapacity(id))
-                .withVehicleData(getLastKnownVehicleData(id))
-                .withCustomersServed(numberOfServedCustomers)
-                .withTotalOccupiedDistanceInMeters(occupiedDistance)
-                .withTotalOccupiedTimeInSeconds(occupiedTime)
-                .withCustomersToPickUpOrOnBoard(currentCustomers).build();
+        return TaxiVehicleData.builder()
+            .id(id)
+            .state(taxiState)
+            .personCapacity(bridge.getVehicleControl().getPersonCapacity(id))
+            .vehicleData(getLastKnownVehicleData(id))
+            .numberOfCustomersServed(numberOfServedCustomers)
+            .totalOccupiedDistanceInMeters(occupiedDistance)
+            .totalOccupiedTimeInSeconds(occupiedTime)
+            .customersToPickUpOrOnBoard(Arrays.stream(currentCustomers.split(",")).toList())
+            .build();
     }
 
     private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {

@@ -46,12 +46,21 @@ import static org.eclipse.mosaic.app.taxi.util.ParserUtil.parseMosaicVehicleIdTo
 
 public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
 
+    // SCENARIO
+    public static final String SCENARIO_NAME = "theodorHeuss";
+
     // DISPATCHER CONFIGS
-    public static final int DISPATCHER_MAX_DETOUR_CONFIG = 70;
-    public static final int DISPATCHER_MAX_WAIT_CONFIG = 10;
+    public static final int ORDER_MAX_DETOUR_IN_PERCENTAGE_DISPATCHER_CONFIG = 70;
+    public static final int ORDER_MAX_WAIT_IN_MINUTES_DISPATCHER_CONFIG = 10;
+
     // FLAGS
     private static final boolean SHOULD_CREATE_DISTANCES_FILE_FLAG = true;
     private static final boolean SHOULD_INCLUDE_SCRIPT_LOGS_FLAG = false;
+
+    // TABLES
+    private static final List<String> NOT_EMPTY_TABLES = List.of("customer", "stop", "cab");
+    private static final List<String> EMPTY_TABLES = List.of("taxi_order", "leg", "route", "freetaxi_order");
+
     // GLOBAL VARIABLES
     private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
     private static int lastRegisteredTaxiDbIndex = 0;
@@ -60,14 +69,14 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
 
     @Override
     public void onStartup() {
-        executePythonScripts(getLog(), SHOULD_INCLUDE_SCRIPT_LOGS_FLAG);
+        executePythonScripts(getLog(), SHOULD_INCLUDE_SCRIPT_LOGS_FLAG, SCENARIO_NAME);
         dataBaseCommunication = new DataBaseCommunication(getLog());
-        dataBaseCommunication.checkTablesState(List.of("customer", "stop", "cab"), false);
-        dataBaseCommunication.checkTablesState(List.of("taxi_order", "leg", "route", "freetaxi_order"), true);
+        dataBaseCommunication.checkTablesState(NOT_EMPTY_TABLES, false);
+        dataBaseCommunication.checkTablesState(EMPTY_TABLES, true);
         if (SHOULD_CREATE_DISTANCES_FILE_FLAG) {
             createFileWithDistancesInMinutesBetweenStops();
         }
-        startDispatcher(getLog());
+        startDispatcher(getLog(), SCENARIO_NAME);
     }
 
     @Override
