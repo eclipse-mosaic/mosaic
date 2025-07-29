@@ -98,6 +98,9 @@ public class LocalFederationManagement implements FederationManagement {
     @Override
     public void addFederate(FederateDescriptor descriptor) throws Exception {
         this.log.info("Add ambassador/federate with id '{}'", descriptor.getId());
+
+        this.federateDescriptors.put(descriptor.getId(), descriptor);
+
         if (descriptor.isToDeployAndUndeploy()) {
             this.deployFederate(descriptor);
         }
@@ -107,7 +110,6 @@ public class LocalFederationManagement implements FederationManagement {
         }
 
         descriptor.getAmbassador().setRtiAmbassador(federation.createRtiAmbassador(descriptor.getId()));
-        this.federateDescriptors.put(descriptor.getId(), descriptor);
         this.federateAmbassadors.put(descriptor.getId(), descriptor.getAmbassador());
     }
 
