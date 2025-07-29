@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Binds docker command line options to methods.
@@ -33,6 +34,7 @@ import java.util.List;
 public class DockerCommandLine {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private long nextTimeout = 0;
 
     protected Process execCommand(String... cmd) {
         try {
@@ -53,18 +55,30 @@ public class DockerCommandLine {
      */
     private int execAndWaitForCommand(String... cmd) {
         try {
-            return execCommand(cmd).waitFor();
+            final Process p = execCommand(cmd);
+            if (nextTimeout <= 0) {
+                p.waitFor();
+            } else if (!p.waitFor(nextTimeout, TimeUnit.NANOSECONDS)) {
+                throw new DockerRuntimeException("Docker Process timed out: " + StringUtils.join(cmd, " "));
+            }
+            return p.exitValue();
         } catch (InterruptedException e) {
             throw new DockerRuntimeException("Timeout while waiting for process", e);
+        } finally {
+            nextTimeout = 0;
         }
     }
 
     private String execCommandAndRead(String... cmd) {
-        Process p = execCommand(cmd);
+        final Process p = execCommand(cmd);
         try {
-            int exitCode = p.waitFor();
+            if (nextTimeout <= 0) {
+                p.waitFor();
+            } else if (!p.waitFor(nextTimeout, TimeUnit.NANOSECONDS)) {
+                throw new DockerRuntimeException("Docker Process timed out: " + StringUtils.join(cmd, " "));
+            }
             String result = readFromProcess(p.getInputStream());
-            if (exitCode == 0) {
+            if (p.exitValue() == 0) {
                 logger.debug("Docker command result: {}", result);
                 return result;
             } else {
@@ -73,6 +87,8 @@ public class DockerCommandLine {
             }
         } catch (InterruptedException | IOException e) {
             throw new DockerRuntimeException("Could not read output from process", e);
+        } finally {
+            nextTimeout = 0;
         }
     }
 
@@ -102,7 +118,6 @@ public class DockerCommandLine {
      *
      * @param image   the docker image
      * @param options additional options for the image
-     *
      * @return the process running the docker container
      */
     public Process run(String image, List<String> options) {
@@ -120,6 +135,10 @@ public class DockerCommandLine {
         return execCommand("attach", container);
     }
 
+    public Process followLogs(String container) {
+        return execCommand("logs", "-f", container);
+    }
+
     public void kill(String containerName) {
         int exitCode = execAndWaitForCommand("kill", containerName);
         logger.info("Kill command exited with code {}.", exitCode);
@@ -132,16 +151,22 @@ public class DockerCommandLine {
     }
 
     public String status(String containerName) {
-        return execCommandAndRead("ps", "-f", "name=" + containerName, "--format", "{{.Status}}");
+        return withTimeout(TimeUnit.SECONDS.toNanos(10)).execCommandAndRead("ps", "-f", "name=" + containerName, "--format", "{{.Status}}");
     }
 
     public String port(String containerName) {
-        return execCommandAndRead("port", containerName);
+        return withTimeout(TimeUnit.SECONDS.toNanos(10)).execCommandAndRead("port", containerName);
     }
 
     private String readFromProcess(InputStream stream) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         IOUtils.copy(stream, baos);
-        return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        return baos.toString(StandardCharsets.UTF_8).stripTrailing();
     }
+
+    private DockerCommandLine withTimeout(long nanos) {
+        nextTimeout = nanos;
+        return this;
+    }
+
 }
