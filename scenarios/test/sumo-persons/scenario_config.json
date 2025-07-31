@@ -25,6 +25,7 @@
     },
     "federates": {
         "application": true,
+        "cell": true,
         "sumo": true
     }
 }

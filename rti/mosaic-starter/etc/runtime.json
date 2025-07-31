@@ -87,6 +87,7 @@
                 "ServerRegistration",
                 "TrafficLightRegistration",
                 "ChargingStationRegistration",
+                "AgentUpdates",
                 "VehicleUpdates",
                 "V2xMessageTransmission",
                 "CellularCommunicationConfiguration"
