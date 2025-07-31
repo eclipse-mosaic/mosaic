@@ -104,11 +104,11 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
         for (CEvent event : config.events) {
             Validate.notNull(event.location, "No location given for event");
             Validate.notNull(event.time, "No time window given for event");
-            Validate.notNull(event.type, "No event type description given for event");
+            Validate.notNull(event.event, "No event type description given for event");
 
             if (isInTimeFrame(event.time, time)) {
                 if (event.location.area != null) {
-                    currentEvents.add(new EnvironmentEventLocation(event.location.area, event.type.sensorType));
+                    currentEvents.add(new EnvironmentEventLocation(event.location.area, event.event.type));
                 }
             }
             if (event.time.start > time) {
@@ -163,7 +163,7 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
         for (VehicleData info : vehicleUpdates.getUpdated()) {
             final List<EnvironmentEvent> events = config.events.stream()
                     .filter(e -> isValidEvent(e, info))
-                    .map(e -> new EnvironmentEvent(e.type.sensorType, e.type.value, startTime, endTime))
+                    .map(e -> new EnvironmentEvent(e.event.type, e.event.value, startTime, endTime))
                     .toList();
 
             if (!events.isEmpty()) {
@@ -195,7 +195,7 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
      * @return true if the event is valid according to criteria above
      */
     private boolean isValidEvent(CEvent event, VehicleData vehicleData) {
-        return event.location != null && event.time != null && event.type != null
+        return event.location != null && event.time != null && event.event != null
                 && isMonitored(vehicleData.getName())
                 && isInTimeFrame(event.time, vehicleData.getTime())
                 && isInEventArea(event, vehicleData);

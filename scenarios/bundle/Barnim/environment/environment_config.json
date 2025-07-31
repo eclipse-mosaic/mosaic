@@ -1,8 +1,8 @@
 {
 	"events": [
 		{
-			"type": {
-				"sensorType": "ICE",
+			"event": {
+				"type": "ICE",
 				"value": 1
 			},
 			"location": {
