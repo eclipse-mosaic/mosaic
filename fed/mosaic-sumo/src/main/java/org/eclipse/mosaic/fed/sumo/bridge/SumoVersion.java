@@ -48,16 +48,17 @@ public enum SumoVersion {
     SUMO_1_21_x("1.21.*", TraciVersion.API_21),
     SUMO_1_22_x("1.22.*", TraciVersion.API_21),
     SUMO_1_23_x("1.23.*", TraciVersion.API_22),
+    SUMO_1_24_x("1.24.*", TraciVersion.API_22),
 
     /**
      * the lowest version supported by this client.
      */
-    LOWEST(SUMO_1_0_x.sumoVersion, SUMO_1_0_x.traciVersion),
+    LOWEST(SUMO_1_0_x),
 
     /**
      * the highest version supported by this client.
      */
-    HIGHEST(SUMO_1_23_x.sumoVersion, SUMO_1_23_x.traciVersion);
+    HIGHEST(SUMO_1_24_x);
 
     private final String sumoVersion;
     private final TraciVersion traciVersion;
@@ -69,6 +70,10 @@ public enum SumoVersion {
         this.traciVersion = traciVersion;
         this.major = Integer.parseInt(StringUtils.substringBefore(sumoVersion, "."));
         this.minor = Integer.parseInt(StringUtils.substringBetween(sumoVersion, ".", "."));
+    }
+
+    SumoVersion(SumoVersion reference) {
+        this(reference.sumoVersion, reference.traciVersion);
     }
 
     public int getApiVersion() {
