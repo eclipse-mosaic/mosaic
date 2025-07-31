@@ -3,7 +3,6 @@ package org.eclipse.mosaic.app.taxi.util;
 import org.eclipse.mosaic.fed.application.ambassador.util.UnitLogger;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
 public class ExternalFilesUtil {
@@ -18,7 +17,8 @@ public class ExternalFilesUtil {
 				.toFile();
 
 			// Create the process and set the working directory to the script folder
-			ProcessBuilder pb = new ProcessBuilder("python", "executeScripts.py", scenarioName);
+			String pythonCmd = isWindows() ? "python" : "python3";
+			ProcessBuilder pb = new ProcessBuilder(pythonCmd, "executeScripts.py", scenarioName);
 			pb.directory(scriptDir);
 			pb.redirectErrorStream(true);
 
@@ -42,27 +42,41 @@ public class ExternalFilesUtil {
 		}
 	}
 
-	// This method currently works only for a Windows system with WSL
-	public static void startDispatcher(UnitLogger unitLogger, String scenarioName) {
+	public static void startDispatcher(UnitLogger unitLogger, String scenarioName, String pathToDispatcher) {
+		if (pathToDispatcher.endsWith("/PUT/YOUR/PATH/HERE")) {
+			throw new RuntimeException("Path to dispatcher is not set");
+		}
+
 		try {
 			File log = getDispatcherLogFileInScenarioDirectory(scenarioName);
 			if (!log.exists()) {
-				log.createNewFile();
+				if (log.createNewFile()) {
+					System.out.println("Created new dispatcher log file: " + log.getAbsolutePath());
+				} else {
+					System.out.println("Dispatcher log file: " + log.getAbsolutePath());
+				}
 			}
 
-			String wslPath = "/mnt/c/Users/Kotse/VSCodeProjects/kern_Github"; // Something like /mnt/c/....
-			// WSL command to go to the project's path and run it using cargo
-			String command = String.format("cd %s && cargo run", wslPath);
-			ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "-l", "-c", command);
-			processBuilder.redirectError(log).redirectOutput(log).redirectInput(log);
+			// Shell command to go to the dispatcher project's path and run it using cargo
+			String shellCommand = String.format("cd '%s' && cargo run --release", pathToDispatcher);
 
-			Process process = processBuilder.start();
+			ProcessBuilder pb;
+
+			if (isWindows()) {
+				pb = new ProcessBuilder("wsl", "bash", "-l", "-c", shellCommand);
+			} else {
+				pb = new ProcessBuilder("bash", "-c", shellCommand);
+			}
+
+			pb.redirectError(log).redirectOutput(log).redirectInput(log);
+			Process process = pb.start();
 
 			try (RandomAccessFile reader = new RandomAccessFile(log, "r")) {
-				String line;
+				reader.seek(log.length());
+				System.out.println("Waiting for dispatcher to start");
 
 				while(true) {
-					line = reader.readLine();
+					String line = reader.readLine();
 
 					if (line == null) {
 						// No new line, wait a bit
@@ -70,10 +84,8 @@ public class ExternalFilesUtil {
 						continue;
 					}
 
-					String decodedLine = new String(line.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-					System.out.println(decodedLine);
-					if (decodedLine.contains("Starting up with config")) {
-						reader.close();
+					if (line.contains("Starting up with config")) {
+						System.out.println("Dispatcher has started!");
 						break;
 					}
 				}
@@ -81,7 +93,10 @@ public class ExternalFilesUtil {
 
 			Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
 		} catch (IOException | InterruptedException e) {
-			unitLogger.error("Failed to execute in WSL: {}", e.getMessage());
+			unitLogger.error("Failed to execute the bash command: {}", e.getMessage());
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		}
 	}
 
@@ -93,5 +108,9 @@ public class ExternalFilesUtil {
 			.resolve(scenarioName) // Change this for other scenarios
 			.resolve("dispatcher.log")
 			.toFile();
+	}
+
+	private static boolean isWindows() {
+		return System.getProperty("os.name").toLowerCase().contains("win");
 	}
 }
