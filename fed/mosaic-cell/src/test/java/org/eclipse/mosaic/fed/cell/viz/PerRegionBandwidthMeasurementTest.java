@@ -69,7 +69,9 @@ public class PerRegionBandwidthMeasurementTest {
 
     @After
     public void tearDown() {
-        measurement.finish();
+        if (measurement != null) {
+            measurement.finish();
+        }
     }
 
     @Test
@@ -192,6 +194,8 @@ public class PerRegionBandwidthMeasurementTest {
         assertNumberOfLinesInExportedCsv(3001);
 
         measurement.finish();
+        measurement = null;
+
         assertNumberOfLinesInExportedCsv(3606);
         assertExportedCsvFile();
     }
@@ -210,6 +214,7 @@ public class PerRegionBandwidthMeasurementTest {
         sendNMessages(1790, 10);
         sendNMessages(3600, 1);
         measurement.finish();
+        measurement = null;
 
         // ASSERT
         InputStream gzippedTargetStream =
