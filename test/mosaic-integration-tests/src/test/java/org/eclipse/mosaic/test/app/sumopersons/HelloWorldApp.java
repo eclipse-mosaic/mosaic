@@ -32,6 +32,8 @@ public class HelloWorldApp extends AbstractApplication<AgentOperatingSystem> {
     public void onStartup() {
         getLog().infoSimTime(this, "Hello World!");
         sample();
+
+        getOs().getCellModule().enable();
     }
 
     @Override
