@@ -179,9 +179,7 @@ public class SimulationFacade {
         this.bridge = bridge;
         this.sumoConfiguration = sumoConfiguration;
 
-        SimulationSetOrder setOrder = bridge.getCommandRegister().getOrCreate(SimulationSetOrder.class);
         try {
-            setOrder.execute(bridge, 1);
             this.simulateStep = bridge.getCommandRegister().getOrCreate(SimulationSimulateStep.class);
         } catch (Exception e) {
             throw new RuntimeException(e);

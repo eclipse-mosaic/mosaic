@@ -17,6 +17,8 @@ package org.eclipse.mosaic.fed.sumo.bridge;
 
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationClose;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetVersion;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSetOrder;
+import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSimulateStep;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationTraciRequest;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.PersonFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.PoiFacade;
@@ -108,6 +110,12 @@ public class TraciClientBridge implements Bridge {
             // tests the connection to SUMO by calling GetVersion before continuing to setup other commands
             new org.eclipse.mosaic.fed.sumo.bridge.traci.SimulationGetVersion().execute(this);
         } catch (InternalFederateException | CommandException e) {
+            throw new IOException("Could not load establish connection to SUMO due to an unknown error.", e);
+        }
+
+        try {
+            new org.eclipse.mosaic.fed.sumo.bridge.traci.SimulationSetOrder().execute(this, 1);
+        } catch (Exception e) {
             throw new IOException("Could not load establish connection to SUMO due to an unknown error.", e);
         }
 
