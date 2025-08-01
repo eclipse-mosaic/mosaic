@@ -43,7 +43,7 @@ public class TrafficLightIndex {
 
     private KdTree<TrafficLightObject> trafficLightTree;
 
-    private SpatialTreeTraverser.InRadius<TrafficLightObject> treeTraverser;
+    private final SpatialTreeTraverser.InRadius<TrafficLightObject> treeTraverser;
 
     private boolean triggerNewTree = false;
 
@@ -86,7 +86,7 @@ public class TrafficLightIndex {
         String trafficLightGroupId = trafficLightGroup.getGroupId();
         trafficLightGroup.getTrafficLights().forEach(
                 (trafficLight) -> {
-                    String trafficLightId = calculateTrafficLightId(trafficLightGroupId, trafficLight.getId());
+                    String trafficLightId = calculateTrafficLightId(trafficLightGroupId, trafficLight.getIndex());
                     if (SimulationKernel.SimulationKernel.getCentralPerceptionComponent().getScenarioBounds()
                             .contains(trafficLight.getPosition().toCartesian())) { // check if inside bounding area
                         indexedTrafficLights.computeIfAbsent(trafficLightId, TrafficLightObject::new)
@@ -120,6 +120,9 @@ public class TrafficLightIndex {
         );
     }
 
+    /**
+     * This is used as a workaround to get a unique id for each traffic light signal, by combining the group id with the index
+     */
     private String calculateTrafficLightId(String trafficLightGroupId, int trafficLightIndex) {
         return trafficLightGroupId + "_" + trafficLightIndex;
     }
