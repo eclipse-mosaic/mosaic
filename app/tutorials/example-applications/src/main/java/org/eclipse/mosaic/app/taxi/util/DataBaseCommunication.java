@@ -7,6 +7,7 @@ import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.eclipse.mosaic.app.taxi.ExampleTaxiDispatchingServer.*;
 import static org.eclipse.mosaic.app.taxi.util.Constants.*;
@@ -52,7 +53,8 @@ public class DataBaseCommunication {
 		try {
 			for (String tableName : tableNames) {
 				PreparedStatement checkCustomerTable = dbConnection.prepareStatement(
-					"SELECT 1 FROM %s LIMIT 1".formatted(tableName));
+					"SELECT 1 FROM ? LIMIT 1");
+				checkCustomerTable.setString(1, tableName);
 				ResultSet checkQueryResult = checkCustomerTable.executeQuery();
 				if (shouldTableBeEmpty) {
 					if (checkQueryResult.next()) {
@@ -74,10 +76,17 @@ public class DataBaseCommunication {
 
 	public void markOrdersAsAccepted(List<String> orderIds) {
 		try {
-			PreparedStatement updateOrders = dbConnection.prepareStatement(
-				"UPDATE taxi_order SET status = ? WHERE id IN (%s)".formatted(String.join(COMMA_DELIMITER, orderIds))
-			);
+			String sql = "UPDATE taxi_order SET status = ? WHERE id IN (%s)";
+			String placeholders = sql.formatted(orderIds.stream()
+				.map(id -> "?")
+				.collect(Collectors.joining(COMMA_DELIMITER)));
+			sql = sql.formatted(placeholders);
+
+			PreparedStatement updateOrders = dbConnection.prepareStatement(sql);
 			updateOrders.setInt(1, DISPATCHER_ACCEPTED_ORDER_STATUS);
+			for (int i = 1; i <= orderIds.size(); i++) {
+				updateOrders.setString(i + 1, orderIds.get(i - 1));
+			}
 
 			if (updateOrders.executeUpdate() != orderIds.size()) {
 				throw new RuntimeException("Not all order statuses were set to 'ACCEPTED'!");
@@ -384,7 +393,6 @@ public class DataBaseCommunication {
 				insertReservations.setLong(8, parsePerson(reservation.getPersonList()));
 				insertReservations.setLong(9, Long.parseLong(reservation.getId()));
 				insertReservations.addBatch();
-				insertReservations.clearParameters();
 			}
 
 			int[] insertedReservationsResults = insertReservations.executeBatch();
