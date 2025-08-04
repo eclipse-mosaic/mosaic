@@ -17,8 +17,6 @@ package org.eclipse.mosaic.fed.sumo.bridge;
 
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationClose;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetVersion;
-import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSetOrder;
-import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSimulateStep;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationTraciRequest;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.PersonFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.PoiFacade;
@@ -26,6 +24,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.facades.RouteFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.SimulationFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.TrafficLightFacade;
 import org.eclipse.mosaic.fed.sumo.bridge.facades.VehicleFacade;
+import org.eclipse.mosaic.fed.sumo.bridge.traci.SimulationSetOrder;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.lib.objects.traffic.SumoTraciResult;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
@@ -114,7 +113,7 @@ public class TraciClientBridge implements Bridge {
         }
 
         try {
-            new org.eclipse.mosaic.fed.sumo.bridge.traci.SimulationSetOrder().execute(this, 1);
+            new org.eclipse.mosaic.fed.sumo.bridge.traci.SimulationSetOrder().execute(this, sumoConfiguration.simulationClientOrder);
         } catch (Exception e) {
             throw new IOException("Could not load establish connection to SUMO due to an unknown error.", e);
         }

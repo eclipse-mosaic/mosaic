@@ -3,7 +3,7 @@
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.eclipse.mosaic.starter.MosaicStarter" />
     <module name="mosaic-starter" />
-    <option name="PROGRAM_PARAMETERS" value="-c ../../scenarios/bundle/HelloWorld/scenario_config.json -w 0" />
+    <option name="PROGRAM_PARAMETERS" value="-c ../../scenarios/bundle/HelloWorld/scenario_config.json" />
     <option name="WORKING_DIRECTORY" value="$MODULE_WORKING_DIR$" />
     <extension name="coverage">
       <pattern>

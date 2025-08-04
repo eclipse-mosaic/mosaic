@@ -22,7 +22,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.Status;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandSimulationControl;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
-public class SimulationSetOrder extends AbstractTraciCommand<Void> implements org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSetOrder {
+public class SimulationSetOrder extends AbstractTraciCommand<Void> {
 
 
     @SuppressWarnings("WeakerAccess")
@@ -34,7 +34,6 @@ public class SimulationSetOrder extends AbstractTraciCommand<Void> implements or
                 .writeIntParam();
     }
 
-    @Override
     public void execute(Bridge bridge, int order) throws CommandException, InternalFederateException {
         super.execute(bridge, order);
     }

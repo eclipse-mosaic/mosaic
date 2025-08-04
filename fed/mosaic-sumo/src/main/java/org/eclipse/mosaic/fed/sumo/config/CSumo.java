@@ -93,6 +93,14 @@ public class CSumo implements Serializable {
     public boolean debugTraciCalls = false;
 
     /**
+     * This parameter can be used to handle multiple SUMO clients at a time.
+     * Typically, MOSAIC will start the SUMO simulation and then connect to it as the first client,
+     *  hence the default value of {@code 1}. For further information read this SUMO documentation
+     *  {@see https://sumo.dlr.de/docs/TraCI/Control-related_commands.html#command_0x03_setorder} and consult MOSAIC's documentation.
+     */
+    public int simulationClientOrder = 1;
+
+    /**
      * A optional list of subscriptions for each vehicle in the simulation. The less subscriptions given,
      * the faster the simulation. Per default (if this list is set to null), all subscriptions are activated.
      * Please note, that some components expect specific information, such as the road position. If those information
