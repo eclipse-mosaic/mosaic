@@ -113,7 +113,7 @@ public class TraciClientBridge implements Bridge {
         }
 
         try {
-            new org.eclipse.mosaic.fed.sumo.bridge.traci.SimulationSetOrder().execute(this, sumoConfiguration.simulationClientOrder);
+            new SimulationSetOrder().execute(this, sumoConfiguration.simulationClientOrder);
         } catch (Exception e) {
             throw new IOException("Could not load establish connection to SUMO due to an unknown error.", e);
         }
