@@ -17,7 +17,9 @@ RUN \
     python3 \
     python-is-python3 \
     unzip \
-    wget
+    wget \
+    curl && \
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
 WORKDIR /home/mosaic/bin/fed/omnetpp
 
@@ -27,7 +29,7 @@ RUN \
     ls -all && \
     ./omnet_installer.sh -q -t USER && \
     mkdir -p omnetpp-federate/simulations && \
-    chmod -R 755 inet omnetpp-5.5.1 && \
+    chmod -R 755 inet omnetpp-6.1 && \
     chmod -R 777 omnetpp-federate
 
 EXPOSE 40001 40002
