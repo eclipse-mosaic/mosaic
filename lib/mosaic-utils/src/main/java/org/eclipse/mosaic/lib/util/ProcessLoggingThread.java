@@ -79,7 +79,10 @@ public class ProcessLoggingThread extends Thread {
     @Override
     public void run() {
         if (closed) {
-            throw new IllegalStateException("ProcessLoggingThread cannot be started twice.");
+            throw new IllegalStateException("ProcessLoggingThread cannot be run another time.");
+        }
+        if (started) {
+            throw new IllegalStateException("ProcessLoggingThread is already running.");
         }
         started = true;
         flushLog(this.stream);
