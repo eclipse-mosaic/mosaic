@@ -15,11 +15,11 @@ RUN \
     protobuf-compiler \
     libxml2-dev \
     python3 \
+    python3-pip \
+    python3.10-venv \
     python-is-python3 \
     unzip \
-    wget \
-    curl && \
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    wget
 
 WORKDIR /home/mosaic/bin/fed/omnetpp
 

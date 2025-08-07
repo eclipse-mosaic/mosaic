@@ -44,7 +44,7 @@ set -o pipefail
 trap clean_up INT
 
 # Required programs and libraries
-required_programs=(unzip tar bison flex protoc gcc python uv)
+required_programs=(unzip tar bison flex protoc gcc python)
 required_libraries=("libprotobuf-dev >= 3.7.0" "libxml2-dev" "python3-dev")
 
 omnet_federate_url="https://github.com/hoelger/omnetpp-federate/archive/refs/heads/1034-update-omnet-to-newest-version.zip"
@@ -812,11 +812,11 @@ configure_omnet() {
   progress "Configuring OMNeT++..."
   cd "${omnetpp_src_dir}"
   info "Using source directory: ${omnetpp_src_dir}"
-  uv venv
-  uv pip install -r python/requirements.txt
+  python -m venv .venv
   set +o nounset
   source setenv
   set -o nounset
+  python -m pip install -r python/requirements.txt
   sed -i -e "s/PREFER_CLANG=yes/PREFER_CLANG=no/" configure.user
   # sed -i -e "s/#CXXFLAGS=-std=c++17/CXXFLAGS=-std=c++17/" configure.user
   ./configure WITH_OSG=no WITH_TKENV=no WITH_QTENV=no WITH_OSGEARTH=no WITH_PARSIM=no
@@ -858,10 +858,9 @@ extract_inet() {
 
 configure_inet() {
   progress "Configuring INET ..."
-  cd "${omnetpp_src_dir}"
-
   # Temporarily disable nounset before sourcing setenv
   set +o nounset
+  cd "${omnetpp_src_dir}"
   source setenv
   cd "${inet_src_dir}"
   source setenv
