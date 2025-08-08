@@ -19,7 +19,8 @@ RUN \
     python3.10-venv \
     python-is-python3 \
     unzip \
-    wget
+    wget \
+    pkg-config
 
 WORKDIR /home/mosaic/bin/fed/omnetpp
 
