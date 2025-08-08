@@ -1,0 +1,58 @@
+{
+    "prototypes": [
+        {
+            "name": "Car",
+            "accel": 1.5,
+            "decel": 4.5,
+            "length": 5.00,
+            "maxSpeed": 10.0,
+            "minGap": 2.5,
+            "sigma": 0.5,
+            "tau": 1,
+            "color": "red"
+        }
+    ],
+    "trafficLights": [
+        {
+            "name": "TrafficLight",
+            "tlGroupId": "26704448",
+            "applications": [
+                "org.eclipse.mosaic.test.app.networking.TrafficLightRxCellApp"
+            ]
+        }
+    ],
+    "rsus": [
+        {
+            "name": "RSU",
+            "position": {
+                "latitude": 52.513060766781614,
+                "longitude": 13.32891047000885
+            },
+            "applications": [
+                "org.eclipse.mosaic.test.app.networking.RsuRxCellApp"
+            ]
+        }
+    ],
+    "servers": [
+        {
+            "name": "Server",
+            "group": "PerfectTransmissionServer",
+            "applications": [ "org.eclipse.mosaic.test.app.networking.ServerRxCellApp" ]
+        }
+    ],
+    "vehicles": [
+        {
+            "startingTime": "1.0 s",
+            "route": "0",
+            "maxNumberVehicles": 1,
+            "types": [
+                {
+                    "name": "Car",
+                    "applications": [
+                        "org.eclipse.mosaic.test.app.networking.CarTxCellApp(\"10.5.0.1\")"
+                    ]
+                }
+            ]
+        }
+    ]
+}
