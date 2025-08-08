@@ -1,9 +1,9 @@
 {
     "events": [
         {
-            "type": {
-                "sensorType": "OBSTACLE",
-                "value": 1
+            "event": {
+                "type": "EVENT",
+                "value": "ROADWORKS"
             },
             "location": {
                 "area": {
@@ -21,9 +21,9 @@
             }
         },
         {
-            "type": {
-                "sensorType": "OBSTACLE",
-                "value": 1
+            "event": {
+                "type": "EVENT",
+                "value": "OBSTACLE_ON_ROAD"
             },
             "location": {
                 "area": {
@@ -41,8 +41,8 @@
             }
         },
         {
-            "type": {
-                "sensorType": "ICE",
+            "event": {
+                "type": "ICE",
                 "value": 1
             },
             "location": {

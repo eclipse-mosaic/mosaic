@@ -18,11 +18,12 @@ package org.eclipse.mosaic.app.tutorial;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 import org.eclipse.mosaic.rti.TIME;
 
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -48,7 +49,8 @@ public class SlowDownApp extends AbstractApplication<VehicleOperatingSystem> imp
 
     @Override
     public void onVehicleUpdated(@Nullable VehicleData previousVehicleData, @Nonnull VehicleData updatedVehicleData) {
-        SensorType[] types = SensorType.values();
+        // List of sensors which indicate a hazardous situation
+        List<Sensor<Integer>> hazardSensors = List.of(Sensor.ICE, Sensor.FOG, Sensor.SNOW);
 
         // Initialize sensor strength
         int strength = 0;
@@ -58,9 +60,9 @@ public class SlowDownApp extends AbstractApplication<VehicleOperatingSystem> imp
          * If one is higher than zero, we reason that we are in a hazardous area with the
          * given hazard.
          */
-        for (SensorType currentType : types) {
+        for (Sensor<Integer> hazardSensor : hazardSensors) {
             // The strength of a detected sensor
-            strength = getOs().getBasicSensorModule().getStrengthOf(currentType);
+            strength = getOs().getBasicSensorModule().getSensorValue(hazardSensor).orElse(0);
 
             if (strength > 0) {
                 break;
