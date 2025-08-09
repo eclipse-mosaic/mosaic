@@ -16,10 +16,7 @@
 package org.eclipse.mosaic.lib.docker;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,8 +34,6 @@ public class DockerClient {
 
     private final DockerCommandLine docker;
     private final Vector<DockerContainer> runningContainers = new Vector<>();
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public DockerClient() {
         this(new DockerCommandLine());
@@ -84,19 +79,17 @@ public class DockerClient {
             docker.rm(containerName);
         }
 
-        final Process p;
-        if ("true".equals(System.getProperty("mosaic.docker.no-detach", SystemUtils.IS_OS_WINDOWS ? "true" : "false"))) {
-            logger.info("Starting container without detaching.");
-            p = docker.run(image, options);
-        } else {
-            String exitMessage = docker.runAndDetach(image, options);
-            logger.info("Container was started with message {}", exitMessage);
-            p = docker.attach(containerName);
-        }
+        // run and detach ...
+        docker.runAndDetach(image, options);
 
+        // ..., so we can wait until it's up running
         waitUntilRunning(containerName, DOCKER_RUN_TIMEOUT_MILLISECONDS);
 
-        List<Pair<Integer, Integer>> portBindings = readPortBinding(containerName);
+        // when container is up running, catch and follow output of container
+        final Process p = docker.followLogs(containerName);
+
+        // grab the dynamic port bindings for connecting to the processes inside the container
+        final List<Pair<Integer, Integer>> portBindings = readPortBinding(containerName);
 
         final DockerContainer container = new DockerContainer(image, containerName, portBindings);
         container.appendProcess(p);
