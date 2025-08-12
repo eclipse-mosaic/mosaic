@@ -44,7 +44,8 @@
                     "description": "Used for assigning a value to the event. It can be used as the strength of an event, the road surface quality, or the name of a specific event cause, etc.",
                     "anyOf": [
                         { "type": "string", "maxLength": 30 },
-                        { "type": "number", "minimum": 0 }
+                        { "type": "number", "minimum": 0 },
+                        { "type":  "object" }
                     ]
                 }
             }

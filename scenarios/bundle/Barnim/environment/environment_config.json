@@ -2,8 +2,8 @@
 	"events": [
 		{
 			"event": {
-				"type": "ICE",
-				"value": 1
+				"type": "TRACTION_HAZARD",
+				"value": "ICE"
 			},
 			"location": {
 				"area": {

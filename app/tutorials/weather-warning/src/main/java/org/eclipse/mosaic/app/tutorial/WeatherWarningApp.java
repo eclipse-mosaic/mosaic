@@ -30,6 +30,7 @@ import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.environment.Sensor;
+import org.eclipse.mosaic.lib.enums.TractionHazard;
 import org.eclipse.mosaic.lib.objects.v2x.MessageRouting;
 import org.eclipse.mosaic.lib.objects.v2x.V2xMessage;
 import org.eclipse.mosaic.lib.objects.v2x.etsi.Denm;
@@ -44,7 +45,6 @@ import org.eclipse.mosaic.lib.routing.util.ReRouteSpecificConnectionsCostFunctio
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import java.awt.Color;
-import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -140,28 +140,18 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
 
 
     /**
-     * This method is used to request new data from the sensors and, in case of new data, react on it.
+     * This method is used to request new data from the traction sensor and, in case of new data, react on it.
      */
     private void detectSensors() {
 
-        List<Sensor<Integer>> hazardSensors = List.of(Sensor.ICE, Sensor.FOG, Sensor.SNOW);
-        /*
-         * The current strength of each environment sensor is examined here.
-         * If one is higher than zero, we reason that we are in a hazardous area with the
-         * given hazard.
-         */
-        for (Sensor<Integer> hazardSensor : hazardSensors) {
+        TractionHazard tractionHazard = getOs().getBasicSensorModule().getSensorValue(Sensor.TRACTION_HAZARD).orElse(null);
 
-            // The strength of a detected sensor
-            int strength = getOs().getBasicSensorModule().getSensorValue(hazardSensor).orElse(0);
+        if (tractionHazard != null) {
+            getLog().infoSimTime(this, "Traction sensor event of type {} detected", tractionHazard);
 
-            if (strength > 0) {
-                getLog().infoSimTime(this, "Sensor {} event of strength {} detected", hazardSensor.getName(), strength);
-
-                // Method which is called to react on new or changed environment events
-                reactOnAdverseWeatherCondition();
-                return; // the early exit discards other possible environmental warnings, ok for this tutorial purpose
-            }
+            // Method which is called to react on new or changed environment events
+            reactOnTractionHazard();
+            return; // the early exit discards other possible environmental warnings, ok for this tutorial purpose
         }
 
         getLog().debugSimTime(this, "No Sensor/Event detected");
@@ -173,7 +163,7 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
      * detected event. Later on all information is filled into a new
      * DEN Message and will be sent.
      */
-    private void reactOnAdverseWeatherCondition() {
+    private void reactOnTractionHazard() {
         // failsafe
         if (getOs().getVehicleData() == null) {
             getLog().infoSimTime(this, "No vehicleInfo given, skipping.");
@@ -216,7 +206,7 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
          * of the sending node, the geo position of the sending node, warning type and event strength.
          */
         Denm denm = new Denm(mr, new DenmContent(
-                getOs().getSimulationTime(), vehicleLongLat, roadId, EnvironmentEventCause.ADVERSE_WEATHER_CONDITION,
+                getOs().getSimulationTime(), vehicleLongLat, roadId, EnvironmentEventCause.ADVERSE_WEATHER_CONDITION_ADHESION,
                 SPEED, 0.0f, vehicleLongLat, null, null
         ), 200);
         getLog().infoSimTime(this, "Sending DENM");

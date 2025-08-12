@@ -18,6 +18,7 @@ package org.eclipse.mosaic.app.tutorial;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
+import org.eclipse.mosaic.lib.enums.TractionHazard;
 import org.eclipse.mosaic.lib.objects.environment.Sensor;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
@@ -29,9 +30,9 @@ import javax.annotation.Nullable;
 
 /**
  * This application shall induce vehicles to slow down in hazardous environments.
- * In onVehicleUpdated() the application requests new data from a vehicle's
- * sensors and analyzes the data with respect to strength after every single update.
- * Once a sensor indicates that a certain vehicle has entered a potentially
+ * In onVehicleUpdated() the application requests new data from the vehicle's
+ * traction hazard sensor and analyzes the result with every movement update.
+ * Once the sensor indicates that a certain vehicle has entered a potentially
  * hazardous area, the application will reduce the speed of the respective vehicle
  * within a specified time frame. After the respective vehicle has left the dangerous
  * zone, its speed will no longer be reduced.
@@ -49,33 +50,20 @@ public class SlowDownApp extends AbstractApplication<VehicleOperatingSystem> imp
 
     @Override
     public void onVehicleUpdated(@Nullable VehicleData previousVehicleData, @Nonnull VehicleData updatedVehicleData) {
-        // List of sensors which indicate a hazardous situation
-        List<Sensor<Integer>> hazardSensors = List.of(Sensor.ICE, Sensor.FOG, Sensor.SNOW);
-
-        // Initialize sensor strength
-        int strength = 0;
 
         /*
-         * The current strength of each environment sensor is examined here.
-         * If one is higher than zero, we reason that we are in a hazardous area with the
-         * given hazard.
+         * The current strength of the traction hazard sensor is examined here.
+         * If a traction hazard event is detected, we initiate a slowdown of the vehicle.
          */
-        for (Sensor<Integer> hazardSensor : hazardSensors) {
-            // The strength of a detected sensor
-            strength = getOs().getBasicSensorModule().getSensorValue(hazardSensor).orElse(0);
+        TractionHazard tractionHazard = getOs().getBasicSensorModule().getSensorValue(Sensor.TRACTION_HAZARD).orElse(null);
 
-            if (strength > 0) {
-                break;
-            }
-        }
-
-        if (strength > 0 && !hazardousArea) {
+        if (tractionHazard != null && !hazardousArea) {
             // Reduce speed when entering potentially hazardous area
             getOs().changeSpeedWithInterval(SPEED, 5 * TIME.SECOND);
             hazardousArea = true;
         }
 
-        if (strength == 0 && hazardousArea) {
+        if (tractionHazard == null && hazardousArea) {
             // Reset speed when leaving potentially hazardous area
             getOs().resetSpeed();
             hazardousArea = false;

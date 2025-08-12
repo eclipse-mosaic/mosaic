@@ -30,6 +30,7 @@ import org.eclipse.mosaic.fed.application.ambassador.util.UnitLogger;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.fed.application.app.api.perception.BasicSensorModule;
 import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
+import org.eclipse.mosaic.lib.enums.TractionHazard;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 import org.eclipse.mosaic.lib.objects.addressing.AdHocMessageRoutingBuilder;
 import org.eclipse.mosaic.lib.objects.addressing.SourceAddressContainer;
@@ -93,7 +94,7 @@ public class WeatherWarningAppTest {
         app.setUp(operatingSystem, log);
 
         // set sensor data
-        setSensor(Sensor.ICE, 10);
+        setSensor(Sensor.TRACTION_HAZARD, TractionHazard.ICE);
         // setup position of vehicle to inflict sending of V2xMessage
         setupVehiclePosition();
         // setup message routing
@@ -125,7 +126,7 @@ public class WeatherWarningAppTest {
         verify(operatingSystem.getNavigationModule()).switchRoute(any());
     }
 
-    private void setSensor(Sensor<Integer> sensor, int value) {
+    private  <T> void setSensor(Sensor<T> sensor, T value) {
         when(operatingSystem.getBasicSensorModule().getSensorValue(same(sensor))).thenReturn(Optional.of(value));
     }
 
@@ -171,7 +172,7 @@ public class WeatherWarningAppTest {
 
     private boolean assertDenm(Denm denm) {
         assertEquals(25 / 3.6f, denm.getCausedSpeed(), 0.1f);
-        assertEquals(EnvironmentEventCause.ADVERSE_WEATHER_CONDITION, denm.getEventCause());
+        assertEquals(EnvironmentEventCause.ADVERSE_WEATHER_CONDITION_ADHESION, denm.getEventCause());
         return true;
     }
 

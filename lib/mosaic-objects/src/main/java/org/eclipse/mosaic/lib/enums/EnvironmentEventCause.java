@@ -15,6 +15,10 @@
 
 package org.eclipse.mosaic.lib.enums;
 
+import org.apache.commons.lang3.StringUtils;
+
+import javax.annotation.Nullable;
+
 /**
  * An {@link EnvironmentEventCause} can be used to inform others about the reason for a specific hazardous event, such
  * as an obstacle on the road, a roadworks area, a bad weather condition, and more. Inspired by CauseCodeType from ETSI DENM.
@@ -27,7 +31,8 @@ public enum EnvironmentEventCause {
     ACCIDENT(2),
     ROADWORKS(3),
     OBSTACLE_ON_ROAD(10),
-    ADVERSE_WEATHER_CONDITION(6),
+    ADVERSE_WEATHER_CONDITION_ADHESION(6),
+    ADVERSE_WEATHER_CONDITION_VISIBILITY(18),
     SLOW_VEHICLE(26),
     VEHICLE_BREAKDOWN(91),
     EMERGENCY_VEHICLE_APPROACHING(95),
@@ -62,5 +67,18 @@ public enum EnvironmentEventCause {
             }
         }
         throw new IllegalArgumentException("Unknown SensorType id " + id);
+    }
+
+    public static @Nullable EnvironmentEventCause fromObject(@Nullable Object o) {
+        if (o == null) {
+            return null;
+        } else if (o instanceof EnvironmentEventCause cause) {
+            return cause;
+        } else if (o instanceof String string) {
+            return EnvironmentEventCause.valueOf(StringUtils.upperCase(string));
+        } else if (o instanceof Number number) {
+            return EnvironmentEventCause.fromId(number.intValue());
+        }
+        throw new IllegalArgumentException("Could not translate object of type " + o.getClass() + " to EventCause.");
     }
 }
