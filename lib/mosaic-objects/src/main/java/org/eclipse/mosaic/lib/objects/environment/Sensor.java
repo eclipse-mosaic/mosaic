@@ -16,12 +16,11 @@
 package org.eclipse.mosaic.lib.objects.environment;
 
 import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
+import org.eclipse.mosaic.lib.enums.TractionHazard;
+import org.eclipse.mosaic.lib.enums.VisibilityHazard;
 import org.eclipse.mosaic.lib.util.ConversionUtils;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /**
  * An environment sensor used to return values or objects which have been configured for specific areas. Currently, solely used by
@@ -33,29 +32,24 @@ import javax.annotation.Nullable;
 public class Sensor<T> {
 
     /**
-     * A sensor that senses "FOG" in an area, with user-defined amount/level of fog (0 = no fog).
-     */
-    public final static Sensor<Integer> FOG = new Sensor<>("FOG", ConversionUtils::toInteger);
-
-    /**
-     * A sensor that senses "ICE" in an area, with user-defined amount/level of ice (0 = no ice).
-     */
-    public final static Sensor<Integer> ICE = new Sensor<>("ICE", ConversionUtils::toInteger);
-
-    /**
-     * A sensor that senses "SNOW" in an area, with user-defined amount/level of snow (0 = no snow).
-     */
-    public final static Sensor<Integer> SNOW = new Sensor<>("SNOW", ConversionUtils::toInteger);
-
-    /**
-     * A sensor that senses "RAIN" in an area, with user-defined amount/level of rain (0 = no rain).
-     */
-    public final static Sensor<Integer> RAIN = new Sensor<>("RAIN", ConversionUtils::toInteger);
-
-    /**
      * A sensor that senses a specific "TEMPERATURE" in an area, with user-defined temperature (double).
      */
     public final static Sensor<Double> TEMPERATURE = new Sensor<>("TEMPERATURE", ConversionUtils::toDouble);
+
+    /**
+     * A sensor that senses properties of wind (direction and wind speed), not including airflow experienced from driving.
+     */
+    public final static Sensor<Wind> WIND = new Sensor<>("WIND", Wind::fromObject);
+
+    /**
+     * A sensor that senses a hazard resulting in reduced visibility, caused by rain, snow, fog, or dust.
+     */
+    public final static Sensor<VisibilityHazard> VISIBILITY_HAZARD = new Sensor<>("VISIBILITY_HAZARD", VisibilityHazard::fromObject);
+
+    /**
+     * A sensor that senses a hazard regarding vehicle traction, caused by icy roads, aqua planning, snow or mud.
+     */
+    public final static Sensor<TractionHazard> TRACTION_HAZARD = new Sensor<>("TRACTION_HAZARD", TractionHazard::fromObject);
 
     /**
      * A sensor that senses the condition of the road-surface (e.g., IRI).
@@ -65,7 +59,7 @@ public class Sensor<T> {
     /**
      * A sensor that senses hazardous events of a specific {@link EnvironmentEventCause}.
      */
-    public final static Sensor<EnvironmentEventCause> EVENT = new Sensor<>("EVENT", Sensor::toEventCause);
+    public final static Sensor<EnvironmentEventCause> EVENT = new Sensor<>("EVENT", EnvironmentEventCause::fromObject);
 
     private final String name;
     private final Function<Object, T> translator;
@@ -99,19 +93,6 @@ public class Sensor<T> {
      */
     public T translate(Object value) {
         return translator.apply(value);
-    }
-
-    private static @Nullable EnvironmentEventCause toEventCause(@Nullable Object o) {
-        if (o == null) {
-            return null;
-        } else if (o instanceof EnvironmentEventCause) {
-            return (EnvironmentEventCause) o;
-        } else if (o instanceof String) {
-            return EnvironmentEventCause.valueOf(StringUtils.upperCase(((String) o)));
-        } else if (o instanceof Number) {
-            return EnvironmentEventCause.fromId(((Number) o).intValue());
-        }
-        throw new IllegalArgumentException("Could not translate object of type " + o.getClass() + " to EventCause.");
     }
 }
 

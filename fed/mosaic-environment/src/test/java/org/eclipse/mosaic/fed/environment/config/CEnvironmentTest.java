@@ -28,6 +28,7 @@ import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.geo.GeoRectangle;
 import org.eclipse.mosaic.lib.objects.environment.Sensor;
+import org.eclipse.mosaic.lib.enums.TractionHazard;
 import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
 import org.eclipse.mosaic.rti.TIME;
 
@@ -99,8 +100,8 @@ public class CEnvironmentTest {
         );
         assertEventDeserialization(
                 eventGeoCircle,
-                Sensor.ICE,
-                5,
+                Sensor.TRACTION_HAZARD,
+                TractionHazard.ICE,
                 eventGeoCircleExpectedLocation,
                 null,
                 0,
