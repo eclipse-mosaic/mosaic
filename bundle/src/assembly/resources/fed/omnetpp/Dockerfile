@@ -15,9 +15,12 @@ RUN \
     protobuf-compiler \
     libxml2-dev \
     python3 \
+    python3-pip \
+    python3.10-venv \
     python-is-python3 \
     unzip \
-    wget
+    wget \
+    pkg-config
 
 WORKDIR /home/mosaic/bin/fed/omnetpp
 
@@ -27,7 +30,7 @@ RUN \
     ls -all && \
     ./omnet_installer.sh -q -t USER && \
     mkdir -p omnetpp-federate/simulations && \
-    chmod -R 755 inet omnetpp-5.5.1 && \
+    chmod -R 755 inet omnetpp-6.1 && \
     chmod -R 777 omnetpp-federate
 
 EXPOSE 40001 40002

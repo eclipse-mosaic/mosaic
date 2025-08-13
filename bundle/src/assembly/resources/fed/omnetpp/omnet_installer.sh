@@ -19,22 +19,16 @@
 # Ensure this file is executable via chmod a+x omnet_installer.
 #
 
-
 # ----------------------------------------
 #
 # Pre Tests
 #
 # ----------------------------------------
 
-check_shell() {
-   if [ -z "$BASH_VERSION" ]; then
-      fail "This script requires the BASH shell"
-      exit 1
-   fi
-}
-
-check_shell
-
+if [ -z "$BASH_VERSION" ]; then
+  fail "This script requires the BASH shell"
+  exit 1
+fi
 
 # ----------------------------------------
 #
@@ -42,13 +36,20 @@ check_shell
 #
 # ----------------------------------------
 
-# Required programs and libraries
-required_programs=( unzip tar bison flex protoc gcc python )
-required_libraries=( "libprotobuf-dev >= 3.7.0" "libxml2-dev" )
+umask 027
+set -o nounset
+set -o errtrace
+set -o errexit
+set -o pipefail
+trap clean_up INT
 
-omnet_federate_url="https://github.com/mosaic-addons/omnetpp-federate/archive/refs/tags/25.0.zip"
-omnet_src_url="https://github.com/omnetpp/omnetpp/releases/download/omnetpp-5.5.1/omnetpp-5.5.1-src-linux.tgz"
-inet_src_url="https://github.com/inet-framework/inet/releases/download/v4.1.1/inet-4.1.1-src.tgz"
+# Required programs and libraries
+required_programs=(unzip tar bison flex protoc gcc python)
+required_libraries=("libprotobuf-dev >= 3.7.0" "libxml2-dev" "python3-dev")
+
+omnet_federate_url="https://github.com/mosaic-addons/omnetpp-federate/archive/refs/heads/main.zip"
+omnet_src_url="https://github.com/omnetpp/omnetpp/releases/download/omnetpp-6.1.0/omnetpp-6.1.0-linux-x86_64.tgz"
+inet_src_url="https://github.com/inet-framework/inet/releases/download/v4.5.4/inet-4.5.4-src.tgz"
 
 premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-linux.tar.gz"
 premake5_tar="$(basename "$premake5_url")"
@@ -75,12 +76,120 @@ omnet_dir_name="${omnet_dir_name_default}"
 omnet_federate_filename="$(basename "$omnet_federate_url")"
 omnet_src_filename="$(basename "$omnet_src_url")"
 inet_src_filename="$(basename "$inet_src_url")"
-working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+working_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # INET configuration: Disabled features
-disabled_inet_features=(TCP_lwIP TCP_NSC INET_examples IPv6 IPv6_examples xMIPv6 xMIPv6_examples WiseRoute RTP RTP_examples SCTP SCTP_examples DHCP DHCP_examples Ethernet Ethernet_examples PPP ExternalInterface ExternalInterface_examples MPLS MPLS_examples BGPv4 BGPv4_examples PIM PIM_examples DYMO AODV AODV_examples RIP RIP_examples mobility_examples physicalenvironment_examples Ieee802154 apskradio wireless_examples VoIPStream VoIPStream_examples SimpleVoIP SimpleVoIP_examples HttpTools HttpTools_examples_direct HttpTools_examples_socket DiffServ DiffServ_examples InternetCloud InternetCloud_examples Ieee8021d Ieee8021d_examples TUN BMAC LMAC TCP_common TCP_INET)
-downloaded_files=""
+inet_feature_file=".oppfeaturestate"
+disabled_inet_features=(
+  # Routing Protocols (simu5g handles 5G routing internally)
+  "Aodv"
+  "AodvExamples"
+  "Bgpv4"
+  "Bgpv4Examples"
+  "Dsdv"
+  "Dymo"
+  "Eigrp"
+  "EigrpExamples"
+  "Flooding"
+  # "Gpsr"
+  "Nexthop"
+  "Ospfv2"
+  "Ospfv2Examples"
+  "Ospfv3"
+  "Ospfv3Examples"
+  "Pim"
+  "PimExamples"
+  "Rip"
+  "RipExamples"
+  "WiseRoute"
 
+  # Application Protocols (not needed for basic V2X)
+  "Dhcp"
+  "DhcpExamples"
+  "DiffServ"
+  "DiffServExamples"
+  "Rtp"
+  "RtpExamples"
+  "Sctp"
+  "SctpExamples"
+  "SimpleVoip"
+  "SimpleVoipExamples"
+
+  # Alternative MAC Protocols (using 802.11p instead)
+  "AckingMac"
+  "BMac"
+  "CsmaCaMac"
+  "LMac"
+  "XMac"
+
+  # Other IEEE Standards (not relevant for V2X)
+  "Ieee802154"
+  "Ieee8021ae"
+  "Ieee8021as"
+  "Ieee8021d"
+  "Ieee8021dExamples"
+  "Ieee8021q"
+  "Ieee8021r"
+  "Ieee8022"
+
+  # TSN Features (unless specifically needed)
+  "TSN"
+  "TSNShowcases"
+  "GateScheduling"
+
+  # IPv6 (disabled as requested)
+  "Ipv6"
+  "Ipv6Examples"
+  "Xmipv6"
+  "Xmipv6Examples"
+
+  # MPLS (not needed for V2X)
+  "Mpls"
+  "MplsExamples"
+
+  # VoIP Stream (disabled by default anyway)
+  "VoipStream"
+  "VoipStreamExamples"
+
+  # Optional visualizations (keeping basic ones)
+  "VisualizationOsg"
+  "VisualizationOsgShowcases"
+
+  # Self documentation (not needed for runtime)
+  "SelfDoc"
+
+  # Advanced scheduling (not needed for basic V2X)
+  "Z3GateSchedulingConfigurator"
+
+  # TCP LwIP (keeping TcpInet instead)
+  "TcpLwip"
+
+  # All Examples and Showcases (not needed for actual simulation work)
+  "EthernetExamples"
+  "InternetCloudExamples"
+  "InternetProtocolExamples"
+  "MobilityExamples"
+  "MobilityShowcases"
+  "PhysicalEnvironmentExamples"
+  "RoutingShowcases"
+  "WirelessExamples"
+  "WirelessShowcases"
+  "WirelessTutorial"
+  "GeneralShowcases"
+  "VisualizationCanvasShowcases"
+  "ConfiguratorTutorial"
+  "ProtocolTutorial"
+  "QueueingTutorial"
+  "ClockExamples"
+
+  # Network Emulation Examples (keeping support but not examples)
+  "NetworkEmulationExamples"
+  "NetworkEmulationShowcases"
+
+  # TUN/TAP interfaces (uncomment next line if you don't need emulation)
+  # "Tun"
+)
+downloaded_files=""
 
 # ----------------------------------------
 #
@@ -102,28 +211,28 @@ style_option_positive="\033[1;37;42m"
 style_option_negative="\033[1;37;41m"
 
 log() {
-   STRING_ARG=$1
-   printf "${STRING_ARG//%/\\%%}\n" ${*:2}
-   return $?
+  STRING_ARG=$1
+  printf "${STRING_ARG//%/\\%%}\n" "${*:2}"
+  return $?
 }
 info() {
-   log "${restore}${style_info}INFO${restore} ${bold}$1${restore}" ${*:2}
+  log "${restore}${style_info}INFO${restore} ${bold}$1${restore}" "${*:2}"
 }
 success() {
-   log "${style_success}SUCCESS${restore} ${bold}$1${restore}" ${*:2}
+  log "${style_success}SUCCESS${restore} ${bold}$1${restore}" "${*:2}"
 }
 warn() {
-   log "${style_warning}WARNING${restore} ${bold}$1${restore}\n" ${*:2}
+  log "${style_warning}WARNING${restore} ${bold}$1${restore}\n" "${*:2}"
 }
 error() {
-   log "${style_error}ERROR${restore} ${bold}${red}$1${restore}" ${*:2}
+  log "${style_error}ERROR${restore} ${bold}${red}$1${restore}" "${*:2}"
 }
 fail() {
-   error "$1" ${*:2}
-   exit 1
+  error "$1" "${*:2}"
+  exit 1
 }
 progress() {
-   log "${restore}${style_progress}Progress: $1${restore}" ${*:2}
+  log "${restore}${style_progress}Progress: $1${restore}" "${*:2}"
 }
 ask_user() {
   log "\n${restore}${style_question}$1${restore}"
@@ -136,9 +245,8 @@ option_negative() {
 }
 
 has() {
-  return $(command -v "$1" > /dev/null)
+  return $(command -v "$1" >/dev/null)
 }
-
 
 # ----------------------------------------
 #
@@ -147,34 +255,34 @@ has() {
 # ----------------------------------------
 
 print_usage() {
-   log "${bold}${cyan}[$(basename "$0")] -- An OMNeT++/INET installation script for MOSAIC${restore}"
-   log "\nUsage: $0 -s path/to/omnetpp-5.5.x-src-linux.tgz [arguments]"
-   log "\nArguments:"
-   log "\n -o, --omnetpp path/to/omnetpp-5.5.x-src-linux.tgz"
-   log "\n     provide the archive containing the OMNeT++ source"
-   log "\n     You can obtain it from ${cyan}https://omnetpp.org/download/"
-   log "\n -f, --federate path/to/<omnetpp-federate-archive.zip>"
-   log "\n     provide the archive containing the OMNeT++-federate and patches for coupling OMNeT++ to MOSAIC."
-   log "\n     If not given, the omnetpp-federate is downloaded by this installation script."
-   log "\n -i, --inet_src path/to/inet-4.1.x-src.tgz"
-   log "\n     provide the archive containing the inet source code"
-   log "\n     You can obtain it from ${cyan}https://inet.omnetpp.org/Download.html${restore}"
-   log "\n     If not given, the inet-source files are downloaded by this installation script."
-   log "\n -so, --skip-omnetpp"
-   log "\n     skip the installation of OMNeT++"
-   log "\n -si, --skip-inet"
-   log "\n     skip the installation of INET"
-   log "\n -t, --installation-type <INSTALLATION_TYPE>"
-   log "\n     either USER or DEVELOPER"
-   log "\n -q, --quiet"
-   log "\n     less output, no interaction required"
-   log "\n -j, --parallel <number of threads>"
-   log "\n     enables make to use the given number of compilation threads"
-   log "\n -u, --uninstall"
-   log "\n     uninstalls the OMNeT++ federate"
-   log "\n -h, --help"
-   log "\n     shows this usage screen"
-   log "\n"
+  log "${bold}${cyan}[$(basename "$0")] -- An OMNeT++/INET installation script for MOSAIC${restore}"
+  log "\nUsage: $0 -s path/to/omnetpp-6.1.x-src-linux.tgz [arguments]"
+  log "\nArguments:"
+  log "\n -o, --omnetpp path/to/omnetpp-6.1.x-src-linux.tgz"
+  log "\n     provide the archive containing the OMNeT++ source"
+  log "\n     You can obtain it from ${cyan}https://omnetpp.org/download/"
+  log "\n -f, --federate path/to/<omnetpp-federate-archive.zip>"
+  log "\n     provide the archive containing the OMNeT++-federate and patches for coupling OMNeT++ to MOSAIC."
+  log "\n     If not given, the omnetpp-federate is downloaded by this installation script."
+  log "\n -i, --inet_src path/to/inet-4.5.4-src.tgz"
+  log "\n     provide the archive containing the inet source code"
+  log "\n     You can obtain it from ${cyan}https://inet.omnetpp.org/Download.html${restore}"
+  log "\n     If not given, the inet-source files are downloaded by this installation script."
+  log "\n -so, --skip-omnetpp"
+  log "\n     skip the installation of OMNeT++"
+  log "\n -si, --skip-inet"
+  log "\n     skip the installation of INET"
+  log "\n -t, --installation-type <INSTALLATION_TYPE>"
+  log "\n     either USER or DEVELOPER"
+  log "\n -q, --quiet"
+  log "\n     less output, no interaction required"
+  log "\n -j, --parallel <number of threads>"
+  log "\n     enables make to use the given number of compilation threads"
+  log "\n -u, --uninstall"
+  log "\n     uninstalls the OMNeT++ federate"
+  log "\n -h, --help"
+  log "\n     shows this usage screen"
+  log "\n"
 }
 
 get_program_arguments() {
@@ -184,56 +292,55 @@ get_program_arguments() {
       exit 0
     else
       # note: if this is set to > 0 the /etc/hosts part is not recognized ( may be a bug )
-      while [[ $# -ge 1 ]]
-      do
+      while [[ $# -ge 1 ]]; do
         key="$1"
         case $key in
-          -q|--quiet)
-              arg_quiet=true
-              ;;
-          -o|--omnetpp|-s|--simulator)
-              arg_omnet_tar="$2"
-              shift # past argument
-              ;;
-          -i|--inet)
-              arg_inet_src_file="$2"
-              shift # past argument
-              ;;
-          -f|--federate)
-              arg_federate_src_file="$2"
-              shift # past argument
-              ;;
-          -t|--installation-type)
-              arg_installation_type="$2"
-              if [ "$arg_installation_type" != "USER" ] && [ "$arg_installation_type" != "DEVELOPER" ]; then
-                fail "Value of argument '--installation-type' (-t) needs either to be 'USER' or 'DEVELOPER'."
-              fi
-              shift # past argument
-              ;;
-          -it|--integration_testing)
-              arg_integration_testing=true
-              arg_quiet=true
-              ;;
-          -si|--skip-inet)
-              arg_skip_inet_installation=true
-              ;;
-          -so|--skip-omnetpp)
-              arg_skip_omnetpp_installation=true
-              ;;
-          -F|--force)
-              arg_force=true
-              ;;
-          -j|--parallel)
-              if [[ $2 =~ ^[0-9]+$ ]]; then
-                arg_make_parallel="-j$2"
-              else
-                warn "Value of argument '--parallel' (-j) is not a positive integer. Continuing installation with '-j1' ..."
-              fi
-              shift # past argument
-              ;;
-          -u|--uninstall)
-              arg_uninstall=true
-              ;;
+        -q | --quiet)
+          arg_quiet=true
+          ;;
+        -o | --omnetpp | -s | --simulator)
+          arg_omnet_tar="$2"
+          shift # past argument
+          ;;
+        -i | --inet)
+          arg_inet_src_file="$2"
+          shift # past argument
+          ;;
+        -f | --federate)
+          arg_federate_src_file="$2"
+          shift # past argument
+          ;;
+        -t | --installation-type)
+          arg_installation_type="$2"
+          if [ "$arg_installation_type" != "USER" ] && [ "$arg_installation_type" != "DEVELOPER" ]; then
+            fail "Value of argument '--installation-type' (-t) needs either to be 'USER' or 'DEVELOPER'."
+          fi
+          shift # past argument
+          ;;
+        -it | --integration_testing)
+          arg_integration_testing=true
+          arg_quiet=true
+          ;;
+        -si | --skip-inet)
+          arg_skip_inet_installation=true
+          ;;
+        -so | --skip-omnetpp)
+          arg_skip_omnetpp_installation=true
+          ;;
+        -F | --force)
+          arg_force=true
+          ;;
+        -j | --parallel)
+          if [[ $2 =~ ^[0-9]+$ ]]; then
+            arg_make_parallel="-j$2"
+          else
+            warn "Value of argument '--parallel' (-j) is not a positive integer. Continuing installation with '-j1' ..."
+          fi
+          shift # past argument
+          ;;
+        -u | --uninstall)
+          arg_uninstall=true
+          ;;
         esac
         shift
       done
@@ -250,32 +357,42 @@ user_configuration_installation_type() {
     option_negative "X" "Abort installation"
     read -r answer
     case $answer in
-      [uU]* )
-        arg_installation_type="USER"
-        break;;
+    [uU]*)
+      arg_installation_type="USER"
+      break
+      ;;
 
-      [dD]* )
-        arg_installation_type="DEVELOPER"
-        break;;
+    [dD]*)
+      arg_installation_type="DEVELOPER"
+      break
+      ;;
 
-      [xX]* )
-        info "Installation aborted by user."
-        exit;;
+    [xX]*)
+      info "Installation aborted by user."
+      exit
+      ;;
 
-      * )
-        log "Allowed choices are 'U', 'D' or 'X'. Please try again...";;
+    *)
+      log "Allowed choices are 'U', 'D' or 'X'. Please try again..."
+      ;;
     esac
-  done;
+  done
 }
 
 user_configuration_extract_omnet_dir_name() {
   if [ "$arg_omnet_tar" != "" ]; then
-    tar_filename="$(basename "${arg_omnet_tar}" )"
+    tar_filename="$(basename "${arg_omnet_tar}")"
   else
-    tar_filename="$(basename "${omnet_src_url}" )"
+    tar_filename="$(basename "${omnet_src_url}")"
   fi
 
-  tmp_dir_name="${tar_filename%-src*}"
+  tmp_dir_name="${tar_filename%-linux-x86_64*}"
+  # Handle version number truncation (e.g., omnetpp-6.1.0 -> omnetpp-6.1)
+  # Remove trailing .0 from version numbers
+  if [[ "$tmp_dir_name" =~ ^omnetpp-[0-9]+\.[0-9]+\.0$ ]]; then
+    tmp_dir_name="${tmp_dir_name%.0}"
+  fi
+
   if [ "${tar_filename}" == "${tmp_dir_name}" ]; then
     log "Warning: falling back to ${omnet_dir_name_default} as name for installation directory"
     omnet_dir_name="${omnet_dir_name_default}"
@@ -322,14 +439,23 @@ configure_paths() {
 # Checks if /path/to/omnetpp/bin is in PATH and /path/to/omnetpp/lib is in LD_LIBRARY_PATH
 # and creates /path/to/omnetpp/include and checks if all directories really exist.
 extract_path_to_omnetpp() {
-  if [[ ! $PATH =~ .*\/omnetpp-5\.5\.[0-9]+\/bin.* ]]; then
-    fail "omnetpp-5.5.[0-9]+/bin is not in the \$PATH environment variable.";
-  fi
-  if [[ ! $LD_LIBRARY_PATH =~ .*\/omnetpp-5\.5\.[0-9]+\/lib.* ]]; then
-    fail "omnetpp-5.5.[0-9]+/lib is not in the \$LD_LIBRARY_PATH environment variable.";
+  if [[ ! $PATH =~ .*\/omnetpp-6\.1\/bin.* ]]; then
+    fail "omnetpp-6.1/bin is not in the \$PATH environment variable."
+  else
+    if [[ ! "${LD_LIBRARY_PATH:-}" =~ .*\/omnetpp-6\.1\/lib.* ]]; then
+      info "omnetpp-6.1/lib is not in the \$LD_LIBRARY_PATH environment variable. Trying to add it now."
+      if [ "${LD_LIBRARY_PATH:-}" ]; then
+        export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${omnetpp_src_dir}/lib"
+      else
+        export LD_LIBRARY_PATH="${omnetpp_src_dir}/lib"
+      fi
+      info "Added omnetpp-6.1/lib to \$LD_LIBRARY_PATH environment variable."
+    else
+      info "omnetpp-6.1/lib is already in the \$LD_LIBRARY_PATH environment variable."
+    fi
   fi
 
-  omnetpp_src_dir_bin="$(echo "$PATH" | grep -m 1 -o -P "[^:]*\/omnetpp-5\.5\.[0-9]/bin" | head -1)"
+  omnetpp_src_dir_bin="$(echo "$PATH" | grep -m 1 -o -P "[^:]*\/omnetpp-6\.1/bin" | head -1)"
   omnetpp_src_dir="$(dirname "$omnetpp_src_dir_bin")"
   if [ ! -d "${omnetpp_src_dir}/include" ]; then
     fail "Could not find OMNeT++ 'include' directory in: ${omnetpp_src_dir} ${restore}"
@@ -343,10 +469,11 @@ extract_path_to_omnetpp() {
 
 # Extracts path to inet source directory from LD_LIBRARY_PATH
 extract_path_to_inet() {
-  inet_src_dir="$(echo "$LD_LIBRARY_PATH" | grep -m 1 -o -P "[^:]*\/inet4?" | head -1)";
+  inet_src_dir="$(echo "$LD_LIBRARY_PATH" | grep -m 1 -o -P "[^:]*\/inet4.5?" | head -1)"
   if [ ! -d "${inet_src_dir}" ]; then
     fail "Could not find INET 'src' directory in: ${inet_src_dir} ${restore}"
   fi
+  echo "Found INET source directory: ${inet_src_dir}"
   arg_skip_inet_installation=true
 }
 
@@ -409,18 +536,6 @@ ask_for_dependencies() {
   fi
 }
 
-umask 027
-set -o nounset
-set -o errtrace
-set -o errexit
-set -o pipefail
-trap clean_up INT
-
-get_program_arguments "$@"
-user_configuration
-configure_paths
-ask_for_dependencies
-
 
 # ----------------------------------------
 #
@@ -455,15 +570,15 @@ clean_up() {
         read -r answer
       fi
       case $answer in
-        [Yy]* ) break;;
-        [Nn]* ) return;;
-        * ) echo "Allowed choices are yes or no";;
+      [Yy]*) break ;;
+      [Nn]*) return ;;
+      *) echo "Allowed choices are yes or no" ;;
       esac
-    done;
+    done
   fi
 
   cd "$working_directory"
-  rm -rf $downloaded_files
+  rm -rf "$downloaded_files"
 }
 
 uninstall() {
@@ -482,7 +597,7 @@ uninstall() {
     fi
 
     if [ -d "${omnetpp_federate_target_dir}" ]; then
-        warn "Deleting OMNeT++ federate directory..."
+      warn "Deleting OMNeT++ federate directory..."
       rm -rf "${omnetpp_federate_target_dir}"
     fi
     find . -maxdepth 1 -type d -name "omnetpp-*.*" -exec rm -rf {} \;
@@ -503,7 +618,7 @@ set_environment_variables() {
 omnetpp_install_ok=true
 inet_install_ok=true
 federate_install_ok=true
-check_install () {
+check_install() {
   if [ "${arg_force}" == "false" ]; then
     if [ -d "${omnetpp_federate_target_dir}" ]; then
       if [ -d "${omnetpp_federate_target_dir}/omnetpp_federate" ]; then
@@ -581,17 +696,27 @@ check_directory() {
   if [ "$federate_working_directory" == "$federate_path" ]; then
     return
   else
-    fail "This doesn't look like a MOSAIC directory. Please make sure this script is started from '$federate_path'."
+    warn "This doesn't look like a MOSAIC directory. The script should be started from '$federate_path'."
+    if [ "$arg_quiet" == "false" ]; then
+      ask_user "Do you want to continue anyway?"
+      option_positive "y" "Yes, continue."
+      option_negative "n" "No, abort installation."
+      read -r answer
+      case $answer in
+      [nN]*)
+        info "Installation aborted by user."
+        exit 0
+        ;;
+      *)
+        info "Continuing installation despite directory warning."
+        ;;
+      esac
+    else
+      info "Continuing installation despite directory warning due to --quiet flag."
+    fi
   fi
 }
 
-
-uninstall # Uninstall and exit if porgram argument says so
-#print_info
-set_environment_variables
-check_install
-check_required_programs "${required_programs[*]}"
-check_directory
 
 # ----------------------------------------
 #
@@ -609,15 +734,15 @@ download() {
   progress "Downloading '$title' from: $url"
   if [ ! -f "$(basename "$url")" ]; then
     if has wget; then
-      if !   wget -q "$url"; then
-        error "The download URL seems to have changed. File not found: '$url'";
+      if ! wget -q "$url"; then
+        error "The download URL seems to have changed. File not found: '$url'"
         if [ "$error_message" != "" ]; then
           info "$error_message"
         fi
         exit 1
       fi
     elif has curl; then
-      curl -s -O "$url" || fail "The download URL seems to have changed. File not found: '$url'";
+      curl -s -O "$url" || fail "The download URL seems to have changed. File not found: '$url'"
     else
       error "Can't download '$url'."
       if [ "$error_message" != "" ]; then
@@ -657,34 +782,51 @@ extract_premake() {
 # OMNeT++
 # ----------------------------------------
 extract_omnet() {
-   progress "Extracting OMNeT++ from '$1'..."
-   cd "$working_directory"
-   arg1="$1" #omnet archive
-   if [ -f "$1" ]; then
-      if [ -d "${omnetpp_src_dir}" ]; then
-         fail "${omnetpp_src_dir} exists, please uninstall the existing installation before proceeding (-u or --uninstall)"
-         exit 1;
+  progress "Extracting OMNeT++ from '$1'..."
+  cd "$working_directory"
+  arg1="$1" #omnet archive
+  if [ -f "$1" ]; then
+    if [ -d "${omnetpp_src_dir}" ]; then
+      fail "${omnetpp_src_dir} exists, please uninstall the existing installation before proceeding (-u or --uninstall)"
+    fi
+    tar -xf "$arg1"
+    
+    # Find the actual extracted directory name
+    extracted_dir=$(find . -maxdepth 1 -type d -name "omnetpp-[0-9]*.[0-9]*" | head -1)
+    if [ -n "$extracted_dir" ]; then
+      actual_dir_name=$(basename "$extracted_dir")
+      if [ "$actual_dir_name" != "$omnet_dir_name" ]; then
+        info "Extracted directory is '$actual_dir_name', updating paths..."
+        omnet_dir_name="$actual_dir_name"
+        # Update the source directory path
+        omnetpp_src_dir="${working_directory}/${omnet_dir_name}"
+        info "Updated OMNeT++ source directory to: ${omnetpp_src_dir}"
       fi
-      tar -xf "$arg1"
-   else
-      fail "${1} not found! Abort!";
-   fi
+    fi
+  else
+    fail "${1} not found! Abort!"
+  fi
 }
 
 configure_omnet() {
   progress "Configuring OMNeT++..."
   cd "${omnetpp_src_dir}"
-  PATH=$(pwd -L)/bin:$PATH
-  export PATH
+  info "Using source directory: ${omnetpp_src_dir}"
+  python -m venv .venv
+  set +o nounset
+  source setenv
+  set -o nounset
+  python -m pip install -r python/requirements.txt
   sed -i -e "s/PREFER_CLANG=yes/PREFER_CLANG=no/" configure.user
+  # sed -i -e "s/#CXXFLAGS=-std=c++17/CXXFLAGS=-std=c++17/" configure.user
   ./configure WITH_OSG=no WITH_TKENV=no WITH_QTENV=no WITH_OSGEARTH=no WITH_PARSIM=no
 }
 
 build_omnet() {
   progress "Building OMNeT++ ($arg_make_parallel) ..."
   cd "${omnetpp_src_dir}"
-  make $arg_make_parallel MODE=debug base
-  export PATH="${omnetpp_src_dir}/bin":$PATH
+
+  make "$arg_make_parallel" MODE=debug
   mkdir -p "${omnetpp_federate_target_dir_bin}"
   cp -r bin "${omnetpp_federate_target_dir}"
   cp -r lib "${omnetpp_federate_target_dir}"
@@ -697,33 +839,49 @@ extract_inet() {
   cd "$working_directory"
   if [ -f "$1" ]; then
     if [ -d "${inet_src_dir}" ]; then
-      fail "${inet_src_dir} exists, please uninstall the existing installation before proceeding (-u or --uninstall)"
-      exit 1;
+      # Check if inet was already built (libINET_dbg.so exists)
+      if [ -f "${inet_target_dir}/libINET_dbg.so" ]; then
+        fail "INET already installed in ${inet_src_dir}. Use -F or --force to overwrite existing installation."
+      else
+        # Remove existing inet_src_dir
+        rm -rf "${inet_src_dir}"
+      fi
     fi
     tar -xf "$1"
     cd "$working_directory"
-    mv inet4 "${inet_src_dir}"
+    mv inet4.5 "${inet_src_dir}"
     mkdir -p "${inet_target_dir}" # same name
   else
-    fail "${1} not found! Abort!";
+    fail "${1} not found! Abort!"
   fi
 }
 
 configure_inet() {
   progress "Configuring INET ..."
+  # Temporarily disable nounset before sourcing setenv
+  set +o nounset
+  cd "${omnetpp_src_dir}"
+  source setenv
   cd "${inet_src_dir}"
-
-  # Patch inet feature tool if python >= 3.0.0
-  python_version_current="$(python --version 2>&1)"
-  python_version_3="Python 3."
-  if [[ "$python_version_current" == "$python_version_3"* ]]; then
-    sed -i -e "s|raw_input|input|" ./bin/inet_featuretool
-  fi
+  source setenv
+  set -o nounset
 
   # Disable unneeded features
-  for feat in "${disabled_inet_features[@]}"; do
-    echo "Disabling INET feature: $feat"
-    echo "yes" | ./bin/inet_featuretool disable $feat > /dev/null
+  for feature in "${disabled_inet_features[@]}"; do
+    echo "Disabling INET feature: $feature"
+    if grep -q "id=\"$feature\"" "$inet_feature_file"; then
+      # Check current state
+      if grep -q "id=\"$feature\" enabled=\"true\"" "$inet_feature_file"; then
+        # Disable the feature
+        sed -i.tmp "s/id=\"$feature\" enabled=\"true\"/id=\"$feature\" enabled=\"false\"/g" "$inet_feature_file"
+        info "Disabled: $feature"
+      else
+        warn "Already disabled: $feature"
+      fi
+    else
+      warn "Feature not found: $feature"
+    fi
+
   done
   make makefiles
 }
@@ -732,15 +890,21 @@ build_inet() {
   progress "Building INET framework ..."
   mkdir -p "${omnetpp_federate_target_dir_lib}"
   cd "${inet_src_dir}"
-  make $arg_make_parallel MODE=debug
+  make "$arg_make_parallel" MODE=debug
   if [ -f "out/gcc-debug/src/libINET_dbg.so" ]; then
     cp "out/gcc-debug/src/libINET_dbg.so" "${inet_target_dir}"
     cp "out/gcc-debug/src/libINET_dbg.so" "${omnetpp_federate_target_dir_lib}"
+  elif [ -f "out/clang-debug/src/libINET_dbg.so" ]; then
+    cp "out/clang-debug/src/libINET_dbg.so" "${inet_target_dir}"
+    cp "out/clang-debug/src/libINET_dbg.so" "${omnetpp_federate_target_dir_lib}"
   else
     fail "Shared library \"libINET_dbg.so\" not found. Something went wrong while building INET."
   fi
   if [ -d "src" ]; then
-    (cd "src"; tar -cf - $(find . -name "*.ned" -print) | ( cd "${inet_target_dir}" && tar xBf - ))
+    (
+      cd "src"
+      tar -cf - $(find . -name "*.ned" -print) | (cd "${inet_target_dir}" && tar xBf -)
+    )
   else
     fail "Directory \"src\" not found. Something went wrong while building INET."
   fi
@@ -758,6 +922,11 @@ extract_federate() {
 
     progress "Extracting MOSAIC OMNeT++ Federate from: ${omnet_federate_filename} ..."
     unzip --qq -o "$omnet_federate_filename"
+    # Check if federate src directory exists and delete it if it does
+    if [ -d "${omnetpp_federate_src_dir}" ]; then
+      info "Removing existing directory: ${omnetpp_federate_src_dir}"
+      rm -rf "${omnetpp_federate_src_dir}"
+    fi
     mv omnetpp-federate-* "${omnetpp_federate_src_dir}"
   else
     progress "Extracting MOSAIC OMNeT++ Federate from: '$1' ..."
@@ -784,13 +953,15 @@ build_omnet_federate() {
   fi
 
   sed -i -e "s|/usr/local|.|" premake5.lua
-  sed -i -e "s|\"/usr/include\"|\"${omnetpp_src_dir}/include\", \"${inet_src_dir}/src\"|" premake5.lua
-  sed -i -e "s|\"/usr/lib\"|\"${omnetpp_src_dir}/lib\", \"${inet_src_dir}/src\"|" premake5.lua
+  sed -i -e "s|\"/usr/include\"|\"/usr/include\", \"${omnetpp_src_dir}/include\", \"${inet_src_dir}/src\"|" premake5.lua
+  sed -i -e "s|\"/usr/lib\"|\"/usr/lib\", \"${omnetpp_src_dir}/lib\", \"${inet_src_dir}/src\"|" premake5.lua
   sed -i -e "s|\$\$ORIGIN\/lib'|\$\$ORIGIN\/lib',-rpath,'\$\$ORIGIN\/..\/inet',-rpath,'${omnetpp_src_dir}\/lib'|" premake5.lua
   sed -i -e "s|\" --msg6 -I /usr/lib\"|\" --msg6 -I ${inet_src_dir}/src\"|" premake5.lua
   sed -i -e "s|'opp_msgc'|'${omnetpp_src_dir}/bin/opp_msgc'|" premake5.lua
   sed -i -e "s|/share/ned||" premake5.lua
   sed -i -e "s|local PROTO_CC_PATH = \"\.\"|local PROTO_CC_PATH = \"src/util\"|" premake5.lua
+
+  
 
   ./premake5 gmake --generate-opp-messages --generate-protobuf --install
 
@@ -798,11 +969,31 @@ build_omnet_federate() {
   make -j1 config=debug # The federate can only be build with a single process
 
   cp bin/Debug/omnetpp-federate "$omnetpp_federate_target_dir_bin"
-  ln -s "${omnetpp_federate_target_dir_bin}/omnetpp-federate" "$omnetpp_federate_target_dir"
+  # Create symlink for omnetpp-federate only if it does not exist
+
+  if [ ! -L "$omnetpp_federate_target_dir/omnetpp-federate" ]; then
+      ln -s "${omnetpp_federate_target_dir_bin}/omnetpp-federate" "$omnetpp_federate_target_dir"
+  fi
   cp lib/libomnetpp-federate.so "$omnetpp_federate_target_dir_lib"
   cp -r src "$omnetpp_federate_target_dir"
   cd "$working_directory"
+  rm -rf "${omnetpp_federate_src_dir}"
+
 }
+
+# Run everything
+# ----------------------------------------
+
+get_program_arguments "$@"
+user_configuration
+configure_paths
+ask_for_dependencies
+
+uninstall # Uninstall and exit if program argument says so
+set_environment_variables
+check_install
+check_required_programs "${required_programs[*]}"
+check_directory
 
 # Install OMNeT++
 if [ "$omnetpp_install_ok" == "false" ] && [ "$arg_skip_omnetpp_installation" == "false" ]; then
