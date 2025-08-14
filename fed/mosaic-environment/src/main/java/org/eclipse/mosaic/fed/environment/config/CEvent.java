@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.fed.environment.config;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 
 /**
@@ -23,11 +25,6 @@ import java.io.Serializable;
 public class CEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * Type of the event.
-     */
-    public CEventType event = new CEventType();
 
     /**
      * The location of the event,, this can either be a
@@ -40,5 +37,17 @@ public class CEvent implements Serializable {
      * Time of the event.
      */
     public CEventTime time = new CEventTime();
+
+    /**
+     * This represents the type of the in that area, e.g. Ice, or Snow.
+     */
+    public String type;
+
+    /**
+     * This is a value used for assigning a value to the event,
+     * it can be used as the strength of an event, or the
+     * amount of free parking spots in a parking lot, etc.
+     */
+    public Object value = null;
 }
 

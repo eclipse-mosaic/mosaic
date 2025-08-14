@@ -21,15 +21,27 @@
                     "$ref": "#/definitions/eventType"
                 },
                 "location": { 
-                    "description": "The location of the event,, this can either be a geoArea or a string representing a specific road segment.",
+                    "description": "The location of the event, this can either be a geoArea or a string representing a specific road segment.",
                     "$ref": "#/definitions/eventLocation" 
                 },
                 "time": { 
                     "description": "Time of the event.",
                     "$ref": "#/definitions/eventTime" 
+                },
+                "type": {
+                    "description": "Represents the type of event value this event is emitting (e.g. TRACTION_HAZARD, VISIBILITY_HAZARD, WIND, TEMPERATURE, or an arbitrary EVENT). The value can be set to any valid string.",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "Used for assigning a value to the event. It can be used as the strength of an event, the road surface quality, or the name of a specific event cause, etc.",
+                    "anyOf": [
+                        { "type": "string", "maxLength": 30 },
+                        { "type": "number", "minimum": 0 },
+                        { "type":  "object" }
+                    ]
                 }
             },
-            "required": [ "event", "location", "time" ]
+            "required": [ "type", "value" ]
         },
         "eventType": {
             "title": "eventType",

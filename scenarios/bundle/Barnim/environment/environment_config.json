@@ -1,28 +1,26 @@
 {
-	"events": [
-		{
-			"event": {
-				"type": "TRACTION_HAZARD",
-				"value": "ICE"
-			},
-			"location": {
-				"area": {
-					"type": "Rectangle",
-					"a": {
-						"latitude": 52.6331,
-						"longitude": 13.5608
-					},
-					"b": {
-						"latitude": 52.6196,
-						"longitude": 13.5656
-					}
-				}
-			},
-			"time": {
-				"start": "0 s",
-				"end": "1220 s"
-			}
-		}
-	]
+    "events": [
+        {
+            "location": {
+                "area": {
+                    "type": "Rectangle",
+                    "a": {
+                        "latitude": 52.6331,
+                        "longitude": 13.5608
+                    },
+                    "b": {
+                        "latitude": 52.6196,
+                        "longitude": 13.5656
+                    }
+                }
+            },
+            "time": {
+                "start": "0 s",
+                "end": "1220 s"
+            },
+            "type": "TRACTION_HAZARD",
+            "value": "ICE"
+        }
+    ]
 }
 

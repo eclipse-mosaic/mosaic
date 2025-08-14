@@ -1,10 +1,8 @@
 {
     "events": [
         {
-            "event": {
-                "type": "EVENT",
-                "value": "ROADWORKS"
-            },
+            "type": "EVENT",
+            "value": "ROADWORKS",
             "location": {
                 "area": {
                     "type": "Circle",
@@ -21,10 +19,8 @@
             }
         },
         {
-            "event": {
-                "type": "EVENT",
-                "value": "OBSTACLE_ON_ROAD"
-            },
+            "type": "EVENT",
+            "value": "OBSTACLE_ON_ROAD",
             "location": {
                 "area": {
                     "type": "Circle",
@@ -41,10 +37,8 @@
             }
         },
         {
-            "event": {
-                "type": "TRACTION_HAZARD",
-                "value": "ICE"
-            },
+            "type": "TRACTION_HAZARD",
+            "value": "ICE",
             "location": {
                 "area": {
                     "type": "Circle",
