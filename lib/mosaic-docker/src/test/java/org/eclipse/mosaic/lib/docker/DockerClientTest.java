@@ -74,7 +74,7 @@ public class DockerClientTest {
 
         //VERIFY
         assertNotNull(container);
-        verify(commandLine).runAndDetach(eq(imageName), argThat(containsInOrder("-P", "--name", "test-image-container")));
+        verify(commandLine).run(eq(imageName), argThat(containsInOrder("-P", "--name", "test-image-container")));
         verify(commandLine, never()).kill(anyString());
         verify(commandLine, never()).rm(anyString());
         verify(commandLine, times(3)).status(eq(containerName));
@@ -95,7 +95,7 @@ public class DockerClientTest {
 
         //VERIFY
         assertNotNull(container);
-        verify(commandLine).runAndDetach(eq(imageName), argThat(containsInOrder("-p", "1337:7331", "--name", "test-image-container")));
+        verify(commandLine).run(eq(imageName), argThat(containsInOrder("-p", "1337:7331", "--name", "test-image-container")));
         verify(commandLine, never()).kill(anyString());
         verify(commandLine, never()).rm(anyString());
         verify(commandLine, times(3)).status(eq(containerName));
@@ -116,7 +116,7 @@ public class DockerClientTest {
         //VERIFY
         assertNotNull(container);
         String tmpFilePath = tmpFile.getAbsolutePath().replace("\\", "/").replace(" ", "\\ ");
-        verify(commandLine).runAndDetach(
+        verify(commandLine).run(
                 eq(imageName),
                 argThat(containsInOrder("-v", tmpFilePath + ":/home/test", "-P", "--name", "test-image-container"))
         );
@@ -135,7 +135,7 @@ public class DockerClientTest {
 
         //VERIFY
         assertNotNull(container);
-        verify(commandLine).runAndDetach(eq(imageName), argThat(containsInOrder("-P", "--name", imageName)));
+        verify(commandLine).run(eq(imageName), argThat(containsInOrder("-P", "--name", imageName)));
         verify(commandLine).kill(eq(imageName));
         verify(commandLine).rm(eq(imageName));
     }
@@ -150,7 +150,7 @@ public class DockerClientTest {
 
         //VERIFY
         assertNotNull(container);
-        verify(commandLine).runAndDetach(eq(imageName), argThat(containsInOrder("--rm", "-P", "--name", imageName)));
+        verify(commandLine).run(eq(imageName), argThat(containsInOrder("--rm", "-P", "--name", imageName)));
         verify(commandLine, never()).kill(anyString());
         verify(commandLine, never()).rm(anyString());
     }
@@ -230,7 +230,7 @@ public class DockerClientTest {
 
         //VERIFY
         assertNotNull(container);
-        verify(commandLine).runAndDetach(anyString(), argThat(containsInOrder("--user", user, "-P", "--name", image)));
+        verify(commandLine).run(anyString(), argThat(containsInOrder("--user", user, "-P", "--name", image)));
     }
 
     @Test

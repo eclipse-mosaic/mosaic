@@ -787,26 +787,25 @@
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <!-- This is much faster than maven-resource-plugin when using ${parent.dir} as entry-point -->
                         <executions>
                             <execution>
-                                <id>copy-legal-information-${parent.dir}</id>
+                                <id>copy-legal-information</id>
                                 <phase>generate-resources</phase>
                                 <goals>
-                                    <goal>copy-resources</goal>
+                                    <goal>run</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${parent.dir}</directory>
-                                            <filtering>false</filtering>
-                                            <includes>
-                                                <include>LICENSE</include>
-                                                <include>NOTICE.md</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
+                                    <target>
+                                        <copy todir="${project.build.outputDirectory}/META-INF" overwrite="false">
+                                            <fileset dir="${parent.dir}">
+                                                <include name="LICENSE"/>
+                                                <include name="NOTICE.md"/>
+                                            </fileset>
+                                        </copy>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
