@@ -64,7 +64,7 @@
                     <entry>SourcePosition.Latitude</entry>
                     <entry>SourcePosition.Longitude</entry>
                     <entry>SourcePosition.Altitude</entry>
-                    <entry>Message.Routing.Destination.Type</entry>
+                    <entry>Message.Routing.Destination.RoutingType</entry>
                     <entry>Message.Routing.Destination.Address.IPv4Address</entry>
                     <entry>Message.Routing.Destination.AdhocChannelId</entry>
                     <entry>Message.Payload.EffectiveLength</entry>
@@ -143,12 +143,12 @@
                     <entry>Time</entry>
                     <entry>Configuration.NodeId</entry>
                     <entry>Configuration.RadioMode</entry>
-                    <entry>Configuration.Conf0.NewIP</entry>
-                    <entry>Configuration.Conf0.NewPower</entry>
+                    <entry>Configuration.Conf0.Ip</entry>
+                    <entry>Configuration.Conf0.Power</entry>
                     <entry>Configuration.Conf0.Channel0</entry>
                     <entry>Configuration.Conf0.Channel1</entry>
-                    <entry>Configuration.Conf1.NewIP</entry>
-                    <entry>Configuration.Conf1.NewPower</entry>
+                    <entry>Configuration.Conf1.Ip</entry>
+                    <entry>Configuration.Conf1.Power</entry>
                     <entry>Configuration.Conf1.Channel0</entry>
                     <entry>Configuration.Conf1.Channel1</entry>
                 </entries>

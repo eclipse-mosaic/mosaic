@@ -59,7 +59,7 @@ working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ns3_installation_path=${working_directory}
 ns3_simulator_path="${working_directory}/$ns3_long_affix/$ns3_short_affix" #due to the ns3 tarball structure
 
-ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/heads/main.zip" # TODO: bump to /refs/tags/25.1.zip before next release
+ns3_federate_url="https://github.com/hoelger/ns3-federate/archive/refs/heads/1059-lte-in-ns3.36-testing.zip" # TODO: bump to /refs/tags/25.1.zip before next release
 ns3_url="https://www.nsnam.org/releases/$ns3_long_affix.tar.bz2"
 ns3_federate_filename="ns3-federate-$(basename "$ns3_federate_url")"
 ns3_filename="$(basename "$ns3_url")"
@@ -334,6 +334,10 @@ extract_premake() {
 
 build_ns3()
 {
+    log "Patch ns3"
+    cp "${ns3_installation_path}/federate/patched-files/lte-enb-rrc.h" "${ns3_installation_path}/${ns3_long_affix}/${ns3_short_affix}/src/lte/model"
+    cp "${ns3_installation_path}/federate/patched-files/no-backhaul-epc-helper.cc" "${ns3_installation_path}/${ns3_long_affix}/${ns3_short_affix}/src/lte/helper"
+
     log "Build ns3 version ${ns3_version}"
     cd "${ns3_installation_path}/ns-allinone-${ns3_version}"
     # ns-3 prior to 3.28.1 does not compile without warnings using g++ 10.2.0

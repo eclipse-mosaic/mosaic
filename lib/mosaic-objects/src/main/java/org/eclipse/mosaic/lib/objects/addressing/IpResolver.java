@@ -97,7 +97,10 @@ public final class IpResolver implements Serializable {
             throw new RuntimeException("Could not parse IP addresses from configuration");
         }
         int flatMask = addressArrayToFlat(netMask.getAddress());
-        maxRange = (~flatMask) - 1;
+        // bei 255.255.0.0 => (0xFFFF / 0x100 + 1) * 0xFE - 1    = 0xFDFF
+        // bei 255.240.0.0 => (0xFFFFF / 0x100 + 1) * 0xFE - 1   = 0xFDFFF
+        // bei 255.0.0.0.0 => (0xFFFFFF / 0x100 + 1) * 0xFE - 1  = 0xFDFFFF
+        maxRange = (~flatMask / 0x100 + 1) * 0xFE - 1;
 
         for (UnitType type : UnitType.values()) {
             Inet4Address network = unitNetworks.get(type);
@@ -191,20 +194,67 @@ public final class IpResolver implements Serializable {
     }
 
     /**
+     * Converts a IPv4 address array to an integer.
+     * Backwards translation from method `translateAddressFlatToArray` - also see comments there.
+     *
+     * @param address the address as a byte array
+     * @return the corresponding integer
+     */
+    int translateAddressArrayToFlat(byte[] address) {
+        if (address.length != 4) {
+            throw new RuntimeException("Given address array is not 32 bit wide");
+        }
+        int LSB = address[3] & 0xFF;
+        if (LSB == 0 || LSB == 0xFF) {
+            throw new RuntimeException("Given address array is no valid unicast");
+        }
+        // convert signed byte to unsigned byte with: byte & 0xFF
+        int result = 0;
+        result += (address[0] & 0xFF) * 254 * 256 * 256;
+        result += (address[1] & 0xFF) * 254 * 256;
+        result += (address[2] & 0xFF) * 254;
+        result += (address[3] & 0xFF) - 1;
+
+        return result;
+    }
+
+    /**
+     * Converts an integer to a valid IP byte array.
+     * A valid (unicast) IP cannot end on 0x00 or 0xFF,
+     * thereby the last byte only has 254 possible values (instead of 256).
+     *
+     * @param address the address as integer
+     * @return the byte array
+     */
+    byte[] translateAddressFlatToArray(int address) {
+        byte[] result = new byte[4];
+        result[0] = (byte) (address / 254 / 256 / 256);
+        result[1] = (byte) (address / 254 / 256 );
+        result[2] = (byte) (address / 254);
+        result[3] = (byte) (address % 254 + 1);
+        return result;
+    }
+
+    /**
      * Converts an IPv4 address to a hostname.
      *
      * @param address address that shall be converted to a hostname
      * @return hostname
      */
     public String ipToName(@Nonnull Inet4Address address) {
+        // convert IP to flat number, extract different parts
         int ip = addressArrayToFlat(address.getAddress());
-        int netPart = addressArrayToFlat(netMask.getAddress());
-        int client = ip & ~netPart;
-        netPart = netPart & ip;
+        int mask = addressArrayToFlat(netMask.getAddress());
+        int clientPart = ip & ~mask;
+        int netPart = ip & mask;
+
+        // convert clientPart to mosaic ID
+        byte[] clientArr = addressFlatToArray(clientPart); // translate client to IP-ish format
+        int id = translateAddressArrayToFlat(clientArr); // now do the translation from IP to ID (excluding .0 and .255 endings)
 
         for (Map.Entry<UnitType, Inet4Address> unitNetworkEntry : unitNetworks.entrySet()) {
             if (netPart == addressArrayToFlat(unitNetworkEntry.getValue().getAddress())) {
-                return unitNetworkEntry.getKey().prefix + "_" + client;
+                return unitNetworkEntry.getKey().prefix + "_" + id;
             }
         }
         throw new RuntimeException("Unresolvable address " + address);
@@ -220,17 +270,20 @@ public final class IpResolver implements Serializable {
         final int firstUnderscorePosition = name.indexOf('_');
         final int unitNumber = Integer.parseInt(name.substring(firstUnderscorePosition + 1));
         if (unitNumber > singleton.maxRange) {
-            throw new IllegalArgumentException("IPv4 address exhausted");
+            throw new IllegalArgumentException("IPv4 address exhausted. Subnet mask only allows up to " + singleton.maxRange + " entities.");
         }
 
         String unitPrefix = name.substring(0, firstUnderscorePosition);
         for (Map.Entry<UnitType, Inet4Address> unitNetworkEntry : unitNetworks.entrySet()) {
             if (unitNetworkEntry.getKey().prefix.equals(unitPrefix)) {
-                int network = addressArrayToFlat(unitNetworkEntry.getValue().getAddress());
+                int netPart = addressArrayToFlat(unitNetworkEntry.getValue().getAddress());
+                int clientPart = addressArrayToFlat(translateAddressFlatToArray(unitNumber));
+                // this looks complicated, but for adding the netPart we convert the clientPart back to int
+                byte [] ipBytes = addressFlatToArray(netPart | clientPart);
 
                 final Inet4Address ipResult;
                 try {
-                    ipResult = (Inet4Address) Inet4Address.getByAddress(addressFlatToArray(network | unitNumber));
+                    ipResult = (Inet4Address) Inet4Address.getByAddress(ipBytes);
                 } catch (UnknownHostException ex) {
                     throw new RuntimeException("Error converting hostname to IP, address is not IPv4");
                 }

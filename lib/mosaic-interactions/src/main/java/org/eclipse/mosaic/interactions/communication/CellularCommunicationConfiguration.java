@@ -32,7 +32,7 @@ import javax.annotation.concurrent.Immutable;
  * communication via cellular networks.
  */
 @Immutable
-public final class CellularCommunicationConfiguration extends Interaction {
+public final class CellularCommunicationConfiguration extends CommunicationConfiguration {
 
     private static final long serialVersionUID = 1L;
 
