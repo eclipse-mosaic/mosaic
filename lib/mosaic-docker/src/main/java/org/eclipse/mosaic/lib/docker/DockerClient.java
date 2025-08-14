@@ -79,14 +79,11 @@ public class DockerClient {
             docker.rm(containerName);
         }
 
-        // run and detach ...
-        docker.runAndDetach(image, options);
+        // run and attach
+        final Process p = docker.run(image, options);
 
         // ..., so we can wait until it's up running
         waitUntilRunning(containerName, DOCKER_RUN_TIMEOUT_MILLISECONDS);
-
-        // when container is up running, catch and follow output of container
-        final Process p = docker.followLogs(containerName);
 
         // grab the dynamic port bindings for connecting to the processes inside the container
         final List<Pair<Integer, Integer>> portBindings = readPortBinding(containerName);
