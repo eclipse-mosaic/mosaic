@@ -102,19 +102,18 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
         List<EnvironmentEventLocation> currentEvents = new ArrayList<>();
 
         for (CEvent event : config.events) {
-            Validate.notNull(event.location, "No location given for event");
-            Validate.notNull(event.time, "No time window given for event");
-            Validate.notNull(event.event, "No event type description given for event");
+            Validate.notNull(event.type, "No event type given for event");
+            Validate.notNull(event.value, "No event value given for event");
 
-            if (isInTimeFrame(event.time, time)) {
+            if (event.time == null || isInTimeFrame(event.time, time)) {
                 if (event.location.area != null) {
-                    currentEvents.add(new EnvironmentEventLocation(event.location.area, event.event.type));
+                    currentEvents.add(new EnvironmentEventLocation(event.location.area, event.type));
                 }
             }
-            if (event.time.start > time) {
+            if (event.time != null && event.time.start > time) {
                 nextTimeAdvanceGrant = Math.min(nextTimeAdvanceGrant, event.time.start);
             }
-            if (event.time.end > time) {
+            if (event.time != null && event.time.end > time) {
                 nextTimeAdvanceGrant = Math.min(nextTimeAdvanceGrant, event.time.end);
             }
         }
@@ -163,7 +162,7 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
         for (VehicleData info : vehicleUpdates.getUpdated()) {
             final List<EnvironmentEvent> events = config.events.stream()
                     .filter(e -> isValidEvent(e, info))
-                    .map(e -> new EnvironmentEvent(e.event.type, e.event.value, startTime, endTime))
+                    .map(e -> new EnvironmentEvent(e.type, e.value, startTime, endTime))
                     .toList();
 
             if (!events.isEmpty()) {
@@ -195,8 +194,7 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
      * @return true if the event is valid according to criteria above
      */
     private boolean isValidEvent(CEvent event, VehicleData vehicleData) {
-        return event.location != null && event.time != null && event.event != null
-                && isMonitored(vehicleData.getName())
+        return isMonitored(vehicleData.getName())
                 && isInTimeFrame(event.time, vehicleData.getTime())
                 && isInEventArea(event, vehicleData);
     }
@@ -212,10 +210,13 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
     }
 
     static boolean isInTimeFrame(CEventTime eventTimeFrame, long messageTime) {
-        return (messageTime >= eventTimeFrame.start && messageTime < eventTimeFrame.end);
+        return eventTimeFrame == null || (messageTime >= eventTimeFrame.start && messageTime < eventTimeFrame.end);
     }
 
     private static boolean isInEventArea(CEvent event, VehicleData vehicleData) {
+        if (event.location == null) {
+            return true;
+        }
         if (event.location.area != null) {
             return event.location.area.contains(vehicleData.getPosition());
         }

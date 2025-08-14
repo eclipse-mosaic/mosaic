@@ -1,10 +1,6 @@
 {
     "events": [
         {
-            "event": {
-                "type": "EVENT",
-                "value": "OBSTACLE_ON_ROAD"
-            },
             "location": {
                 "area": {
                     "type": "Rectangle",
@@ -21,7 +17,9 @@
             "time": {
                 "start": "0 s",
                 "end": "60 s"
-            }
+            },
+            "type": "EVENT",
+            "value": "OBSTACLE_ON_ROAD"
         }
     ]
 }

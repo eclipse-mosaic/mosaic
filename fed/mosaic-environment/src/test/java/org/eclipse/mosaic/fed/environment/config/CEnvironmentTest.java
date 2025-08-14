@@ -29,6 +29,7 @@ import org.eclipse.mosaic.lib.geo.GeoPolygon;
 import org.eclipse.mosaic.lib.geo.GeoRectangle;
 import org.eclipse.mosaic.lib.objects.environment.Sensor;
 import org.eclipse.mosaic.lib.enums.TractionHazard;
+import org.eclipse.mosaic.lib.objects.environment.Wind;
 import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
 import org.eclipse.mosaic.rti.TIME;
 
@@ -118,8 +119,8 @@ public class CEnvironmentTest {
         );
         assertEventDeserialization(
                 eventParkingLot,
-                Sensor.TEMPERATURE,
-                10.0,
+                Sensor.WIND,
+                new Wind(10, 42),
                 null,
                 "seg0",
                 0,
@@ -142,7 +143,7 @@ public class CEnvironmentTest {
             // ASSERT
             assertThat(
                     instantiationException.getMessage(),
-                    startsWith("The CEnvironment config is not valid: $.events[0]: required property 'time' not found")
+                    startsWith("The CEnvironment config is not valid: $.events[0]: required property 'value' not found")
             );  // checking that proper Exception is thrown
         }
     }
@@ -167,8 +168,8 @@ public class CEnvironmentTest {
             long expectedStartTime,
             long expectedEndTime) {
 
-        assertEquals(expectedSensor.getName(), event.event.type);
-        assertEquals(expectedEventValue, expectedSensor.translate(event.event.value));
+        assertEquals(expectedSensor.getName(), event.type);
+        assertEquals(expectedEventValue, expectedSensor.translate(event.value));
         assertEquals(expectedArea, event.location.area);
         assertEquals(expectedConnectionId, event.location.connectionId);
         assertEquals(expectedStartTime, event.time.start);
