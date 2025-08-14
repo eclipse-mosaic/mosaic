@@ -1,10 +1,8 @@
 {
     "events": [
         {
-            "type": {
-                "sensorType": "OBSTACLE",
-                "value": 1
-            },
+            "type": "EVENT",
+            "value": "ROADWORKS",
             "location": {
                 "area": {
                     "type": "Circle",
@@ -21,10 +19,8 @@
             }
         },
         {
-            "type": {
-                "sensorType": "OBSTACLE",
-                "value": 1
-            },
+            "type": "EVENT",
+            "value": "OBSTACLE_ON_ROAD",
             "location": {
                 "area": {
                     "type": "Circle",
@@ -41,10 +37,8 @@
             }
         },
         {
-            "type": {
-                "sensorType": "ICE",
-                "value": 1
-            },
+            "type": "TRACTION_HAZARD",
+            "value": "ICE",
             "location": {
                 "area": {
                     "type": "Circle",
