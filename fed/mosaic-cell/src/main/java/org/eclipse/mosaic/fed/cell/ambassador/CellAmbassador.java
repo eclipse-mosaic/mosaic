@@ -38,7 +38,6 @@ import org.eclipse.mosaic.interactions.mapping.TrafficLightRegistration;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
-import org.eclipse.mosaic.lib.math.SpeedUtils;
 import org.eclipse.mosaic.lib.objects.UnitData;
 import org.eclipse.mosaic.lib.objects.UnitNameGenerator;
 import org.eclipse.mosaic.lib.objects.agent.AgentData;
@@ -424,11 +423,11 @@ public class CellAmbassador extends AbstractFederateAmbassador {
         if (simData.containsCellConfigurationOfNode(unit.getName())) {
             previousRegion = RegionUtility.getRegionIdForNode(unit.getName());
             if (log.isDebugEnabled()) {
-                log.debug("Updated VEH (id={}) to position={} with speed={}, t={}", unit.getName(), unit.getPosition(), speed, TIME.format(time));
+                log.debug("Updated MOBILE NODE (id={}) to position={} with speed={}, t={}", unit.getName(), unit.getPosition(), speed, TIME.format(time));
             }
         } else {
             simData.setCellConfigurationOfNode(unit.getName(), registeredMobileNodes.get(unit.getName()).get());
-            log.debug("Added VEH (id={}) at position={} with speed={}, t={}", unit.getName(), unit.getPosition(), speed, TIME.format(time));
+            log.debug("Added MOBILE NODE (id={}) at position={} with speed={}, t={}", unit.getName(), unit.getPosition(), speed, TIME.format(time));
         }
 
         simData.setPositionOfNode(unit.getName(), projectedPosition);
@@ -466,11 +465,11 @@ public class CellAmbassador extends AbstractFederateAmbassador {
         );
 
         final String nodeId = cellConfiguration.getNodeId();
-        final boolean isMobileUnit = UnitNameGenerator.isVehicle(nodeId) || UnitNameGenerator.isAgent(nodeId);
+        final boolean isMobileNode = UnitNameGenerator.isVehicle(nodeId) || UnitNameGenerator.isAgent(nodeId);
 
         Optional<HandoverInfo> handoverInfo = Optional.empty();
         if (cellConfiguration.isEnabled()) {
-            if (isMobileUnit) { // handle vehicles and agents
+            if (isMobileNode) { // handle vehicles and agents
                 handoverInfo = handleMobileUnitCellConfiguration(nodeId, cellConfiguration, interactionTime);
             } else if (registeredEntities.containsKey(nodeId)) { // handle stationary entities
                 handleEntityCellConfiguration(nodeId, cellConfiguration, interactionTime);
@@ -482,14 +481,14 @@ public class CellAmbassador extends AbstractFederateAmbassador {
                 );
             }
         } else {
-            if (isMobileUnit) {
+            if (isMobileNode) {
                 // disables cell node and removes vehicle or agents
                 handoverInfo = unregisterMobileUnit(interactionTime, nodeId);
             } else {
                 disableCellForNode(nodeId);
             }
             log.info(
-                    "Disabled Cell Communication for {}={}, t={}", (isMobileUnit ? "vehicle" : "entity"), nodeId, TIME.format(interactionTime)
+                    "Disabled Cell Communication for {}={}, t={}", (isMobileNode ? "mobile node" : "entity"), nodeId, TIME.format(interactionTime)
             );
         }
         handoverInfo.ifPresent((handover) -> {
