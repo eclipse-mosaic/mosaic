@@ -20,8 +20,11 @@ import org.eclipse.mosaic.fed.application.app.api.os.modules.Locatable;
 import org.eclipse.mosaic.fed.application.app.api.os.modules.PtRoutable;
 import org.eclipse.mosaic.fed.application.app.api.os.modules.Routable;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
+import org.eclipse.mosaic.lib.objects.agent.AgentData;
 import org.eclipse.mosaic.lib.routing.CandidateRoute;
 import org.eclipse.mosaic.lib.routing.pt.PtRoute;
+
+import javax.annotation.Nullable;
 
 /**
  * An agent represents a person in the simulation which is able to use public transport
@@ -67,5 +70,11 @@ public interface AgentOperatingSystem
      * Provides the destination position of the agent as defined in the mapping configuration.
      */
     GeoPoint getDestinationPosition();
+
+    /**
+     * Provides access to the current agent state.
+     */
+    @Nullable
+    AgentData getAgentData();
 
 }

@@ -42,6 +42,7 @@ import org.eclipse.mosaic.rti.TIME;
 import com.google.common.collect.Lists;
 
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class AgentUnit extends AbstractSimulationUnit implements AgentOperatingSystem {
 
@@ -149,6 +150,12 @@ public class AgentUnit extends AbstractSimulationUnit implements AgentOperatingS
         return agentData != null && agentData.getPosition() != null
                 ? agentData.getPosition()
                 : getInitialPosition();
+    }
+
+    @Nullable
+    @Override
+    public AgentData getAgentData() {
+        return agentData;
     }
 
     @Override

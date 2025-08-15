@@ -388,7 +388,7 @@ public class CellAmbassador extends AbstractFederateAmbassador {
 
         processMobileNodesUpdates(agentUpdates.getTime(), agentUpdates.getUpdated(),
                 a -> a.getPosition().toCartesian(),
-                a -> SpeedUtils.kmh2ms(5) //FIXME extract speed
+                AgentData::getSpeed
         );
     }
 
@@ -552,8 +552,7 @@ public class CellAmbassador extends AbstractFederateAmbassador {
 
             AgentData agentData = fetchAgentDataFromLastUpdate(nodeId);
             if (agentData != null) {
-                //FIXME agent.getSpeed
-                return registerOrUpdateMobileNode(interactionTime, agentData, agentData.getPosition().toCartesian(), SpeedUtils.kmh2ms(5));
+                return registerOrUpdateMobileNode(interactionTime, agentData, agentData.getPosition().toCartesian(), agentData.getSpeed());
             }
         }
         return handoverInfo;
