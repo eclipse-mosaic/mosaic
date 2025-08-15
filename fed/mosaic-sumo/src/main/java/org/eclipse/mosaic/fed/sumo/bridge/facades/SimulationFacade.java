@@ -681,7 +681,7 @@ public class SimulationFacade {
     }
 
     private AgentData processPersonSubscriptionResult(long time, PersonSubscriptionResult result) {
-        return new AgentData(time, result.id, result.position.getGeographicPosition(), null, null, AgentData.TripStatus.WALKING);
+        return new AgentData(time, result.id, result.position.getGeographicPosition(), result.speed, null, null, AgentData.TripStatus.WALKING);
     }
 
     /**
