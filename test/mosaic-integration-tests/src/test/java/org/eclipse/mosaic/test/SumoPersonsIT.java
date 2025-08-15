@@ -34,6 +34,7 @@ public class SumoPersonsIT {
     private static MosaicSimulation.SimulationResult simulationResult;
 
     private final static String AGENT_LOG = "apps/agent_0/HelloWorldApp.log";
+    private final static String SERVER_LOG = "apps/server_0/HelloWorldServerApp.log";
 
     @BeforeClass
     public static void runSimulation() {
@@ -51,5 +52,11 @@ public class SumoPersonsIT {
         LogAssert.contains(simulationRule, AGENT_LOG, ".*Hello World! \\(at simulation time 11.*");
         LogAssert.contains(simulationRule, AGENT_LOG, ".*I'm still here at GeoPoint.*");
         LogAssert.contains(simulationRule, AGENT_LOG, ".*Bye bye World \\(at simulation time 2.*");
+    }
+
+    @Test
+    public void cellMessageExchange() throws Exception {
+        LogAssert.contains(simulationRule, SERVER_LOG, ".*Received message from agent_0 with content ping.*");
+        LogAssert.contains(simulationRule, AGENT_LOG, ".*Received message from server_0 with content pong.*");
     }
 }
