@@ -23,32 +23,32 @@ import org.eclipse.mosaic.rti.TIME;
 
 import org.junit.Test;
 
-public class SumoAmbassadorTimeStepAdjustmentTest {
+public class SumoVehicleActionsHandlerTest {
 
     private final static long sumoTimeStep = TIME.SECOND;
 
     @Test
     public void testEqualTimeStep() {
         // Requested time is the same as the sumo timestep. Shouldn't be changed
-        assertEquals(sumoTimeStep, AbstractSumoAmbassador.adjustToSumoTimeStep(TIME.SECOND, sumoTimeStep));
+        assertEquals(sumoTimeStep, SumoVehicleActionsHandler.adjustToSumoTimeStep(TIME.SECOND, sumoTimeStep));
     }
 
     @Test
     public void testRoundDown() {
         // Just 2 over, should round down
-        assertEquals(sumoTimeStep, AbstractSumoAmbassador.adjustToSumoTimeStep(TIME.SECOND + 2 * TIME.MILLI_SECOND, sumoTimeStep));
+        assertEquals(sumoTimeStep, SumoVehicleActionsHandler.adjustToSumoTimeStep(TIME.SECOND + 2 * TIME.MILLI_SECOND, sumoTimeStep));
     }
 
     @Test
     public void testRoundUp() {
         // Closer to the next higher value, should round up
-        assertEquals(sumoTimeStep * 2, AbstractSumoAmbassador.adjustToSumoTimeStep(TIME.SECOND + 999 * TIME.MILLI_SECOND, sumoTimeStep));
+        assertEquals(sumoTimeStep * 2, SumoVehicleActionsHandler.adjustToSumoTimeStep(TIME.SECOND + 999 * TIME.MILLI_SECOND, sumoTimeStep));
     }
 
     @Test
     public void testTooSmall() {
         // Requested event time is smaller than the half of the sumo step (closer to previous step value - 0 in this case),
         // so it is being reduced to 0 and then brought to sumo time step value
-        assertEquals(sumoTimeStep, AbstractSumoAmbassador.adjustToSumoTimeStep(sumoTimeStep / 3, sumoTimeStep));
+        assertEquals(sumoTimeStep, SumoVehicleActionsHandler.adjustToSumoTimeStep(sumoTimeStep / 3, sumoTimeStep));
     }
 }
