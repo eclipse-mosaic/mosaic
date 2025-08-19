@@ -15,8 +15,6 @@
 
 package org.eclipse.mosaic.fed.environment.config;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.io.Serializable;
 
 /**
