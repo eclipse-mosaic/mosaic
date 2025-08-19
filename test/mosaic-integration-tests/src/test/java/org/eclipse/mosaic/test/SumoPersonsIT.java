@@ -33,8 +33,9 @@ public class SumoPersonsIT {
 
     private static MosaicSimulation.SimulationResult simulationResult;
 
-    private final static String AGENT_LOG = "apps/agent_0/HelloWorldApp.log";
-    private final static String SERVER_LOG = "apps/server_0/HelloWorldServerApp.log";
+    private final static String KEEP_ALIVE_AGENT_LOG = "apps/agent_0/KeepAliveAgentApp.log";
+    private final static String PING_AGENT_LOG = "apps/agent_0/PingAgentApp.log";
+    private final static String PONG_SERVER_LOG = "apps/server_0/PongServerApp.log";
 
     @BeforeClass
     public static void runSimulation() {
@@ -49,14 +50,15 @@ public class SumoPersonsIT {
 
     @Test
     public void agentApplicationUpdated() throws Exception {
-        LogAssert.contains(simulationRule, AGENT_LOG, ".*Hello World! \\(at simulation time 11.*");
-        LogAssert.contains(simulationRule, AGENT_LOG, ".*I'm still here at GeoPoint.*");
-        LogAssert.contains(simulationRule, AGENT_LOG, ".*Bye bye World \\(at simulation time 2.*");
+        LogAssert.contains(simulationRule, KEEP_ALIVE_AGENT_LOG, ".*Hello World! \\(at simulation time 11.*");
+        LogAssert.contains(simulationRule, KEEP_ALIVE_AGENT_LOG, ".*I'm still here at GeoPoint.*");
+        LogAssert.contains(simulationRule, KEEP_ALIVE_AGENT_LOG, ".*Bye bye World \\(at simulation time 2.*");
     }
 
     @Test
     public void cellMessageExchange() throws Exception {
-        LogAssert.contains(simulationRule, SERVER_LOG, ".*Received message from agent_0 with content ping.*");
-        LogAssert.contains(simulationRule, AGENT_LOG, ".*Received message from server_0 with content pong.*");
+        LogAssert.contains(simulationRule, PING_AGENT_LOG, ".*TCP-Acknowledgement received.*");
+        LogAssert.contains(simulationRule, PONG_SERVER_LOG, ".*Received message from agent_0 with content \"ping\".*");
+        LogAssert.contains(simulationRule, PING_AGENT_LOG, ".*Received message from server_0 with content \"pong\".*");
     }
 }
