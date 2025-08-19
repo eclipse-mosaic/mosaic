@@ -47,7 +47,11 @@ public class ConversionUtils {
         } else if (o instanceof Integer) {
             return (Integer) o;
         } else if (o instanceof Long) {
-            return ((Long) o).intValue();
+            try {
+                return Math.toIntExact((Long) o);
+            } catch (ArithmeticException ex) {
+                throw new IllegalArgumentException("Input value is too large to store as integer.", ex);
+            }
         } else if (o instanceof Double) {
             return ((Double) o).intValue();
         } else {
