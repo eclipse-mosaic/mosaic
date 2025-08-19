@@ -499,7 +499,7 @@ public class CellAmbassador extends AbstractFederateAmbassador {
     }
 
     /**
-     * Checks whether a mobile unit (vehicle or person) is registered in a cell. If the unit is registered, unregister it.
+     * Checks whether a mobile unit (vehicle or agent) is registered in a cell. If the unit is registered, unregister it.
      *
      * @param time Simulation time.
      * @param name unit ID.
@@ -572,7 +572,7 @@ public class CellAmbassador extends AbstractFederateAmbassador {
         if (latestAgentUpdates == null) {
             return null;
         }
-        // see if vehicle was added or updated within the last vehicle update
+        // see if an agent was added or updated within the last agent update
         return latestAgentUpdates.getUpdated().stream()
                 .filter(a -> a.getName().equals(agentId))
                 .findFirst()
