@@ -144,17 +144,16 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
      */
     private void detectSensors() {
 
-        TractionHazard tractionHazard = getOs().getBasicSensorModule().getSensorValue(Sensor.TRACTION_HAZARD).orElse(null);
+        // Reads the sensor value for a traction hazard. If present, execute the inner function ...
+        getOs().getBasicSensorModule().getSensorValue(Sensor.TRACTION_HAZARD).ifPresent(tractionHazard -> {
 
-        if (tractionHazard != null) {
+            // Log info, that a traction hazard has been detected
             getLog().infoSimTime(this, "Traction sensor event of type {} detected", tractionHazard);
 
             // Method which is called to react on new or changed environment events
             reactOnTractionHazard();
-            return; // the early exit discards other possible environmental warnings, ok for this tutorial purpose
-        }
+        });
 
-        getLog().debugSimTime(this, "No Sensor/Event detected");
     }
 
     /**
