@@ -82,52 +82,46 @@ public class SumoTrafficLightsHandler extends AbstractHandler {
         try {
             log.info(TRAFFIC_LIGHTS_STATE_CHANGE_REQ);
 
-            String trafficLightGroupId = trafficLightStateChange.getTrafficLightGroupId();
+            final String trafficLightGroupId = trafficLightStateChange.getTrafficLightGroupId();
 
             switch (trafficLightStateChange.getParameterType()) {
-
-                case ChangePhase:
+                case ChangePhase -> {
                     log.info(
                             "Changing the current phase of traffic light group '{}' to phase with index '{}'",
                             trafficLightGroupId, trafficLightStateChange.getPhaseIndex()
                     );
                     bridge.getTrafficLightControl().setPhaseIndex(trafficLightGroupId, trafficLightStateChange.getPhaseIndex());
-                    break;
-
-                case RemainingDuration:
+                }
+                case RemainingDuration -> {
                     double durationInSeconds = trafficLightStateChange.getPhaseRemainingDuration() / 1000; //ms -> s
                     log.info(
                             "Changing remaining phase duration of traffic light group='{}' to '{}' seconds",
                             trafficLightGroupId, durationInSeconds
                     );
                     bridge.getTrafficLightControl().setPhaseRemainingDuration(trafficLightGroupId, durationInSeconds);
-                    break;
-
-                case ProgramId:
+                }
+                case ProgramId -> {
                     log.info(
                             "Changing program of traffic light group '{}' to program id '{}'",
                             trafficLightGroupId, trafficLightStateChange.getProgramId()
                     );
                     bridge.getTrafficLightControl().setProgramById(trafficLightGroupId, trafficLightStateChange.getProgramId());
-                    break;
-
-                case ChangeProgramWithPhase:
+                }
+                case ChangeProgramWithPhase -> {
                     log.info(
                             "Changing program of traffic light group '{}' to program id '{}' and setting the phase to '{}'",
                             trafficLightGroupId, trafficLightStateChange.getProgramId(), trafficLightStateChange.getPhaseIndex()
                     );
                     bridge.getTrafficLightControl().setProgramById(trafficLightGroupId, trafficLightStateChange.getProgramId());
                     bridge.getTrafficLightControl().setPhaseIndex(trafficLightGroupId, trafficLightStateChange.getPhaseIndex());
-                    break;
-
-                case ChangeToCustomState:
+                }
+                case ChangeToCustomState -> {
                     log.info("Changing to custom states for traffic light group '{}'.", trafficLightGroupId);
                     bridge.getTrafficLightControl().setPhase(trafficLightGroupId, trafficLightStateChange.getCustomStateList());
-                    break;
-                default:
-                    log.warn("Discard this TrafficLightStateChange interaction (paramType={}).",
-                            trafficLightStateChange.getParameterType());
-                    return;
+                }
+                default -> log.warn("Discard this TrafficLightStateChange interaction (paramType={}).",
+                        trafficLightStateChange.getParameterType());
+
             }
 
             String programId = bridge.getTrafficLightControl().getCurrentProgram(trafficLightGroupId);

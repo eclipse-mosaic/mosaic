@@ -341,8 +341,8 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
     /**
      * This method is called to tell the federate the start time and the end time.
      *
-     * @param startTime Start time of the simulation run in nano seconds.
-     * @param endTime   End time of the simulation run in nano seconds.
+     * @param startTime Start time of the simulation run in nanoseconds.
+     * @param endTime   End time of the simulation run in nanoseconds.
      * @throws InternalFederateException Exception is thrown if an error is occurred while execute of a federate.
      */
     @Override
@@ -350,15 +350,6 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
         super.initialize(startTime, endTime);
 
         nextTimeStep = startTime;
-
-        // If simulation is to start and stop, do nothing and postpone the thing
-        // to do until a VehicleRoutesInitialization interaction was received
-        // Else connect to the TraCI server, if Sumo is already started no
-        // change of the route file is necessary
-        if (descriptor == null) {
-            initSumoConnection();
-            initHandlers();
-        }
 
         try {
             rti.requestAdvanceTime(nextTimeStep, 0, FederatePriority.higher(descriptor.getPriority()));
@@ -369,7 +360,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
     }
 
     /**
-     * Initializes the TraciClient.
+     * Initializes the TraciClient. Does nothing if the {@link Bridge} is already initialized.
      *
      * @throws InternalFederateException Exception is thrown if an error is occurred while execution of a federate.
      */
@@ -628,6 +619,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
             }
 
             if (firstAdvanceTime) {
+                // if SUMO was not started by the RTI but manually, the connection to SUMO is initiated now
                 initSumoConnection();
                 initHandlers();
                 trafficLightsHandler.initializeTrafficLights(time);
@@ -636,9 +628,9 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
 
             vehiclesHandler.setExternalVehiclesToLatestPositions(time);
             TraciSimulationStepResult simulationStepResult = bridge.getSimulationControl().simulateUntil(time);
+            log.trace("Stepped simulation until {} ns", time);
 
             VehicleUpdates vehicleUpdates = simulationStepResult.vehicleUpdates();
-            log.trace("Leaving advance time: {}", time);
             vehiclesHandler.removeExternalVehiclesFromUpdates(vehicleUpdates);
             routesHandler.propagateNewRoutes(vehicleUpdates, time);
             vehiclesHandler.propagateSumoVehiclesToRti(time);
@@ -651,7 +643,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
             // person updates will be sent in the form of AgentUpdates
             rti.triggerInteraction(simulationStepResult.personUpdates());
             rti.triggerInteraction(simulationStepResult.trafficDetectorUpdates());
-            this.rti.triggerInteraction(simulationStepResult.trafficLightUpdates());
+            rti.triggerInteraction(simulationStepResult.trafficLightUpdates());
 
             rti.requestAdvanceTime(nextTimeStep, 0, FederatePriority.higher(descriptor.getPriority()));
 

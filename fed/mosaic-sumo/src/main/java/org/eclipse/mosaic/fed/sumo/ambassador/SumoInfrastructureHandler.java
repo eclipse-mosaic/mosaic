@@ -44,7 +44,7 @@ import java.util.List;
 public class SumoInfrastructureHandler extends AbstractHandler {
 
     /**
-     * Manages traffic signs to be added as POIs to SUMO (e.g. for visualization)
+     * Manages traffic signs to be added as POIs to SUMO (e.g., for visualization)
      */
     private TrafficSignManager trafficSignManager;
 
