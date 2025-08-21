@@ -20,7 +20,7 @@ import org.eclipse.mosaic.rti.TIME;
 
 /**
  * This class is used to hold and query data of externally simulated vehicles
- * it is used by the {@link AbstractSumoAmbassador} to synchronize vehicles between
+ * it is used by the {@link SumoAmbassador} to synchronize vehicles between
  * simulations.
  */
 class ExternalVehicleState {
