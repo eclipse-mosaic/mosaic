@@ -17,7 +17,7 @@ public class ExternalFilesUtil {
 				.toFile();
 
 			// Create the process and set the working directory to the script folder
-			String pythonCmd = isWindows() ? "python" : "python3";
+			String pythonCmd = isWindows() ? "python" : "python3"; // you might have to adjust this if you are not working on Windows
 			ProcessBuilder pb = new ProcessBuilder(pythonCmd, "executeScripts.py", scenarioName);
 			pb.directory(scriptDir);
 			pb.redirectErrorStream(true);

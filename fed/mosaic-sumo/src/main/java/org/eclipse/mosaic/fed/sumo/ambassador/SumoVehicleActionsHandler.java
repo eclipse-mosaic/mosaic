@@ -27,6 +27,7 @@ import static org.eclipse.mosaic.fed.sumo.ambassador.LogStatements.VEHICLE_STOP_
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoLaneChangeMode;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoSpeedMode;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
+import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.interactions.vehicle.VehicleLaneChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleParametersChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleResume;
@@ -398,6 +399,10 @@ public class SumoVehicleActionsHandler extends AbstractHandler implements EventP
             throw new InternalFederateException(e);
         }
     }
+
+	void handleTaxiDispatch(TaxiDispatch taxiDispatch) throws InternalFederateException {
+		bridge.getVehicleControl().dispatchTaxi(taxiDispatch.getTaxiId(), taxiDispatch.getReservations());
+	}
 
     @Override
     public void processEvent(Event event) throws Exception {
