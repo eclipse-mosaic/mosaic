@@ -26,9 +26,11 @@ import org.eclipse.mosaic.fed.application.app.api.navigation.NavigationModule;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.interactions.communication.V2xMessageTransmission;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
+import org.eclipse.mosaic.lib.enums.TractionHazard;
 import org.eclipse.mosaic.lib.objects.v2x.MessageRouting;
 import org.eclipse.mosaic.lib.objects.v2x.V2xMessage;
 import org.eclipse.mosaic.lib.objects.v2x.etsi.Denm;
@@ -113,8 +115,7 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
         if (msg.getRouting().getSource().getSourceName().equals("server_0")) {
             // Message was received via cell from the WeatherServer
             getLog().infoSimTime(this, "Received message over cell from WeatherServer");
-        }
-        else {
+        } else {
             getLog().infoSimTime(this, "Received message from {}", msg.getRouting().getSource().getSourceName());
         }
 
@@ -139,27 +140,20 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
 
 
     /**
-     * This method is used to request new data from the sensors and, in case of new data, react on it.
+     * This method is used to request new data from the traction sensor and, in case of new data, react on it.
      */
     private void detectSensors() {
-        /*
-         * The current strength of each environment sensor is examined here.
-         * If one is higher than zero, we reason that we are in a hazardous area with the
-         * given hazard.
-         */
-        for (SensorType currentType : SensorType.values()) {
 
-            // The strength of a detected sensor
-            int strength = getOs().getBasicSensorModule().getStrengthOf(currentType);
+        // Reads the sensor value for a traction hazard. If present, execute the inner function ...
+        getOs().getBasicSensorModule().getSensorValue(Sensor.TRACTION_HAZARD).ifPresent(tractionHazard -> {
 
-            if (strength > 0) {
-                // Method which is called to react on new or changed environment events
-                reactOnEnvironmentData(currentType, strength);
-                return; // the early exit discards other possible environmental warnings, ok for this tutorial purpose
-            }
-        }
+            // Log info, that a traction hazard has been detected
+            getLog().infoSimTime(this, "Traction sensor event of type {} detected", tractionHazard);
 
-        getLog().debugSimTime(this, "No Sensor/Event detected");
+            // Method which is called to react on new or changed environment events
+            reactOnTractionHazard();
+        });
+
     }
 
     /**
@@ -167,11 +161,8 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
      * data. It retrieves the strength, type and position of the
      * detected event. Later on all information is filled into a new
      * DEN Message and will be sent.
-     *
-     * @param type     sensor type
-     * @param strength event strength
      */
-    private void reactOnEnvironmentData(SensorType type, int strength) {
+    private void reactOnTractionHazard() {
         // failsafe
         if (getOs().getVehicleData() == null) {
             getLog().infoSimTime(this, "No vehicleInfo given, skipping.");
@@ -188,11 +179,7 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
         // ID of the connection on which the vehicle detected an event.
         String roadId = getOs().getVehicleData().getRoadPosition().getConnection().getId();
 
-        getLog().infoSimTime(this, "Sensor {} event detected", type);
-
         getLog().debugSimTime(this, "Position: {}", vehicleLongLat);
-        getLog().debugSimTime(this, "Event strength to: {}", strength);
-        getLog().debugSimTime(this, "SensorType to: {}", type);
         getLog().debugSimTime(this, "RoadId on which the event take place: {}", roadId);
 
         // Region with a radius around the coordinates of the car.
@@ -217,9 +204,10 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
          * and a payload in the form of a DenmContent object. It contains fields such as the current timestamp
          * of the sending node, the geo position of the sending node, warning type and event strength.
          */
-        Denm denm = new Denm(mr,
-                new DenmContent(getOs().getSimulationTime(), vehicleLongLat, roadId, type, strength, SPEED, 0.0f, vehicleLongLat, null, null),
-                200);
+        Denm denm = new Denm(mr, new DenmContent(
+                getOs().getSimulationTime(), vehicleLongLat, roadId, EnvironmentEventCause.ADVERSE_WEATHER_CONDITION_ADHESION,
+                SPEED, 0.0f, vehicleLongLat, null, null
+        ), 200);
         getLog().infoSimTime(this, "Sending DENM");
 
         /*
@@ -239,9 +227,8 @@ public class WeatherWarningApp extends AbstractApplication<VehicleOperatingSyste
 
         // Print some useful DEN message information
         if (getLog().isDebugEnabled()) {
-            getLog().debugSimTime(this, "DENM content: Sensor Type: {}", denm.getWarningType().toString());
+            getLog().debugSimTime(this, "DENM content: Event cause: {}", denm.getEventCause().toString());
             getLog().debugSimTime(this, "DENM content: Event position: {}", denm.getEventLocation());
-            getLog().debugSimTime(this, "DENM content: Event Strength: {}", denm.getEventStrength());
             getLog().debugSimTime(this, "DENM content: Road Id of the Sender: {}", denm.getEventRoadId());
             getLog().debugSimTime(this, "CurrVehicle: position: {}", getOs().getNavigationModule().getRoadPosition());
             getLog().debugSimTime(this, "CurrVehicle: route: {}", routeInfo.getId());
