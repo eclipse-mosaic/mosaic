@@ -129,7 +129,7 @@ public final class EncodedPayload implements Serializable {
      *
      * @return the encoded bytes of the payload
      */
-    @Nullable
+    @Nonnull
     public byte[] getBytes() {
         if (bytes == null) {
             return new byte[0];

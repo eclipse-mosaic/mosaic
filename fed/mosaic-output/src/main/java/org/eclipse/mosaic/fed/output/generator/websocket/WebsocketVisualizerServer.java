@@ -154,7 +154,7 @@ public class WebsocketVisualizerServer extends WebSocketServer implements Runnab
         List<AgentData> reducedUpdates = new ArrayList<>();
         for (AgentData agent : original.getUpdated()) {
             reducedUpdates.add(
-                    new AgentData(agent.getTime(), agent.getName(), agent.getPosition(), null, null, agent.getTripStatus())
+                    new AgentData(agent.getTime(), agent.getName(), agent.getPosition(), agent.getSpeed(), null, null, agent.getTripStatus())
             );
         }
         return new AgentUpdates(original.getTime(), reducedUpdates, Collections.EMPTY_LIST);

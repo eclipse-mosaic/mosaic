@@ -26,6 +26,7 @@ import org.eclipse.mosaic.fed.cell.data.SimulationData;
 import org.eclipse.mosaic.fed.cell.utility.HandoverUtility;
 import org.eclipse.mosaic.fed.cell.utility.RegionUtility;
 import org.eclipse.mosaic.fed.cell.viz.BandwidthMeasurementManager;
+import org.eclipse.mosaic.interactions.agent.AgentUpdates;
 import org.eclipse.mosaic.interactions.communication.CellularCommunicationConfiguration;
 import org.eclipse.mosaic.interactions.communication.CellularHandoverUpdates;
 import org.eclipse.mosaic.interactions.communication.V2xMessageTransmission;
@@ -37,7 +38,9 @@ import org.eclipse.mosaic.interactions.mapping.TrafficLightRegistration;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
+import org.eclipse.mosaic.lib.objects.UnitData;
 import org.eclipse.mosaic.lib.objects.UnitNameGenerator;
+import org.eclipse.mosaic.lib.objects.agent.AgentData;
 import org.eclipse.mosaic.lib.objects.communication.CellConfiguration;
 import org.eclipse.mosaic.lib.objects.communication.HandoverInfo;
 import org.eclipse.mosaic.lib.objects.mapping.ChargingStationMapping;
@@ -52,6 +55,7 @@ import org.eclipse.mosaic.rti.api.Interaction;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 import org.eclipse.mosaic.rti.api.parameters.AmbassadorParameter;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.Validate;
@@ -63,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -96,14 +101,19 @@ public class CellAmbassador extends AbstractFederateAmbassador {
     private final Map<String, CNetworkProperties> registeredServers = new HashMap<>();
 
     /**
-     * Vehicles to be added to {@link #simData} as soon as they configure cellular communication AND have moved in traffic simulation.
+     * Mobile nodes to be added to {@link #simData} as soon as they configure cellular communication AND have moved in traffic simulation.
      */
-    private final Map<String, AtomicReference<CellConfiguration>> registeredVehicles = new HashMap<>();
+    private final Map<String, AtomicReference<CellConfiguration>> registeredMobileNodes = new HashMap<>();
 
     /**
      * Store latest {@link VehicleUpdates} as they may be needed twice after enabling cell modules for vehicles.
      */
     private VehicleUpdates latestVehicleUpdates;
+
+    /**
+     * Store latest {@link AgentUpdates} as they may be needed twice after enabling cell modules for vehicles.
+     */
+    private AgentUpdates latestAgentUpdates;
 
     /**
      * Manager for detailed statistic of network load (e.g. of Upstream and Downstream) in individual regions / cells.
@@ -221,6 +231,8 @@ public class CellAmbassador extends AbstractFederateAmbassador {
             process((TmcRegistration) interaction);
         } else if (interaction.getTypeId().equals(VehicleUpdates.TYPE_ID)) {
             process((VehicleUpdates) interaction);
+        } else if (interaction.getTypeId().equals(AgentUpdates.TYPE_ID)) {
+            process((AgentUpdates) interaction);
         } else if (interaction.getTypeId().equals(CellularCommunicationConfiguration.TYPE_ID)) {
             final CellularCommunicationConfiguration configInteraction = (CellularCommunicationConfiguration) interaction;
             // Node configuration must be done in the correct order, therefore we must ensure that it is scheduled by the chain manager
@@ -358,18 +370,38 @@ public class CellAmbassador extends AbstractFederateAmbassador {
     private void process(VehicleUpdates vehicleUpdates) throws InternalFederateException {
         latestVehicleUpdates = vehicleUpdates;
 
-        final long currentTime = vehicleUpdates.getTime();
+        processMobileNodesUpdates(vehicleUpdates.getTime(),
+                Iterables.concat(vehicleUpdates.getAdded(), vehicleUpdates.getUpdated()),
+                VehicleData::getProjectedPosition, VehicleData::getSpeed
+        );
+    }
+
+    /**
+     * Register any agent updates in the cell simulation and store all agent data in a {@link HandoverInfo} list
+     * contains the nodeID, previous and current region.
+     *
+     * @param agentUpdates Agent movement object
+     */
+    private void process(AgentUpdates agentUpdates) throws InternalFederateException {
+        latestAgentUpdates = agentUpdates;
+
+        processMobileNodesUpdates(agentUpdates.getTime(), agentUpdates.getUpdated(),
+                a -> a.getPosition().toCartesian(),
+                AgentData::getSpeed
+        );
+    }
+
+    private <UNIT extends UnitData> void processMobileNodesUpdates(long currentTime,
+                                                                   Iterable<UNIT> units,
+                                                                   Function<UNIT, CartesianPoint> cartesianPointAccess,
+                                                                   Function<UNIT, Double> speedAccess) throws InternalFederateException {
         final List<HandoverInfo> handovers = new ArrayList<>();
 
-        for (VehicleData added : vehicleUpdates.getAdded()) {
-            if (isVehicleCellEnabled(added)) {
-                Optional<HandoverInfo> handoverInfo = registerOrUpdateVehicle(currentTime, added);
-                handoverInfo.ifPresent(handovers::add);
-            }
-        }
-        for (VehicleData updated : vehicleUpdates.getUpdated()) {
-            if (isVehicleCellEnabled(updated)) {
-                Optional<HandoverInfo> handoverInfo = registerOrUpdateVehicle(currentTime, updated);
+        for (UNIT unit : units) {
+            if (isCellEnabledForMobileNode(unit.getName())) {
+                Optional<HandoverInfo> handoverInfo = registerOrUpdateMobileNode(
+                        currentTime, unit, cartesianPointAccess.apply(unit), speedAccess.apply(unit)
+                );
                 handoverInfo.ifPresent(handovers::add);
             }
         }
@@ -381,15 +413,38 @@ public class CellAmbassador extends AbstractFederateAmbassador {
             }
         }
 
-        if (handovers.size() > 0) {
+        if (!handovers.isEmpty()) {
             chainManager.sendInteractionToRti(new CellularHandoverUpdates(currentTime, handovers));
         }
+    }
+
+    private Optional<HandoverInfo> registerOrUpdateMobileNode(long time, UnitData unit, CartesianPoint projectedPosition, double speed) throws InternalFederateException {
+        String previousRegion = null;
+        if (simData.containsCellConfigurationOfNode(unit.getName())) {
+            previousRegion = RegionUtility.getRegionIdForNode(unit.getName());
+            if (log.isDebugEnabled()) {
+                log.debug("Updated MOBILE NODE (id={}) to position={} with speed={}, t={}", unit.getName(), unit.getPosition(), speed, TIME.format(time));
+            }
+        } else {
+            simData.setCellConfigurationOfNode(unit.getName(), registeredMobileNodes.get(unit.getName()).get());
+            log.debug("Added MOBILE NODE (id={}) at position={} with speed={}, t={}", unit.getName(), unit.getPosition(), speed, TIME.format(time));
+        }
+
+        simData.setPositionOfNode(unit.getName(), projectedPosition);
+        simData.setSpeedOfNode(unit.getName(), speed);
+
+        CNetworkProperties currentRegion = RegionUtility.getRegionForPosition(projectedPosition);
+        if (HandoverUtility.isAfterHandover(currentRegion.id, previousRegion)) {
+            simData.setRegionOfNode(unit.getName(), currentRegion);
+            return Optional.of(new HandoverInfo(unit.getName(), currentRegion.id, previousRegion));
+        }
+        return Optional.empty();
     }
 
     /**
      * Configure the cellModule of a node (enable, disable or change parameters).
      * For vehicles, the position has to be set as well before the vehicle can be considered for the cell simulation.
-     * Hence, the configuration is stored in {@link #registeredVehicles}.
+     * Hence, the configuration is stored in {@link #registeredMobileNodes}.
      *
      * @param interaction Interaction to configure the cell communication node.
      */
@@ -410,30 +465,30 @@ public class CellAmbassador extends AbstractFederateAmbassador {
         );
 
         final String nodeId = cellConfiguration.getNodeId();
-        final boolean isVehicle = UnitNameGenerator.isVehicle(nodeId);
+        final boolean isMobileNode = UnitNameGenerator.isVehicle(nodeId) || UnitNameGenerator.isAgent(nodeId);
 
         Optional<HandoverInfo> handoverInfo = Optional.empty();
         if (cellConfiguration.isEnabled()) {
-            if (isVehicle) { // handle vehicles
-                handoverInfo = handleVehicleCellConfiguration(nodeId, cellConfiguration, interactionTime);
+            if (isMobileNode) { // handle vehicles and agents
+                handoverInfo = handleMobileUnitCellConfiguration(nodeId, cellConfiguration, interactionTime);
             } else if (registeredEntities.containsKey(nodeId)) { // handle stationary entities
                 handleEntityCellConfiguration(nodeId, cellConfiguration, interactionTime);
             } else if (registeredServers.containsKey(nodeId)) { // handle servers (nodes in Internet, w/o radio region)
                 handleServerCellConfiguration(nodeId, cellConfiguration, interactionTime);
             } else {
                 throw new InternalFederateException(
-                    "Cell Ambassador: Cannot activate Cell module for \"" + nodeId + "\" because the id is unknown"
+                        "Cell Ambassador: Cannot activate Cell module for \"" + nodeId + "\" because the id is unknown"
                 );
             }
         } else {
-            if (isVehicle) {
-                // disables cell node and removes vehicle
-                handoverInfo = unregisterVehicle(interactionTime, nodeId);
+            if (isMobileNode) {
+                // disables cell node and removes vehicle or agents
+                handoverInfo = unregisterMobileUnit(interactionTime, nodeId);
             } else {
                 disableCellForNode(nodeId);
             }
             log.info(
-                    "Disabled Cell Communication for {}={}, t={}", (isVehicle ? "vehicle" : "entity"), nodeId, TIME.format(interactionTime)
+                    "Disabled Cell Communication for {}={}, t={}", (isMobileNode ? "mobile node" : "entity"), nodeId, TIME.format(interactionTime)
             );
         }
         handoverInfo.ifPresent((handover) -> {
@@ -444,52 +499,18 @@ public class CellAmbassador extends AbstractFederateAmbassador {
     }
 
     /**
-     * Register a vehicle in a coverage area of a cellular network in case of a handover or update it if the vehicle is already registered.
-     *
-     * @param time        Simulation time.
-     * @param vehicleData Vehicle information.
-     * @return Info for handover between two cells.
-     */
-    private Optional<HandoverInfo> registerOrUpdateVehicle(long time, VehicleData vehicleData) throws InternalFederateException {
-        String previousRegion = null;
-        if (simData.containsCellConfigurationOfNode(vehicleData.getName())) {
-            previousRegion = RegionUtility.getRegionIdForNode(vehicleData.getName());
-            if (log.isDebugEnabled()) {
-                log.debug("Updated VEH (id={}) to position={} with speed={}, t={}",
-                        vehicleData.getName(), vehicleData.getPosition(), vehicleData.getSpeed(),
-                        TIME.format(time));
-            }
-        } else {
-            simData.setCellConfigurationOfNode(vehicleData.getName(), registeredVehicles.get(vehicleData.getName()).get());
-            log.debug("Added VEH (id={}) at position={} with speed={}, t={}",
-                    vehicleData.getName(), vehicleData.getPosition(), vehicleData.getSpeed(),
-                    TIME.format(time));
-        }
-
-        simData.setPositionOfNode(vehicleData.getName(), vehicleData.getProjectedPosition());
-        simData.setSpeedOfNode(vehicleData.getName(), vehicleData.getSpeed());
-
-        CNetworkProperties currentRegion = RegionUtility.getRegionForPosition(vehicleData.getProjectedPosition());
-        if (HandoverUtility.isAfterHandover(currentRegion.id, previousRegion)) {
-            simData.setRegionOfNode(vehicleData.getName(), currentRegion);
-            return Optional.of(new HandoverInfo(vehicleData.getName(), currentRegion.id, previousRegion));
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Checks whether a vehicle in registered in a cell. If the vehicle is registered, unregister it.
+     * Checks whether a mobile unit (vehicle or agent) is registered in a cell. If the unit is registered, unregister it.
      *
      * @param time Simulation time.
-     * @param name Vehicle ID.
-     * @return handover information of unregistered vehicle
+     * @param name unit ID.
+     * @return handover information of unregistered unit
      */
-    private Optional<HandoverInfo> unregisterVehicle(long time, String name) throws InternalFederateException {
+    private Optional<HandoverInfo> unregisterMobileUnit(long time, String name) throws InternalFederateException {
         Optional<HandoverInfo> handoverInfo = Optional.empty();
-        if (registeredVehicles.containsKey(name)) {
+        if (registeredMobileNodes.containsKey(name)) {
             handoverInfo = disableCellForNode(name);
-            registeredVehicles.remove(name);
-            log.info("Removed VEH (id={}) from simulation, t={}",
+            registeredMobileNodes.remove(name);
+            log.info("Removed MOBILE NODE (id={}) from simulation, t={}",
                     name,
                     TIME.format(time));
         }
@@ -499,33 +520,38 @@ public class CellAmbassador extends AbstractFederateAmbassador {
     /**
      * Checks whether cellular communication is enabled or not.
      *
-     * @param added Vehicle info object.
+     * @param nodeName the name of the mobile node.
      * @return True if cellular communication enabled.
      */
-    private boolean isVehicleCellEnabled(VehicleData added) {
-        final AtomicReference<CellConfiguration> registeredVehicle = registeredVehicles.get(added.getName());
-        return registeredVehicle != null
-                && registeredVehicle.get() != null
-                && registeredVehicle.get().isEnabled();
+    private boolean isCellEnabledForMobileNode(String nodeName) {
+        final AtomicReference<CellConfiguration> mobileNode = registeredMobileNodes.get(nodeName);
+        return mobileNode != null
+                && mobileNode.get() != null
+                && mobileNode.get().isEnabled();
     }
 
-    private Optional<HandoverInfo> handleVehicleCellConfiguration(String nodeId, CellConfiguration cellConfiguration, Long interactionTime) throws InternalFederateException {
-        registeredVehicles
+    private Optional<HandoverInfo> handleMobileUnitCellConfiguration(String nodeId, CellConfiguration cellConfiguration, Long interactionTime) throws InternalFederateException {
+        registeredMobileNodes
                 .computeIfAbsent(nodeId, k -> new AtomicReference<>())
                 .set(cellConfiguration);
         Optional<HandoverInfo> handoverInfo = Optional.empty();
         // update the cell configuration if the cell module was already activated
         if (simData.containsCellConfigurationOfNode(nodeId)) {
             simData.setCellConfigurationOfNode(nodeId, cellConfiguration);
-            log.info("Updated (Configured) Cell Communication for vehicle={}, t={}",
+            log.info("Updated (Configured) Cell Communication for mobile node={}, t={}",
                     nodeId, TIME.format(interactionTime));
         } else {
-            log.info("Enabled (Configured) Cell Communication for vehicle={}, t={}",
+            log.info("Enabled (Configured) Cell Communication for mobile node={}, t={}",
                     nodeId, TIME.format(interactionTime));
 
             VehicleData vehicleData = fetchVehicleDataFromLastUpdate(nodeId);
             if (vehicleData != null) {
-                handoverInfo = registerOrUpdateVehicle(interactionTime, vehicleData);
+                return registerOrUpdateMobileNode(interactionTime, vehicleData, vehicleData.getProjectedPosition(), vehicleData.getSpeed());
+            }
+
+            AgentData agentData = fetchAgentDataFromLastUpdate(nodeId);
+            if (agentData != null) {
+                return registerOrUpdateMobileNode(interactionTime, agentData, agentData.getPosition().toCartesian(), agentData.getSpeed());
             }
         }
         return handoverInfo;
@@ -536,10 +562,21 @@ public class CellAmbassador extends AbstractFederateAmbassador {
             return null;
         }
         // see if vehicle was added or updated within the last vehicle update
-        Optional<VehicleData> vehicleData = Stream.concat(latestVehicleUpdates.getAdded().stream(), latestVehicleUpdates.getUpdated().stream())
+        return Stream.concat(latestVehicleUpdates.getAdded().stream(), latestVehicleUpdates.getUpdated().stream())
                 .filter(v -> v.getName().equals(vehicleId))
-                .findFirst();
-        return vehicleData.orElse(null);
+                .findFirst()
+                .orElse(null);
+    }
+
+    private AgentData fetchAgentDataFromLastUpdate(String agentId) {
+        if (latestAgentUpdates == null) {
+            return null;
+        }
+        // see if an agent was added or updated within the last agent update
+        return latestAgentUpdates.getUpdated().stream()
+                .filter(a -> a.getName().equals(agentId))
+                .findFirst()
+                .orElse(null);
     }
 
     private void handleEntityCellConfiguration(String nodeId, CellConfiguration cellConfiguration, long interactionTime) {

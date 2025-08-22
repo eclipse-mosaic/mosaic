@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
@@ -174,6 +175,25 @@ public abstract class V2xMessage implements Serializable, Identifiable {
         @Override
         public EncodedPayload getPayload() {
             return EncodedPayload.EMPTY_PAYLOAD;
+        }
+    }
+
+    /**
+     * Simple message with string payload for communication testing purposes.
+     */
+    public static class Simple extends V2xMessage {
+
+        private final EncodedPayload payload;
+
+        public Simple(String message, MessageRouting routing) {
+            super(routing);
+            this.payload = new EncodedPayload(message.getBytes(StandardCharsets.UTF_8), message.length());
+        }
+
+        @Nonnull
+        @Override
+        public EncodedPayload getPayload() {
+            return payload;
         }
     }
 

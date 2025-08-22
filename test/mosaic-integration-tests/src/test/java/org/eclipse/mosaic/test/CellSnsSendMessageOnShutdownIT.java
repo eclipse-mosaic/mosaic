@@ -72,8 +72,8 @@ public class CellSnsSendMessageOnShutdownIT {
     }
     @Test
     public void assertDisableAndRemoval() throws Exception {
-        LogAssert.contains(simulationRule, CELL_LOG, ".*Disabled Cell Communication for vehicle=veh_4, t=206.*");
-        LogAssert.contains(simulationRule, CELL_LOG, ".*Removed VEH \\(id=veh_4\\) from simulation, t=206.*");
+        LogAssert.contains(simulationRule, CELL_LOG, ".*Disabled Cell Communication for mobile node=veh_4, t=206.*");
+        LogAssert.contains(simulationRule, CELL_LOG, ".*Removed MOBILE NODE \\(id=veh_4\\) from simulation, t=206.*");
         LogAssert.contains(simulationRule, CELL_LOG, ".*Disabled Cell Communication for entity=server_0, t=220.*");
 
         LogAssert.contains(simulationRule, SNS_LOG, ".*Removed Node id=veh_4 @time=206.*");
