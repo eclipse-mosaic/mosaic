@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AbstractNetworkAmbassador",
+    "description": "Schema describing the JSON file structure for the network simulator configuration.",
+    "type": "object",
+    "properties": {
+        "federateConfigurationFile": {
+            "type": "string",
+            "description": "Name to the federate configuration file."
+        },
+        "baseStations": {
+            "type": "array",
+            "description": "List of base stations and their properties.",
+            "items": {
+                "type": "object",
+                "title": "BaseStationProperties",
+                "properties": {
+                    "geoPosition": {
+                        "type": "object",
+                        "description": "Geographic position of the base station.",
+                        "properties": {
+                            "lat": {
+                                "type": "number",
+                                "description": "Latitude in decimal degrees."
+                            },
+                            "lon": {
+                                "type": "number",
+                                "description": "Longitude in decimal degrees."
+                            },
+                            "alt": {
+                                "type": "number",
+                                "description": "Altitude in meters.",
+                                "nullable": true
+                            }
+                        },
+                        "required": [ "lat", "lon" ]
+                    },
+                    "cartesianPosition": {
+                        "type": "object",
+                        "description": "Cartesian coordinates of the base station (used if geoPosition is not provided).",
+                        "properties": {
+                            "x": {
+                                "type": "number",
+                                "description": "X coordinate."
+                            },
+                            "y": {
+                                "type": "number",
+                                "description": "Y coordinate."
+                            },
+                            "z": {
+                                "type": "number",
+                                "description": "Z coordinate.",
+                                "nullable": true
+                            }
+                        },
+                        "required": [ "x", "y" ]
+                    }
+                },
+                "anyOf": [
+                    { "required": [ "geoPosition" ] },
+                    { "required": [ "cartesianPosition" ] }
+                ]
+            }
+        }
+    }
+}

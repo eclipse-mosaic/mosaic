@@ -185,7 +185,8 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
         this.removedNodes = new ArrayList<>();
 
         try {
-            config = new ObjectInstantiation<>(CAbstractNetworkAmbassador.class, log).readFile(ambassadorParameter.configuration);
+            config = new ObjectInstantiation<>(CAbstractNetworkAmbassador.class, log)
+                    .readFile(ambassadorParameter.configuration, CAbstractNetworkAmbassador.createConfigBuilder());
         } catch (InstantiationException | NullPointerException e) {
             log.warn("Problem when instantiating ambassador configuration from '{}'. Ignore file and try again with default config.", ambassadorParameter.configuration);
             config = new CAbstractNetworkAmbassador();

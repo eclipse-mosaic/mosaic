@@ -18,15 +18,19 @@ package org.eclipse.mosaic.lib.coupling;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 
+import com.google.gson.GsonBuilder;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public final class CAbstractNetworkAmbassador {
 
+    /**
+     * Name to the federate configuration file.
+     */
     public String federateConfigurationFile;
-
-    public String regionConfigurationFile;
 
     /**
      * List of base stations and their properties.
@@ -46,6 +50,7 @@ public final class CAbstractNetworkAmbassador {
      * Configuration structure of one single base station.
      */
     public static class CBaseStationProperties implements Serializable {
+
         /**
          * The base stations geo position.
          */
@@ -63,6 +68,16 @@ public final class CAbstractNetworkAmbassador {
             s += " cartesianPosition: " + ((cartesianPosition != null) ? cartesianPosition.toString() : "null");
             return s;
         }
+    }
+
+    static GsonBuilder createConfigBuilder() {
+        return new GsonBuilder()
+                .setFieldNamingStrategy(f -> switch (f.getName()) {
+                    case "latitude" -> "lat";
+                    case "longitude" -> "lon";
+                    case "altitude" -> "alt";
+                    default -> f.getName();
+                });
     }
 
 

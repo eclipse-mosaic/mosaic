@@ -35,19 +35,16 @@ public class MutableGeoPoint implements GeoPoint {
     /**
      * The latitude coordinate of this {@link MutableGeoPoint}. Unit: [degree (angle)].
      */
-    @SerializedName(value = "latitude", alternate = {"lat"})
     public double latitude;
 
     /**
      * The longitude coordinate of this {@link MutableGeoPoint}.Unit: [degree (angle)].
      */
-    @SerializedName(value = "longitude", alternate = {"lon"})
     public double longitude;
 
     /**
      * The altitude coordinate of this {@link MutableGeoPoint}. Unit: meter.
      */
-    @SerializedName(value = "altitude", alternate = {"alt"})
     public double altitude;
 
     /**

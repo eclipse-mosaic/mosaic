@@ -15,7 +15,6 @@
 
 package org.eclipse.mosaic.lib.coupling;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,12 +28,11 @@ import static org.mockito.Mockito.when;
 import org.eclipse.mosaic.interactions.communication.AdHocCommunicationConfiguration;
 import org.eclipse.mosaic.interactions.mapping.RsuRegistration;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
-import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.CommandMessage.CommandType;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.AddNode.NodeType;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.CommandMessage.CommandType;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
-import org.eclipse.mosaic.lib.geo.MutableCartesianPoint;
 import org.eclipse.mosaic.lib.geo.UtmPoint;
 import org.eclipse.mosaic.lib.geo.UtmZone;
 import org.eclipse.mosaic.lib.junit.GeoProjectionRule;
@@ -52,8 +50,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -62,8 +58,6 @@ import java.net.UnknownHostException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractNetworkAmbassadorTest {
-
-    private final static Logger log = LoggerFactory.getLogger(AbstractNetworkAmbassadorTest.class);
 
     @Mock
     public ClientServerChannel ambassadorFederateChannelMock;

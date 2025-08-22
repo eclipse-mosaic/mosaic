@@ -1,0 +1,13 @@
+{
+    "baseStations": [
+        {
+            "id": "tuberlin1",
+            "geoPosition": { "lon": 13.3249, "lat": 52.5131 },
+            "cartesianPosition": {"x": 558, "y": 188, "z": 12345}
+        },
+        {
+            "id": "tuberlin2",
+            "cartesianPosition": {"x": 719.314, "y": 118.181, "z": 0}
+        }
+    ]
+}
