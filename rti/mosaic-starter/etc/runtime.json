@@ -127,12 +127,15 @@
             "deploy": true,
             "start": true,
             "subscriptions": [
+                "ServerRegistration",
+                "TmcRegistration",
                 "RsuRegistration",
                 "ChargingStationRegistration",
                 "TrafficLightRegistration",
                 "VehicleUpdates",
                 "V2xMessageTransmission",
-                "AdHocCommunicationConfiguration"
+                "AdHocCommunicationConfiguration",
+                "CellularCommunicationConfiguration"
             ],
             "javaClasspathEntries": []
         },

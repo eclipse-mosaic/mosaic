@@ -104,12 +104,12 @@ public class AdHocConfigurationTest {
         assertEquals(AdHocConfiguration.RadioMode.OFF, aconfig1.getRadioMode());
         assertEquals(AdHocConfiguration.RadioMode.SINGLE, aconfig2.getRadioMode());
         assertEquals(AdHocConfiguration.RadioMode.DUAL, aconfig3.getRadioMode());
-        assertArrayEquals(addr1.getAddress(), aconfig3.getConf0().getNewIP().getAddress());
-        assertArrayEquals(addr2.getAddress(), aconfig3.getConf1().getNewIP().getAddress());
-        assertArrayEquals(sub.getAddress(), aconfig3.getConf0().getNewSubnet().getAddress());
-        assertArrayEquals(sub.getAddress(), aconfig3.getConf1().getNewSubnet().getAddress());
-        assertEquals(100., aconfig3.getConf0().getNewPower(),1e-7);
-        assertEquals(99999., aconfig3.getConf1().getNewPower(), 1e-7);
+        assertArrayEquals(addr1.getAddress(), aconfig3.getConf0().getIp().getAddress());
+        assertArrayEquals(addr2.getAddress(), aconfig3.getConf1().getIp().getAddress());
+        assertArrayEquals(sub.getAddress(), aconfig3.getConf0().getSubnet().getAddress());
+        assertArrayEquals(sub.getAddress(), aconfig3.getConf1().getSubnet().getAddress());
+        assertEquals(100., aconfig3.getConf0().getPower(),1e-7);
+        assertEquals(99999., aconfig3.getConf1().getPower(), 1e-7);
         assertEquals(AdHocChannel.SCH6, aconfig2.getConf0().getChannel0());
         assertEquals(AdHocChannel.SCH6, aconfig3.getConf0().getChannel0());
         assertEquals(AdHocChannel.SCH1, aconfig3.getConf1().getChannel0());

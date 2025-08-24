@@ -17,14 +17,19 @@ package org.eclipse.mosaic.lib.coupling;
 
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.CommandMessage;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.CommandMessage.CommandType;
-import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.ConfigureRadioMessage;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.InitMessage;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.PortExchange;
-import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.ReceiveMessage;
-import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.SendMessageMessage;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.TimeMessage;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.AddNode;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.UpdateNode;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.RemoveNode;
 import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.UpdateNode.NodeData;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.ConfigureWifiRadio;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.SendWifiMessage;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.ReceiveWifiMessage;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.ConfigureCellRadio;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.SendCellMessage;
+import org.eclipse.mosaic.lib.coupling.ClientServerChannelProtos.ReceiveCellMessage;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
 import org.eclipse.mosaic.lib.geo.CartesianCircle;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
@@ -33,6 +38,7 @@ import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoRectangle;
 import org.eclipse.mosaic.lib.objects.addressing.DestinationAddressContainer;
 import org.eclipse.mosaic.lib.objects.communication.AdHocConfiguration;
+import org.eclipse.mosaic.lib.objects.communication.CellConfiguration;
 import org.eclipse.mosaic.lib.objects.communication.InterfaceConfiguration;
 import org.eclipse.mosaic.lib.objects.v2x.V2xReceiverInformation;
 import org.eclipse.mosaic.lib.util.objects.IdTransformer;
@@ -57,93 +63,7 @@ import java.util.List;
  */
 public class ClientServerChannel {
 
-    public String getLastStatusMessage() {
-        return lastStatusMessage;
-    }
-
-    public static final class CMD {
-        /**
-         * Undefined Message.
-         */
-        public final static int UNDEF = -1;
-
-        /**
-         * initialize the federate.
-         */
-        public final static int INIT = 1;
-
-        /**
-         * Stop simulation.
-         */
-        public final static int SHUT_DOWN = 4;
-
-        /**
-         * Update node properties.
-         */
-        public static final int UPDATE_NODE = 10;
-
-        /**
-         * Delete network nodes.
-         */
-        public static final int REMOVE_NODE = 11;
-
-        /**
-         * Advance simulation time.
-         */
-        public final static int ADVANCE_TIME = 20;
-
-        /**
-         * Scheduling request at the next event time.
-         */
-        public final static int NEXT_EVENT = 21;
-
-        /**
-         * A virtual node has received a message.
-         */
-        public final static int MSG_RECV = 22;
-
-        /**
-         * A virtual node has sent a message.
-         */
-        public static final int MSG_SEND = 30;
-
-        /**
-         * Configure radio.
-         */
-        public static final int CONF_RADIO = 31;
-
-        /**
-         * Termination of steps or lists.
-         */
-        public static final int END = 40;
-
-        /**
-         * Success message, returned by federate upon successful execution of command.
-         */
-        public final static int SUCCESS = 41;
-    }
-
-    /**
-     * Allowed address types.
-     * FIXME: Is this still needed?
-     */
-    public static final class ADDRESSTYPE {
-
-        /**
-         * Topological address.
-         */
-        public final static int TOPOCAST = 1;
-
-        /**
-         * Geo address with circular shaped area.
-         */
-        public final static int GEOCIRCLE = 2;
-
-        /**
-         * Geo address with rectangular shaped area.
-         */
-        public final static int GEORECTANGLE = 3;
-    }
+    final static int PROTOCOL_VERSION = 2;
 
     /**
      * Socket connected to the network federate.
@@ -161,16 +81,6 @@ public class ClientServerChannel {
     final private OutputStream out;
 
     /**
-     * Logger (not yet used).
-     *///TODO: implement usage
-    final private Logger log;
-
-    /**
-     * Last message from the federate.
-     */  //TODO: implement usage
-    private String lastStatusMessage = "";
-
-    /**
      * Constructor.
      *
      * @param host the remote host address as an InetAddress
@@ -183,7 +93,7 @@ public class ClientServerChannel {
         socket.setTcpNoDelay(true);
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
-        this.log = log;
+        // TODO: use logger
     }
 
     /**
@@ -197,23 +107,35 @@ public class ClientServerChannel {
     //                  Reading methods
     //####################################################################
 
-    private ReceiveMessage readMessage() throws IOException {
-        return Validate.notNull(ReceiveMessage.parseDelimitedFrom(in), "Could not read message body.");
-    }
-
     /**
-     * Reads a message from the incoming channel.
+     * Reads a wifi message from the incoming channel.
      * TODO: ChannelID (and length) not yet treated
      *
      * @return The read message.
      */
-    public ReceiveMessageContainer readMessage(IdTransformer<Integer, String> idTransformer) throws IOException {
-        ReceiveMessage receiveMessage = this.readMessage();
+    public ReceiveWifiMessageRecord readReceiveWifiMessage(IdTransformer<Integer, String> idTransformer) throws IOException {
+        ReceiveWifiMessage receiveMessage = Validate.notNull(ReceiveWifiMessage.parseDelimitedFrom(in), "Could not read message body.");
         V2xReceiverInformation recInfo = new V2xReceiverInformation(receiveMessage.getTime()).signalStrength(receiveMessage.getRssi());
-        return new ReceiveMessageContainer(
+        return new ReceiveWifiMessageRecord(
                 receiveMessage.getTime(),
                 idTransformer.fromExternalId(receiveMessage.getNodeId()),
-                receiveMessage.getMessageId(), recInfo
+                receiveMessage.getMessageId(),
+                recInfo
+        );
+    }
+
+
+    /**
+     * Reads a cell message from the incoming channel.
+     *
+     * @return The read message.
+     */
+    public ReceiveCellMessageRecord readReceiveCellMessage(IdTransformer<Integer, String> idTransformer) throws IOException {
+        ReceiveCellMessage msg = Validate.notNull(ReceiveCellMessage.parseDelimitedFrom(in), "Could not read message body.");
+        return new ReceiveCellMessageRecord(
+                msg.getTime(),
+                idTransformer.fromExternalId(msg.getNodeId()),
+                msg.getMessageId()
         );
     }
 
@@ -242,9 +164,9 @@ public class ClientServerChannel {
      *
      * @return the read command
      */
-    public int readCommand() throws IOException {
+    public CommandType readCommand() throws IOException {
         CommandMessage commandMessage = Validate.notNull(CommandMessage.parseDelimitedFrom(in), "Could not read command.");
-        return protobufCmdToCmd(commandMessage.getCommandType());
+        return commandMessage.getCommandType();
     }
 
     //####################################################################
@@ -258,52 +180,33 @@ public class ClientServerChannel {
      * @param endTime   the last timestep simulated by the simulator
      * @return command returned by the federate
      */
-    public int writeInitBody(long startTime, long endTime) throws IOException {
-        writeCommand(CMD.INIT);                                     //Announce INIT message
-        InitMessage.Builder initMessage = InitMessage.newBuilder(); //Builder for the protobuf message
-        initMessage.setStartTime(startTime).setEndTime(endTime);    //Hand times to builder
-        initMessage.build().writeDelimitedTo(out);                  //Build object and write it (delimited!) to stream
-        return readCommand();                                       //Return the command that the federate sent as ack
+    public CommandType writeInitBody(long startTime, long endTime) throws IOException {
+        writeCommand(CommandType.INIT);
+        InitMessage.Builder initMessage = InitMessage.newBuilder();
+        initMessage.setSimulationStartTime(startTime);
+        initMessage.setSimulationEndTime(endTime);
+        initMessage.setProtocolVersion(PROTOCOL_VERSION);
+        initMessage.build().writeDelimitedTo(out);
+        return readCommand();
     }
 
     /**
-     * Command: Add nodes.
+     * Command: Add node.
      *
-     * @param time  time at which the node is added
-     * @param nodes a list of ids and positions
+     * @param time time at which the node is added
+     * @param node id and position
      * @return command returned by the federate
      */
-    public int writeAddNodeMessage(long time, List<NodeDataContainer> nodes) throws IOException {
-        writeCommand(CMD.UPDATE_NODE);                                  //Announce UPDATE_NODE message
-        UpdateNode.Builder updateNode = UpdateNode.newBuilder();        //Create builder
-        updateNode.setUpdateType(UpdateNode.UpdateType.ADD_VEHICLE).setTime(time);  //Set the type of the update message
-        for (NodeDataContainer cont : nodes) {                           //Fill the given nodes into the builder
-            NodeData.Builder tmpBuilder = NodeData.newBuilder();        //Every node data is another protobuf object, thus new builder
-            tmpBuilder.setId(cont.id).setX(cont.pos.getX()).setY(cont.pos.getY());  //Set coordinates
-            updateNode.addProperties(tmpBuilder.build());               //Add node data to message
-        }
-        updateNode.build().writeDelimitedTo(out);                       //Build message and write to stream
-        return readCommand();                                           //Read command (hopefully a success)
-    }
-
-    /**
-     * Command: Add rsu nodes.
-     *
-     * @param time the time at which he RSU is added
-     * @param rsus list of ids and positions
-     * @return command returned by the federate
-     */
-    public int writeAddRsuNodeMessage(long time, List<NodeDataContainer> rsus) throws IOException {
-        writeCommand(CMD.UPDATE_NODE);
-        UpdateNode.Builder updateNode = UpdateNode.newBuilder();
-        updateNode.setUpdateType(UpdateNode.UpdateType.ADD_RSU).setTime(time);
-        for (NodeDataContainer cont : rsus) {
-            NodeData.Builder tmpBuilder = NodeData.newBuilder();
-            tmpBuilder.setId(cont.id).setX(cont.pos.getX()).setY(cont.pos.getY());
-            updateNode.addProperties(tmpBuilder.build());
-        }
-        updateNode.build().writeDelimitedTo(out);
-
+    public CommandType writeAddNodeMessage(long time, AddNode.NodeType type, NodeDataContainer node) throws IOException {
+        writeCommand(CommandType.ADD_NODE);
+        AddNode.Builder msg = AddNode.newBuilder();
+        msg.setType(type);
+        msg.setTime(time);
+        msg.setNodeId(node.id);
+        msg.setX(node.pos.getX());
+        msg.setY(node.pos.getY());
+        msg.setZ(node.pos.getZ());
+        msg.build().writeDelimitedTo(out);
         return readCommand();
     }
 
@@ -314,16 +217,19 @@ public class ClientServerChannel {
      * @param nodes a list of ids and positions
      * @return command returned by the federate
      */
-    public int writeUpdatePositionsMessage(long time, List<NodeDataContainer> nodes) throws IOException {
-        writeCommand(CMD.UPDATE_NODE);
-        UpdateNode.Builder updateNode = UpdateNode.newBuilder();
-        updateNode.setUpdateType(UpdateNode.UpdateType.MOVE_NODE).setTime(time);
-        for (NodeDataContainer cont : nodes) {
+    public CommandType writeUpdatePositionsMessage(long time, List<NodeDataContainer> nodes) throws IOException {
+        writeCommand(CommandType.UPDATE_NODE);
+        UpdateNode.Builder msg = UpdateNode.newBuilder();
+        msg.setTime(time);
+        for (NodeDataContainer node : nodes) {
             NodeData.Builder tmpBuilder = NodeData.newBuilder();
-            tmpBuilder.setId(cont.id).setX(cont.pos.getX()).setY(cont.pos.getY());
-            updateNode.addProperties(tmpBuilder.build());
+            tmpBuilder.setId(node.id);
+            tmpBuilder.setX(node.pos.getX());
+            tmpBuilder.setY(node.pos.getY());
+            tmpBuilder.setZ(node.pos.getZ());
+            msg.addProperties(tmpBuilder.build());
         }
-        updateNode.build().writeDelimitedTo(out);
+        msg.build().writeDelimitedTo(out);
         return readCommand();
     }
 
@@ -331,27 +237,20 @@ public class ClientServerChannel {
      * Command: Remove nodes.
      *
      * @param time time at which the nodes are removed
-     * @param ids  list of IDs to remove
+     * @param id   ID to remove
      * @return command returned by the federate
      */
-    public int writeRemoveNodesMessage(long time, List<Integer> ids) throws IOException {
-        writeCommand(CMD.UPDATE_NODE);
-        UpdateNode.Builder updateNode = UpdateNode.newBuilder();
-        updateNode.setUpdateType(UpdateNode.UpdateType.REMOVE_NODE).setTime(time);
-        for (int id : ids) {
-            NodeData.Builder tmpBuilder = NodeData.newBuilder();  //like add and move but coordinates are ignored
-            tmpBuilder.setId(id).setX(0).setY(0);
-            updateNode.addProperties(tmpBuilder.build());
-        }
-        updateNode.build().writeDelimitedTo(out);
-
+    public CommandType writeRemoveNodeMessage(long time, Integer id) throws IOException {
+        writeCommand(CommandType.REMOVE_NODE);
+        RemoveNode.Builder msg = RemoveNode.newBuilder();
+        msg.setTime(time);
+        msg.setNodeId(id);
+        msg.build().writeDelimitedTo(out);
         return readCommand();
     }
 
-    // @param channelId the channelID               //TODO: make enum from
-
     /**
-     * Write send message header to stream.
+     * Write send wifi message header to channel.
      * Not used in eWorld visualizer.
      *
      * @param time      simulation time at which the message is sent
@@ -361,11 +260,12 @@ public class ClientServerChannel {
      * @param dac       DestinationAddressContainer with the destination address of the sender and additional information
      * @return command returned by the federate
      */
-    public int writeSendMessage(long time, int srcNodeId,
-                                int msgId, long msgLength, DestinationAddressContainer dac) throws IOException {
-        writeCommand(CMD.MSG_SEND);
+    public CommandType writeSendWifiMessage(long time, int srcNodeId,
+                                            int msgId, long msgLength, DestinationAddressContainer dac) throws IOException {
+        writeCommand(CommandType.SEND_WIFI_MSG);
+
         //Add message details to the builder
-        SendMessageMessage.Builder sendMess = SendMessageMessage.newBuilder()
+        SendWifiMessage.Builder sendMess = SendWifiMessage.newBuilder()
                 .setTime(time)
                 .setNodeId(srcNodeId)
                 .setChannelId(translateChannel(dac.getAdhocChannelId()))
@@ -376,9 +276,9 @@ public class ClientServerChannel {
         buffer.put(dac.getAddress().getIPv4Address().getAddress()); //make an int32 out of the byte array
         buffer.position(0);
 
-        if (dac.isGeocast()) { //Geocasts
+        if (dac.getRoutingType().isGeocast()) {
             if (dac.getGeoArea() instanceof GeoRectangle geoRectangle) {   //Rectangular area
-                SendMessageMessage.GeoRectangleAddress.Builder rectangleAddress = SendMessageMessage.GeoRectangleAddress.newBuilder();
+                SendWifiMessage.GeoRectangleAddress.Builder rectangleAddress = SendWifiMessage.GeoRectangleAddress.newBuilder();
                 //builder for rectangular addresses
                 rectangleAddress.setIpAddress(buffer.getInt()); //write the ip address as flat integer into the builder
                 //convert coordinates etc.
@@ -391,7 +291,7 @@ public class ClientServerChannel {
                 //add address to the message
                 sendMess.setRectangleAddress(rectangleAddress);
             } else if (dac.getGeoArea() instanceof GeoCircle geoCircle) {
-                SendMessageMessage.GeoCircleAddress.Builder circleAddress = SendMessageMessage.GeoCircleAddress.newBuilder();
+                SendWifiMessage.GeoCircleAddress.Builder circleAddress = SendWifiMessage.GeoCircleAddress.newBuilder();
                 circleAddress.setIpAddress(buffer.getInt());
 
                 CartesianCircle projectedCircle = geoCircle.toCartesian();
@@ -404,13 +304,16 @@ public class ClientServerChannel {
             } else {
                 throw new IllegalArgumentException("Addressing does support GeoCircle and GeoRectangle only.");
             }
-        } else if (dac.getTimeToLive() > -1) {  //Topocast addresses
-            SendMessageMessage.TopoAddress.Builder topoAddress = SendMessageMessage.TopoAddress.newBuilder();
-            topoAddress.setIpAddress(buffer.getInt());  //Add IP as flat int
-            topoAddress.setTtl(dac.getTimeToLive());    //add time to live
-            sendMess.setTopoAddress(topoAddress);   //set address in message
-        } //TODO: create else case and throw exception
-        sendMess.build().writeDelimitedTo(out); //write message onto channel        
+        } else if (dac.getRoutingType().isTopocast()) {
+            SendWifiMessage.TopologicalAddress.Builder adr = SendWifiMessage.TopologicalAddress.newBuilder();
+            adr.setIpAddress(buffer.getInt());
+            if (!(dac.getTimeToLive() > -1)) {
+                throw new IllegalArgumentException("Require TimeToLive for topocast ad-hoc communciation.");
+            }
+            adr.setTtl(dac.getTimeToLive());
+            sendMess.setTopologicalAddress(adr);
+        }
+        sendMess.build().writeDelimitedTo(out); //write message onto channel
         return readCommand();
     }
 
@@ -420,52 +323,110 @@ public class ClientServerChannel {
      *
      * @param time          the logical time at which the configuration happens
      * @param msgID         the ID of the configuration message
-     * @param externalId    the external (federate-internal) ID of the node
+     * @param nodeId        the external (federate-internal) ID of the node
      * @param configuration the actual configuration
      * @return command returned by the federate
      */
-    public int writeConfigMessage(long time, int msgID, int externalId, AdHocConfiguration configuration) throws IOException {
-        writeCommand(CMD.CONF_RADIO);
-        ConfigureRadioMessage.Builder configRadio = ConfigureRadioMessage.newBuilder();
-        configRadio.setTime(time).setMessageId(msgID).setExternalId(externalId);
+    public CommandType writeConfigureWifiRadio(long time, int msgID, int nodeId, AdHocConfiguration configuration) throws IOException {
+        writeCommand(CommandType.CONF_WIFI_RADIO);
+        ConfigureWifiRadio.Builder configRadio = ConfigureWifiRadio.newBuilder();
+        configRadio.setTime(time);
+        configRadio.setMessageId(msgID);
+        configRadio.setNodeId(nodeId);
         configRadio.setRadioNumber(switch (configuration.getRadioMode()) {
-            case OFF -> ConfigureRadioMessage.RadioNumber.NO_RADIO;
-            case SINGLE -> ConfigureRadioMessage.RadioNumber.SINGLE_RADIO;
-            case DUAL -> ConfigureRadioMessage.RadioNumber.DUAL_RADIO;
+            case OFF -> ConfigureWifiRadio.RadioNumber.NO_RADIO;
+            case SINGLE -> ConfigureWifiRadio.RadioNumber.SINGLE_RADIO;
+            case DUAL -> ConfigureWifiRadio.RadioNumber.DUAL_RADIO;
             default -> throw new RuntimeException("Illegal number of radios in configuration: " + configuration.getRadioMode().toString());
         });
         if (configuration.getRadioMode() == AdHocConfiguration.RadioMode.SINGLE
                 || configuration.getRadioMode() == AdHocConfiguration.RadioMode.DUAL) {
-            ConfigureRadioMessage.RadioConfiguration.Builder radioConfig1 = ConfigureRadioMessage.RadioConfiguration.newBuilder();
+            ConfigureWifiRadio.RadioConfiguration.Builder radioConfig1 = ConfigureWifiRadio.RadioConfiguration.newBuilder();
             radioConfig1.setReceivingMessages(false);                                     //!!Semantic in Java: true -> only routing
-            radioConfig1.setIpAddress(inet4ToInt(configuration.getConf0().getNewIP()));   //Semantic in federates: false -> only routing
-            radioConfig1.setSubnetAddress(inet4ToInt(configuration.getConf0().getNewSubnet()));
-            radioConfig1.setTransmissionPower(configuration.getConf0().getNewPower());
+            radioConfig1.setIpAddress(inet4ToInt(configuration.getConf0().getIp()));   //Semantic in federates: false -> only routing
+            radioConfig1.setSubnetAddress(inet4ToInt(configuration.getConf0().getSubnet()));
+            radioConfig1.setTransmissionPower(configuration.getConf0().getPower());
             radioConfig1.setPrimaryRadioChannel(translateChannel(configuration.getConf0().getChannel0()));
             if (configuration.getConf0().getMode() == InterfaceConfiguration.MultiChannelMode.ALTERNATING) {
                 radioConfig1.setSecondaryRadioChannel(translateChannel(configuration.getConf0().getChannel1()));
-                radioConfig1.setRadioMode(ConfigureRadioMessage.RadioConfiguration.RadioMode.DUAL_CHANNEL);
+                radioConfig1.setRadioMode(ConfigureWifiRadio.RadioConfiguration.RadioMode.DUAL_CHANNEL);
             } else {
-                radioConfig1.setRadioMode(ConfigureRadioMessage.RadioConfiguration.RadioMode.SINGLE_CHANNEL);
+                radioConfig1.setRadioMode(ConfigureWifiRadio.RadioConfiguration.RadioMode.SINGLE_CHANNEL);
             }
             configRadio.setPrimaryRadioConfiguration(radioConfig1);
         }
         if (configuration.getRadioMode() == AdHocConfiguration.RadioMode.DUAL) {
-            ConfigureRadioMessage.RadioConfiguration.Builder radioConfig2 = ConfigureRadioMessage.RadioConfiguration.newBuilder();
+            ConfigureWifiRadio.RadioConfiguration.Builder radioConfig2 = ConfigureWifiRadio.RadioConfiguration.newBuilder();
             radioConfig2.setReceivingMessages(false); //!!Semantic in Java: true -> only routing
-            radioConfig2.setIpAddress(inet4ToInt(configuration.getConf1().getNewIP()));   //Semantic in federates: false -> only routing
-            radioConfig2.setSubnetAddress(inet4ToInt(configuration.getConf1().getNewSubnet()));
-            radioConfig2.setTransmissionPower(configuration.getConf1().getNewPower());
+            radioConfig2.setIpAddress(inet4ToInt(configuration.getConf1().getIp()));   //Semantic in federates: false -> only routing
+            radioConfig2.setSubnetAddress(inet4ToInt(configuration.getConf1().getSubnet()));
+            radioConfig2.setTransmissionPower(configuration.getConf1().getPower());
             radioConfig2.setPrimaryRadioChannel(translateChannel(configuration.getConf1().getChannel0()));
             if (configuration.getConf1().getMode() == InterfaceConfiguration.MultiChannelMode.ALTERNATING) {
                 radioConfig2.setSecondaryRadioChannel(translateChannel(configuration.getConf1().getChannel1()));
-                radioConfig2.setRadioMode(ConfigureRadioMessage.RadioConfiguration.RadioMode.DUAL_CHANNEL);
+                radioConfig2.setRadioMode(ConfigureWifiRadio.RadioConfiguration.RadioMode.DUAL_CHANNEL);
             } else {
-                radioConfig2.setRadioMode(ConfigureRadioMessage.RadioConfiguration.RadioMode.SINGLE_CHANNEL);
+                radioConfig2.setRadioMode(ConfigureWifiRadio.RadioConfiguration.RadioMode.SINGLE_CHANNEL);
             }
             configRadio.setSecondaryRadioConfiguration(radioConfig2);
         }
         configRadio.build().writeDelimitedTo(out);
+        return readCommand();
+    }
+
+
+    /**
+     * Takes a configuration message and inserts it via the wrapped protobuf channel
+     * Configuration is then sent to the federate.
+     *
+     * @param time          the logical time at which the configuration happens
+     * @param nodeId        the external (federate-internal) ID of the node
+     * @param configuration the actual configuration
+     * @return command returned by the federate
+     */
+    public CommandType writeConfigureCellRadio(long time, int nodeId, CellConfiguration configuration, Inet4Address ip) throws IOException {
+        // CellConfiguration unused
+        writeCommand(CommandType.CONF_CELL_RADIO);
+        ConfigureCellRadio.Builder message = ConfigureCellRadio.newBuilder();
+        message.setTime(time);
+        message.setNodeId(nodeId);
+        message.setIpAddress(inet4ToInt(ip));
+        message.setSubnetAddress(0);
+        message.build().writeDelimitedTo(out);
+        return readCommand();
+    }
+
+
+    /**
+     * Write send cell message header to channel.
+     *
+     * @param time      simulation time at which the message is sent
+     * @param srcNodeId ID of the sending node
+     * @param msgId     the ID of the message
+     * @param msgLength length of the message
+     * @param dac       DestinationAddressContainer with the destination address of the sender and additional information
+     * @return command returned by the federate
+     */
+    public CommandType writeSendCellMessage(long time, int srcNodeId,
+                                            int msgId, long msgLength, DestinationAddressContainer dac) throws IOException {
+        writeCommand(CommandType.SEND_CELL_MSG);
+
+        SendCellMessage.Builder msg = SendCellMessage.newBuilder();
+        msg.setTime(time);
+        msg.setNodeId(srcNodeId);
+        msg.setMessageId(msgId);
+        msg.setLength(msgLength);;
+
+        if (!dac.getRoutingType().isTopocast()) {
+            throw new IllegalArgumentException("Only topocast is supported");
+        }
+        SendCellMessage.TopologicalAddress.Builder adr = SendCellMessage.TopologicalAddress.newBuilder();
+        ByteBuffer buffer = ByteBuffer.allocate(Long.SIZE);
+        buffer.put(dac.getAddress().getIPv4Address().getAddress());
+        buffer.position(0);
+        adr.setIpAddress(buffer.getInt());
+        msg.setTopologicalAddress(adr);
+        msg.build().writeDelimitedTo(out);
         return readCommand();
     }
 
@@ -475,7 +436,7 @@ public class ClientServerChannel {
      * @param time point in time up to which advance is granted
      */
     public void writeAdvanceTimeMessage(long time) throws IOException {
-        writeCommand(CMD.ADVANCE_TIME);
+        writeCommand(CommandType.ADVANCE_TIME);
         TimeMessage.Builder timeMessage = TimeMessage.newBuilder();
         timeMessage.setTime(time);
         timeMessage.build().writeDelimitedTo(out);
@@ -487,8 +448,7 @@ public class ClientServerChannel {
      * @param cmd the command to write onto the channel
      * @throws IOException Communication error.
      */
-    public void writeCommand(int cmd) throws IOException {
-        CommandType protobufCmd = cmdToProtobufCmd(cmd);
+    public void writeCommand(CommandType protobufCmd) throws IOException {
         if (protobufCmd == CommandType.UNDEF) {
             return;
         }
@@ -515,40 +475,6 @@ public class ClientServerChannel {
         return buffer.getInt();
     }
 
-    private int protobufCmdToCmd(CommandType protoCmd) {
-        return switch (protoCmd) {
-            case INIT -> CMD.INIT;
-            case SHUT_DOWN -> CMD.SHUT_DOWN;
-            case UPDATE_NODE -> CMD.UPDATE_NODE;
-            case REMOVE_NODE -> CMD.REMOVE_NODE;
-            case ADVANCE_TIME -> CMD.ADVANCE_TIME;
-            case NEXT_EVENT -> CMD.NEXT_EVENT;
-            case MSG_RECV -> CMD.MSG_RECV;
-            case MSG_SEND -> CMD.MSG_SEND;
-            case CONF_RADIO -> CMD.CONF_RADIO;
-            case END -> CMD.END;
-            case SUCCESS -> CMD.SUCCESS;
-            default -> CMD.UNDEF;
-        };
-    }
-
-    private CommandType cmdToProtobufCmd(int cmd) {
-        return switch (cmd) {
-            case CMD.INIT -> CommandType.INIT;
-            case CMD.SHUT_DOWN -> CommandType.SHUT_DOWN;
-            case CMD.UPDATE_NODE -> CommandType.UPDATE_NODE;
-            case CMD.REMOVE_NODE -> CommandType.REMOVE_NODE;
-            case CMD.ADVANCE_TIME -> CommandType.ADVANCE_TIME;
-            case CMD.NEXT_EVENT -> CommandType.NEXT_EVENT;
-            case CMD.MSG_RECV -> CommandType.MSG_RECV;
-            case CMD.MSG_SEND -> CommandType.MSG_SEND;
-            case CMD.CONF_RADIO -> CommandType.CONF_RADIO;
-            case CMD.END -> CommandType.END;
-            case CMD.SUCCESS -> CommandType.SUCCESS;
-            default -> CommandType.UNDEF;
-        };
-    }
-
     /**
      * Returns the corresponding {@link AdHocChannel} type to a given Protobuf channel enum type.
      *
@@ -569,6 +495,8 @@ public class ClientServerChannel {
 
     record NodeDataContainer(int id, CartesianPoint pos) {}
 
-    record ReceiveMessageContainer(long time, String receiverName, int msgId, V2xReceiverInformation receiverInformation) {}
+    record ReceiveWifiMessageRecord(long time, String receiverName, int msgId, V2xReceiverInformation receiverInformation) {}
+
+    record ReceiveCellMessageRecord(long time, String receiverName, int msgId) {}
 
 }

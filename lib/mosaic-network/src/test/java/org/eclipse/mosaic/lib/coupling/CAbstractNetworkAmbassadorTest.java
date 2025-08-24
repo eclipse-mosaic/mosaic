@@ -15,6 +15,8 @@
 
 package org.eclipse.mosaic.lib.coupling;
 
+import static org.junit.Assert.assertEquals;
+
 import org.eclipse.mosaic.lib.util.objects.ObjectInstantiation;
 
 import org.junit.Test;
@@ -23,13 +25,28 @@ public class CAbstractNetworkAmbassadorTest {
 
     @Test
     public void tiergartenOmnetpp() throws InstantiationException {
-        new ObjectInstantiation<>(CAbstractNetworkAmbassador.class)
-                .read(getClass().getResourceAsStream("/Tiergarten/omnetpp_config.json"));
+        new ObjectInstantiation<>(CAbstractNetworkAmbassador.class).read(
+                getClass().getResourceAsStream("/Tiergarten/omnetpp_config.json"), CAbstractNetworkAmbassador.createConfigBuilder()
+        );
     }
 
     @Test
     public void tiergartenNs3() throws InstantiationException {
-        new ObjectInstantiation<>(CAbstractNetworkAmbassador.class)
-                .read(getClass().getResourceAsStream("/Tiergarten/ns3_config.json"));
+        new ObjectInstantiation<>(CAbstractNetworkAmbassador.class).read(
+                getClass().getResourceAsStream("/Tiergarten/ns3_config.json"), CAbstractNetworkAmbassador.createConfigBuilder()
+        );
+    }
+
+    @Test
+    public void withBaseStations() throws InstantiationException {
+        CAbstractNetworkAmbassador config = new ObjectInstantiation<>(CAbstractNetworkAmbassador.class).read(
+                getClass().getResourceAsStream("/ns3_config_with_basestations.json"), CAbstractNetworkAmbassador.createConfigBuilder()
+        );
+        assertEquals(2, config.baseStations.size());
+        assertEquals(52.5131, config.baseStations.get(0).geoPosition.getLatitude(), 0.0001d);
+        assertEquals(13.3249, config.baseStations.get(0).geoPosition.getLongitude(), 0.0001d);
+
+        assertEquals(719.3, config.baseStations.get(1).cartesianPosition.getX(), 0.1d);
+        assertEquals(118.2, config.baseStations.get(1).cartesianPosition.getY(), 0.1d);
     }
 }

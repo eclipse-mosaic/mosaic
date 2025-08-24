@@ -125,7 +125,7 @@ public class AdHocModule extends AbstractCommunicationModule<AdHocModuleConfigur
             log.warn("sendV2XMessage: Ad hoc communication disabled (!adhocModule.isEnabled()).");
             return;
         }
-        if (!msg.getRouting().getDestination().getType().isAdHoc()) {
+        if (!msg.getRouting().getDestination().getRoutingType().isAdHoc()) {
             log.warn("sendV2XMessage: Message {} provided to Ad hoc module is not an Ad hoc message.", msg.getId());
             return;
         }

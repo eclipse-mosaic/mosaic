@@ -1,87 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- common version from 12.08.2025 -->
 <ns3>
     <LogLevel>
-        <!-- for name, refer to corresponding ns3 model -->
+        <!-- for field "name" refer to corresponding ns3 model -->
         <!-- possible level values: error warn debug info function logic all * -->
         <!-- including higher levels: level_error level_warn level_debug level_info level_function level_logic level_all ** -->
-        <!-- possible prefix values: func time node level prefix_func prefix_time prefix_node prefix_level prefix_all -->
-        <component name="*" value="prefix_level|prefix_time"/>
+        <!-- possible prefix values: prefix_func prefix_time prefix_node prefix_level prefix_all -->
 
-        <!-- These are setting suggestions for verbosity levels
-             which are equivalent to MOSAIC's log level INFO and DEBUG
+        <component name="*" value="error|prefix_level|prefix_time|prefix_func"/>
 
-             MOSAIC log level equivalent:             INFO                                       DEBUG
-        .....................................................................................................................-->
-        <component name="MosaicStarter"        value="warn|error|debug|info"/>       <!-- value="warn|error|debug|info"      -->
-        <component name="MosaicSimulatorImpl"  value="warn|error|debug|info"/>       <!-- value="warn|error|debug|info"      -->
-        <component name="MosaicNs3Server"      value="warn|error"/>                  <!-- value="warn|error"                 -->
-        <component name="MosaicNodeManager"    value="warn|error|debug"/>            <!-- value="warn|error|debug"           -->
-        <component name="MosaicProxyApp"       value="warn|error|debug|func|info"/>  <!-- value="warn|error|debug|func|info" -->
-        <component name="ClientServerChannel"  value="warn|error"/>                  <!-- value="warn|error"                 -->
+        <component name="MainClass"             value="error|warn|info|debug"/>
+        <component name="MosaicSimulatorImpl"   value="error|warn|info|debug"/>
+        <component name="MosaicNs3Bridge"       value="error|warn|info|debug"/>
+        <component name="MosaicNodeManager"     value="error|warn|info|debug"/>
+        <component name="MosaicProxyApp"        value="error|warn|info|debug|prefix_node"/>
+        <component name="ClientServerChannel"   value="error|warn|info"/>
 
-        <component name="UdpSocketImpl"        value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="UdpL4Protocol"        value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="Ipv4L3Protocol"       value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="Ipv4Interface"        value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="TrafficControlLayer"  value="warn|error"/>                  <!-- value="warn|error|debug"           -->
+        <component name="UdpSocketImpl"        value="error|warn|prefix_node"/>
+        <component name="UdpL4Protocol"        value="error|warn|prefix_node"/>
+        <component name="TrafficControlLayer"  value="error|warn|prefix_node"/>
+        <component name="Ipv4L3Protocol"       value="error|warn|prefix_node"/>
+        <component name="Ipv4Interface"        value="error|warn|prefix_node"/>
+        <component name="Ipv4GlobalRouting"    value="error|warn|prefix_node"/>
+        <component name="Ipv4StaticRouting"    value="error|warn|prefix_node"/>
+        <component name="ArpL3Protocol"        value="error|warn|prefix_node"/>
 
-        <component name="PropagationLossModel" value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="WifiPhy"              value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="YansWifiPhy"          value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="WaveNetDevice"        value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="YansWifiChannel"      value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <component name="InterferenceHelper"   value="warn|error"/>                  <!-- value="warn|error|debug"           -->
-        <!-- List can be extendy by other components to set logging for -->
+        <component name="LteNetDevice"         value="error|warn"/>
+        <component name="LteHelper"            value="error|warn"/>
+        <component name="NoBackhaulEpcHelper"  value="error|warn"/>
+        <component name="EpcPgwApplication"    value="error|warn"/>
+        <component name="LteEnbRrc"            value="error|warn|prefix_node"/>
+        <component name="LteUeRrc"             value="error|warn|prefix_node"/>
+        <component name="EpcX2"                value="error|warn"/>
+
+        <component name="NoOpHandoverAlgorithm"     value="error|warn|prefix_node"/>
+        <component name="A3RsrpHandoverAlgorithm"   value="error|warn|prefix_node|logic"/>
+        <component name="A2A4RsrqHandoverAlgorithm" value="error|warn|prefix_node"/>
+
+        <component name="OcbWifiMac"           value="error|warn"/>
+
+        <component name="PropagationLossModel" value="error"/>
+        <component name="WifiPhy"              value="error|warn"/>
+        <component name="YansWifiPhy"          value="error|warn"/>
+        <component name="WaveNetDevice"        value="error|warn"/>
+        <component name="WifiNetDevice"        value="error|warn"/>
+        <component name="YansWifiChannel"      value="error|warn"/>
+        <component name="InterferenceHelper"   value="error|warn"/>
     </LogLevel>
 
-    <!-- Mosaic Federate settings -->
+    <!-- Global settings -->
+    <global name="RngSeed" value="1"/>
+
+    <!-- Federate settings -->
     <default name="ns3::MosaicProxyApp::Port" value="8010"/>
-    <default name="ns3::MosaicNodeManager::DelayModel" value="ns3::ConstantSpeedPropagationDelayModel"/>
-    <default name="ns3::MosaicNodeManager::LossModel" value="ns3::FriisPropagationLossModel"/>
+    <default name="ns3::MosaicNodeManager::numExtraRadioNodes" value="5"/>
 
+    <!-- LTE settings -->
+    <default name="ns3::LteHelper::HandoverAlgorithm" value="ns3::NoOpHandoverAlgorithm"/>
+    <default name="ns3::LteEnbRrc::AdmitHandoverRequest" value="true"/>
+    <default name="ns3::LteEnbRrc::AdmitRrcConnectionRequest" value="true"/>
+    <default name="ns3::LteUeRrc::N310" value="20"/>
+    <default name="ns3::LteUeRrc::T310" value="+2000.0ms"/>
 
-    <!-- NS3 model settings -->
-    <default name="ns3::RandomPropagationDelayModel::Variable" value="ns3::UniformRandomVariable"/>
-    <default name="ns3::ConstantSpeedPropagationDelayModel::Speed" value="2.99792e+08"/>
+    <default name="ns3::LteRlcUm::MaxTxBufferSize" value="100000"/>
+    <!-- increase from 5MHz to 20MHz -->
+    <!-- <default name="ns3::LteEnbNetDevice::UlBandwidth" value="100"/> -->
+    <!-- <default name="ns3::LteEnbNetDevice::DlBandwidth" value="100"/> -->
 
-    <default name="ns3::RandomPropagationLossModel::Variable" value="ns3::ConstantRandomVariable[Constant=1.0]"/>
+    <!-- Network settings -->
+    <default name="ns3::ArpCache::PendingQueueSize" value="100"/>
+
+    <!-- Propagation settings -->
+    <!-- YansWifiChannelHelper / yans-wifi-helper.cc : can not set the values in this config, this is done in NodeManager costructor -->
 
     <default name="ns3::FriisPropagationLossModel::Frequency" value="5900000000"/>
-    <default name="ns3::FriisPropagationLossModel::SystemLoss" value="1"/>
-    <default name="ns3::FriisPropagationLossModel::MinLoss" value="0"/>
 
-    <default name="ns3::TwoRayGroundPropagationLossModel::Frequency" value="5900000000"/>
-    <default name="ns3::TwoRayGroundPropagationLossModel::SystemLoss" value="1"/>
-    <default name="ns3::TwoRayGroundPropagationLossModel::MinDistance" value="1"/>
-    <default name="ns3::TwoRayGroundPropagationLossModel::HeightAboveZ" value="2"/>
-
-    <default name="ns3::LogDistancePropagationLossModel::Exponent" value="2.0"/>
-    <default name="ns3::LogDistancePropagationLossModel::ReferenceDistance" value="1"/>
-    <default name="ns3::LogDistancePropagationLossModel::ReferenceLoss" value="47.85704"/>
-
+    <!-- Wifi settings -->
+    <default name="ns3::WifiPhy::Frequency" value="5900"/>
+    <default name="ns3::WifiPhy::ChannelNumber" value="180"/>
+    <default name="ns3::WifiPhy::ChannelWidth" value="10"/>
     <default name="ns3::WifiPhy::RxSensitivity" value="-81.02"/>
     <default name="ns3::WifiPhy::CcaEdThreshold" value="-99.0"/>
-    <default name="ns3::WifiPhy::TxGain" value="0.0"/>
-    <default name="ns3::WifiPhy::RxGain" value="0.0"/>
-    <default name="ns3::WifiPhy::TxPowerLevels" value="1"/>
     <default name="ns3::WifiPhy::TxPowerEnd" value="17"/>
     <default name="ns3::WifiPhy::TxPowerStart" value="17"/>
     <default name="ns3::WifiPhy::RxNoiseFigure" value="0"/>
-    <default name="ns3::WifiPhy::ChannelSwitchDelay" value="+250000.0ns"/>
-    <default name="ns3::WifiPhy::ChannelNumber" value="180"/>
-    <default name="ns3::WifiPhy::Frequency" value="5900"/>
-    <default name="ns3::WifiPhy::ChannelWidth" value="10"/>
-    <default name="ns3::WifiPhy::Antennas" value="1"/>
+    <default name="ns3::WifiPhy::Sifs" value="+16000.0ns"/>
     <default name="ns3::WifiPhy::Slot" value="+9000.0ns"/>
     <default name="ns3::WifiPhy::Pifs" value="+25000.0ns"/>
-    <default name="ns3::WifiPhy::Sifs" value="+16000.0ns"/>
-    <default name="ns3::WifiPhy::ShortPlcpPreambleSupported" value="false"/>
 
-    <default name="ns3::ConstantRateWifiManager::DataMode" value="OfdmRate6Mbps"/>
-    <default name="ns3::ConstantRateWifiManager::ControlMode" value="OfdmRate6Mbps"/>
-
-    <default name="ns3::WifiMacQueue::MaxDelay" value="+500000000.0ns"/>
     <default name="ns3::WifiNetDevice::Mtu" value="2296"/>
-    <default name="ns3::WifiMac::Ssid" value="default"/>
-    <global name="RngSeed" value="1"/>
+
 </ns3>

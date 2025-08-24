@@ -16,6 +16,9 @@
 package org.eclipse.mosaic.fed.omnetpp.ambassador;
 
 import org.eclipse.mosaic.lib.coupling.AbstractNetworkAmbassador;
+import org.eclipse.mosaic.lib.enums.AddressType;
+import org.eclipse.mosaic.lib.enums.ProtocolType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.rti.api.FederateExecutor;
 import org.eclipse.mosaic.rti.api.federatestarter.DockerFederateExecutor;
 import org.eclipse.mosaic.rti.api.federatestarter.ExecutableFederateExecutor;
@@ -23,6 +26,7 @@ import org.eclipse.mosaic.rti.api.parameters.AmbassadorParameter;
 import org.eclipse.mosaic.rti.config.CLocalHost.OperatingSystem;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,6 +44,9 @@ public class OmnetppAmbassador extends AbstractNetworkAmbassador {
      */
     public OmnetppAmbassador(AmbassadorParameter ambassadorParameter) {
         super(ambassadorParameter, "OMNeT++ Ambassador", "OMNeT++ Federate");
+
+        supportedRoutingAddress.add(Pair.of(RoutingType.AD_HOC_TOPOCAST, AddressType.IPV4_BROADCAST));
+        supportedProtocols.add(ProtocolType.UDP);
     }
 
     @Nonnull

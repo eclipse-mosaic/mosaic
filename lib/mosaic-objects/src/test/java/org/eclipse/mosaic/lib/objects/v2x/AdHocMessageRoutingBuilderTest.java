@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoRectangle;
@@ -90,7 +90,7 @@ public class AdHocMessageRoutingBuilderTest {
         MessageRouting routing = builder.broadcast().geographical(geoCircle).build();
 
         // assert
-        assertEquals(DestinationType.AD_HOC_GEOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.AD_HOC_GEOCAST, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoCircle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -103,7 +103,7 @@ public class AdHocMessageRoutingBuilderTest {
         MessageRouting routing = builder.broadcast().geographical(geoRectangle).build();
 
         // assert
-        assertEquals(DestinationType.AD_HOC_GEOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.AD_HOC_GEOCAST, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoRectangle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -116,7 +116,7 @@ public class AdHocMessageRoutingBuilderTest {
         MessageRouting routing = builder.channel(adHocChannel).broadcast().geographical(geoCircle).build();
 
         // assert
-        assertEquals(DestinationType.AD_HOC_GEOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.AD_HOC_GEOCAST, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoCircle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -129,7 +129,7 @@ public class AdHocMessageRoutingBuilderTest {
         MessageRouting routing = builder.channel(adHocChannel).broadcast().geographical(geoRectangle).build();
 
         // assert
-        assertEquals(DestinationType.AD_HOC_GEOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.AD_HOC_GEOCAST, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoRectangle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -142,7 +142,7 @@ public class AdHocMessageRoutingBuilderTest {
         MessageRouting routing = builder.channel(adHocChannel).destination(destinationAddress).geographical(geoCircle).build();
 
         // assert
-        assertEquals(DestinationType.AD_HOC_GEOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.AD_HOC_GEOCAST, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoCircle);
         assertTrue(routing.getDestination().getAddress().isUnicast());
@@ -155,7 +155,7 @@ public class AdHocMessageRoutingBuilderTest {
         MessageRouting routing = builder.channel(adHocChannel).singlehop().broadcast().topological().build();
 
         // assert
-        assertEquals(DestinationType.AD_HOC_TOPOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.AD_HOC_TOPOCAST, routing.getDestination().getRoutingType());
         assertFalse(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getAddress().isBroadcast());
         assertEquals(1, routing.getDestination().getTimeToLive());
@@ -169,7 +169,7 @@ public class AdHocMessageRoutingBuilderTest {
         MessageRouting routing = builder.channel(adHocChannel).broadcast().topological().hops(hops).build();
 
         // assert
-        assertEquals(DestinationType.AD_HOC_TOPOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.AD_HOC_TOPOCAST, routing.getDestination().getRoutingType());
         assertFalse(routing.getDestination().isGeocast());
         assertEquals(hops, routing.getDestination().getTimeToLive());
         assertTrue(routing.getDestination().getAddress().isBroadcast());

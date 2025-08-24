@@ -132,7 +132,7 @@ public class GeocasterModuleTest {
         IpResolver.getSingleton().registerHost("veh_2");
 
         routing.set(new CellMessageRoutingBuilder("veh_0", null)
-                .destination(new byte[]{10, 0, 0, 2})
+                .destination(new byte[]{10, 0, 0, 3})
                 .topological()
                 .build());
         SampleV2xMessage sampleV2XMessage = new SampleV2xMessage(routing.get(), 5 * DATA.BYTE);

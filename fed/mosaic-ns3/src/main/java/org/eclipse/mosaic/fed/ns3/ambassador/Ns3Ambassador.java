@@ -18,6 +18,9 @@ package org.eclipse.mosaic.fed.ns3.ambassador;
 import org.eclipse.mosaic.interactions.communication.AdHocCommunicationConfiguration;
 import org.eclipse.mosaic.lib.coupling.AbstractNetworkAmbassador;
 import org.eclipse.mosaic.lib.enums.AdHocChannel;
+import org.eclipse.mosaic.lib.enums.AddressType;
+import org.eclipse.mosaic.lib.enums.ProtocolType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.objects.communication.AdHocConfiguration;
 import org.eclipse.mosaic.lib.objects.communication.AdHocConfiguration.RadioMode;
 import org.eclipse.mosaic.lib.objects.communication.InterfaceConfiguration;
@@ -25,9 +28,10 @@ import org.eclipse.mosaic.rti.api.FederateExecutor;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 import org.eclipse.mosaic.rti.api.federatestarter.DockerFederateExecutor;
 import org.eclipse.mosaic.rti.api.federatestarter.ExecutableFederateExecutor;
-import org.eclipse.mosaic.rti.api.federatestarter.NopFederateExecutor;
 import org.eclipse.mosaic.rti.api.parameters.AmbassadorParameter;
 import org.eclipse.mosaic.rti.config.CLocalHost.OperatingSystem;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -45,6 +49,10 @@ public class Ns3Ambassador extends AbstractNetworkAmbassador {
      */
     public Ns3Ambassador(AmbassadorParameter ambassadorParameter) {
         super(ambassadorParameter, "NS-3 Ambassador", "NS-3 Federate");
+
+        supportedRoutingAddress.add(Pair.of(RoutingType.AD_HOC_TOPOCAST, AddressType.IPV4_BROADCAST));
+        supportedRoutingAddress.add(Pair.of(RoutingType.CELL_TOPOCAST, AddressType.IPV4_UNICAST));
+        supportedProtocols.add(ProtocolType.UDP);
     }
 
     @Nonnull

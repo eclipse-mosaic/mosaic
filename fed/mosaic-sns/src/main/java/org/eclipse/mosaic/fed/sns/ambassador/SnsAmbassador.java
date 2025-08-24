@@ -23,7 +23,7 @@ import org.eclipse.mosaic.interactions.mapping.ChargingStationRegistration;
 import org.eclipse.mosaic.interactions.mapping.RsuRegistration;
 import org.eclipse.mosaic.interactions.mapping.TrafficLightRegistration;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
 import org.eclipse.mosaic.lib.model.delay.GammaSpeedDelay;
 import org.eclipse.mosaic.lib.model.transmission.TransmissionResult;
@@ -205,8 +205,8 @@ public class SnsAmbassador extends AbstractFederateAmbassador {
     }
 
     private void process(V2xMessageTransmission interaction) throws InternalFederateException {
-        DestinationType type = interaction.getMessage().getRouting().getDestination().getType();
-        if (type != DestinationType.AD_HOC_GEOCAST && type != DestinationType.AD_HOC_TOPOCAST) {
+        RoutingType type = interaction.getMessage().getRouting().getDestination().getRoutingType();
+        if (type != RoutingType.AD_HOC_GEOCAST && type != RoutingType.AD_HOC_TOPOCAST) {
             return;
         }
         // Calculate transmission

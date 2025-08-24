@@ -67,7 +67,7 @@ public class V2xMessageReception extends Interaction {
      *                            {@code null} if no additional information given.
      */
     public V2xMessageReception(final long time, @Nonnull final String receiverName, final int msgId,
-                               @Nonnull final V2xReceiverInformation receiverInformation) {
+                               final V2xReceiverInformation receiverInformation) {
         super(time);
         this.messageId = msgId;
         this.receiverName = Objects.requireNonNull(receiverName);

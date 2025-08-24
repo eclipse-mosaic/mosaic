@@ -15,76 +15,70 @@
 
 package org.eclipse.mosaic.lib.coupling;
 
-import org.eclipse.mosaic.lib.enums.DestinationType;
-import org.eclipse.mosaic.lib.enums.ProtocolType;
-import org.eclipse.mosaic.lib.objects.addressing.NetworkAddress;
+import org.eclipse.mosaic.lib.geo.CartesianPoint;
+import org.eclipse.mosaic.lib.geo.GeoPoint;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.google.gson.GsonBuilder;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public final class CAbstractNetworkAmbassador {
 
+    /**
+     * Name to the federate configuration file.
+     */
     public String federateConfigurationFile;
 
-    private CMessages messages = new CMessages();
-
     /**
-     * Returns {@code true}, if the network ambassador implementation supports the
-     * given {@link DestinationType}.
-     *
-     * @param routingType the {@link DestinationType} to check
-     * @return {@code true}, if the network ambassador implementation supports the given {@link DestinationType}.
+     * List of base stations and their properties.
      */
-    boolean isRoutingTypeSupported(DestinationType routingType) {
-        return messages.routingType.getOrDefault(routingType, false);
+    public List<CBaseStationProperties> baseStations = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        for (CBaseStationProperties bs : baseStations) {
+            builder.append(bs.toString()).append("\n");
+        }
+        return builder.toString();
     }
 
     /**
-     * Returns {@code true}, if the network ambassador implementation supports the
-     * given {@link NetworkAddress}.
-     *
-     * @param destinationAddress the {@link NetworkAddress} to check
-     * @return {@code true}, if the network ambassador implementation supports the given {@link NetworkAddress}.
+     * Configuration structure of one single base station.
      */
-    boolean isAddressTypeSupported(NetworkAddress destinationAddress) {
-        return destinationAddress != null
-                && (destinationAddress.isUnicast() && messages.destinationAddress.ipv4UnicastAddress
-                || destinationAddress.isBroadcast() && messages.destinationAddress.ipv4BroadcastAddress
-                || destinationAddress.isAnycast() && messages.destinationAddress.ipv4AnycastAddress);
-    }
+    public static class CBaseStationProperties implements Serializable {
 
-    /**
-     * Returns {@code true}, if the network ambassador implementation supports the given {@link ProtocolType}.
-     *
-     * @param protocolType the {@link ProtocolType} to check
-     * @return {@code true}, if the network ambassador implementation supports the given {@link ProtocolType}.
-     */
-    boolean isProtocolSupported(ProtocolType protocolType) {
-        return messages.protocolType.getOrDefault(protocolType, false);
-    }
+        /**
+         * The base stations geo position.
+         */
+        public GeoPoint geoPosition;
 
-    static class CMessages {
+        /**
+         * The base stations cartesian position. GeoPosition will take precedence.
+         */
+        public CartesianPoint cartesianPosition;
 
-        private CDestinationAdress destinationAddress = new CDestinationAdress();
-        private Map<DestinationType, Boolean> routingType = new HashMap<>();
-        private Map<ProtocolType, Boolean> protocolType = new HashMap<>();
-
-        CMessages() {
-            routingType.put(DestinationType.AD_HOC_GEOCAST, false);
-            routingType.put(DestinationType.AD_HOC_TOPOCAST, true);
-            routingType.put(DestinationType.CELL_GEOCAST, false);
-            routingType.put(DestinationType.CELL_GEOCAST_MBMS, false);
-            routingType.put(DestinationType.CELL_TOPOCAST, false);
-
-            protocolType.put(ProtocolType.UDP, true);
-            protocolType.put(ProtocolType.TCP, false);
+        @Override
+        public String toString() {
+            String s = "";
+            s += " geoPosition: " + ((geoPosition != null) ? geoPosition.toString() : "null");
+            s += " cartesianPosition: " + ((cartesianPosition != null) ? cartesianPosition.toString() : "null");
+            return s;
         }
     }
 
-    @SuppressWarnings("FieldCanBeLocal")
-    static class CDestinationAdress {
-        private boolean ipv4UnicastAddress = false;
-        private boolean ipv4BroadcastAddress = true;
-        private boolean ipv4AnycastAddress = false;
+    static GsonBuilder createConfigBuilder() {
+        return new GsonBuilder()
+                .setFieldNamingStrategy(f -> switch (f.getName()) {
+                    case "latitude" -> "lat";
+                    case "longitude" -> "lon";
+                    case "altitude" -> "alt";
+                    default -> f.getName();
+                });
     }
+
+
 }

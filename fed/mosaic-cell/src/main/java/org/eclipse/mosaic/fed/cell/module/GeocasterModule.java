@@ -24,7 +24,7 @@ import org.eclipse.mosaic.fed.cell.message.GeocasterResult;
 import org.eclipse.mosaic.fed.cell.message.StreamResult;
 import org.eclipse.mosaic.fed.cell.utility.RegionUtility;
 import org.eclipse.mosaic.interactions.communication.V2xMessageAcknowledgement;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.enums.NegativeAckReason;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.geo.GeoArea;
@@ -93,7 +93,7 @@ public final class GeocasterModule extends CellModule {
         StreamResult streamResult = message.getResource();
         V2xMessage v2xMessage = streamResult.getV2xMessage();
         DestinationAddressContainer dac = v2xMessage.getRouting().getDestination();
-        DestinationType type = dac.getType();
+        RoutingType type = dac.getRoutingType();
         NetworkAddress address = dac.getAddress();
         ProtocolType protocol = dac.getProtocolType();
 
@@ -103,13 +103,13 @@ public final class GeocasterModule extends CellModule {
         }
         String nextModule = CellModuleNames.DOWNSTREAM_MODULE; // next module after Geocaster in basic configuration is Downstream
         // Cast according to the schemes of 1) Topocast, 2) GeoUnicast and 3) GeoBroadcast
-        if (type.equals(DestinationType.CELL_TOPOCAST) && address.isUnicast()) {
+        if (type.equals(RoutingType.CELL_TOPOCAST) && address.isUnicast()) {
             // Topocast only allows unicasts, but any protocols (tcp, udp)
             geocasterCellTopocast(time, nextModule, streamResult, isFullMessage);
-        } else if (type.equals(DestinationType.CELL_GEOCAST) && address.isBroadcast() && !protocol.equals(ProtocolType.TCP)) {
+        } else if (type.equals(RoutingType.CELL_GEOCAST) && address.isBroadcast() && !protocol.equals(ProtocolType.TCP)) {
             // Geocasts require broadcast, but don't allow tcp (as ack for broadcasts is denied)
             geocasterCellGeoUnicast(time, nextModule, streamResult, isFullMessage);
-        } else if (type.equals(DestinationType.CELL_GEOCAST_MBMS) && address.isBroadcast() && !protocol.equals(ProtocolType.TCP)) {
+        } else if (type.equals(RoutingType.CELL_GEOCAST_MBMS) && address.isBroadcast() && !protocol.equals(ProtocolType.TCP)) {
             // Geocasts require broadcast, but don't allow tcp (as ack for broadcasts is denied)
             geocasterCellGeoBroadcast(time, nextModule, streamResult, isFullMessage);
         } else {
@@ -260,7 +260,7 @@ public final class GeocasterModule extends CellModule {
     private void unknownDestinationType(long time, StreamResult streamResult) {
         V2xMessage v2xMessage = streamResult.getV2xMessage();
         DestinationAddressContainer dac = v2xMessage.getRouting().getDestination();
-        DestinationType type = dac.getType();
+        RoutingType type = dac.getRoutingType();
         NetworkAddress address = dac.getAddress();
 
         // Default case with, up to now, unknown casting scheme

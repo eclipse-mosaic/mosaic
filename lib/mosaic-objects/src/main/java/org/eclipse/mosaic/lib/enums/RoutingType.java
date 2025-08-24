@@ -18,7 +18,7 @@ package org.eclipse.mosaic.lib.enums;
 /**
  * Enumeration of destination types.
  */
-public enum DestinationType {
+public enum RoutingType {
     // ad hoc types
     AD_HOC_GEOCAST,
     AD_HOC_TOPOCAST,
@@ -33,6 +33,14 @@ public enum DestinationType {
 
     public boolean isCell() {
         return this == CELL_GEOCAST || this == CELL_GEOCAST_MBMS || this == CELL_TOPOCAST;
+    }
+
+    public boolean isGeocast() {
+        return this == CELL_GEOCAST || this == CELL_GEOCAST_MBMS || this == AD_HOC_GEOCAST;
+    }
+
+    public boolean isTopocast() {
+        return this == AD_HOC_TOPOCAST || this == CELL_TOPOCAST;
     }
 
 }

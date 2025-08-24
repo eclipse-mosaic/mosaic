@@ -33,7 +33,7 @@ import javax.annotation.concurrent.Immutable;
  * facilities.
  */
 @Immutable
-public final class AdHocCommunicationConfiguration extends Interaction {
+public final class AdHocCommunicationConfiguration extends CommunicationConfiguration {
 
     private final static long serialVersionUID = 1L;
 

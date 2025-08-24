@@ -334,6 +334,11 @@ extract_premake() {
 
 build_ns3()
 {
+    log "Patch ns3"
+    # create patch with: `git diff master 1057-lte-in-ns3.36-integration --output=../ns3-federate/patches/ns3-lte.patch`
+    cd ${ns3_installation_path}/${ns3_long_affix}/${ns3_short_affix}
+    patch --strip=1 --input=${ns3_installation_path}/federate/patches/ns3-lte.patch
+
     log "Build ns3 version ${ns3_version}"
     cd "${ns3_installation_path}/ns-allinone-${ns3_version}"
     # ns-3 prior to 3.28.1 does not compile without warnings using g++ 10.2.0

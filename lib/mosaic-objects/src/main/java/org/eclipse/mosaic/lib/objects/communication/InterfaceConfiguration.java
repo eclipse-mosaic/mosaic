@@ -42,13 +42,13 @@ public class InterfaceConfiguration implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The new IPv4 address to assign.
+     * The IPv4 address to assign.
      */
-    private final Inet4Address newIP;
+    private final Inet4Address ip;
     /**
      * The subnet belonging to the IP address.
      */
-    private final Inet4Address newSubnet;
+    private final Inet4Address subnet;
     /**
      * The transmission power of the radio belonging to the interface.
      * Positive integer - power in mW
@@ -68,15 +68,15 @@ public class InterfaceConfiguration implements Serializable {
     /**
      * Create a configuration for a single channel interface.
      *
-     * @param newIP     the new Ip address to assign to the interface
-     * @param newSubnet the subnet specification for the new interface address
+     * @param ip        the Ip address to assign to the interface
+     * @param subnet    the subnet specification for the interface address
      * @param power     the transmission power which the radio belonging to this interface should send (in mW)
      */
-    private InterfaceConfiguration(@Nonnull Inet4Address newIP, @Nonnull Inet4Address newSubnet,
+    private InterfaceConfiguration(@Nonnull Inet4Address ip, @Nonnull Inet4Address subnet,
                                    Double power, Double radius, List<AdHocChannel> channels) {
         Validate.isTrue(channels.size() >= 1 && channels.size() <= 2, "Either single or dual channel");
-        this.newIP = Objects.requireNonNull(newIP);
-        this.newSubnet = Objects.requireNonNull(newSubnet);
+        this.ip = Objects.requireNonNull(ip);
+        this.subnet = Objects.requireNonNull(subnet);
         this.power = power;
         this.radius = radius;
         this.channels.addAll(channels);
@@ -86,8 +86,8 @@ public class InterfaceConfiguration implements Serializable {
     @Override
     public int hashCode() {
         return new HashCodeBuilder(7, 97)
-                .append(newIP)
-                .append(newSubnet)
+                .append(ip)
+                .append(subnet)
                 .append(power)
                 .append(channels)
                 .toHashCode();
@@ -107,22 +107,22 @@ public class InterfaceConfiguration implements Serializable {
 
         InterfaceConfiguration other = (InterfaceConfiguration) obj;
         return new EqualsBuilder()
-                .append(this.newIP, other.newIP)
-                .append(this.newSubnet, other.newSubnet)
+                .append(this.ip, other.ip)
+                .append(this.subnet, other.subnet)
                 .append(this.power, other.power)
                 .append(this.channels, other.channels)
                 .isEquals();
     }
 
-    public Inet4Address getNewIP() {
-        return newIP;
+    public Inet4Address getIp() {
+        return ip;
     }
 
-    public Inet4Address getNewSubnet() {
-        return newSubnet;
+    public Inet4Address getSubnet() {
+        return subnet;
     }
 
-    public double getNewPower() {
+    public double getPower() {
         return power;
     }
 
@@ -166,10 +166,10 @@ public class InterfaceConfiguration implements Serializable {
 
     public static class Builder {
 
-        private Inet4Address newIP;
-        private Inet4Address newSubnet;
-        private Double newPower;
-        private Double newRadius;
+        private Inet4Address ip;
+        private Inet4Address subnet;
+        private Double power;
+        private Double radius;
         private AdHocChannel channel0;
         private AdHocChannel channel1;
 
@@ -178,22 +178,22 @@ public class InterfaceConfiguration implements Serializable {
         }
 
         public Builder ip(Inet4Address ip) {
-            this.newIP = ip;
+            this.ip = ip;
             return this;
         }
 
         public Builder subnet(Inet4Address subnet) {
-            this.newSubnet = subnet;
+            this.subnet = subnet;
             return this;
         }
 
         public Builder power(Double power) {
-            this.newPower = power;
+            this.power = power;
             return this;
         }
 
         public Builder radius(Double radius) {
-            this.newRadius = radius;
+            this.radius = radius;
             return this;
         }
 
@@ -207,7 +207,7 @@ public class InterfaceConfiguration implements Serializable {
             if (channel1 != null) {
                 channels.add(channel1);
             }
-            return new InterfaceConfiguration(newIP, newSubnet, newPower, newRadius, channels);
+            return new InterfaceConfiguration(ip, subnet, power, radius, channels);
         }
     }
 }

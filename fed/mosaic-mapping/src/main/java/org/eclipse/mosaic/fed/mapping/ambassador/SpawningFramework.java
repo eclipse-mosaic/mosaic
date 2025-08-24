@@ -135,13 +135,13 @@ public class SpawningFramework {
             }
         }
 
-        // RSUs
-        if (mappingConfiguration.rsus != null) {
-            for (CRoadSideUnit roadSideUnitConfiguration : mappingConfiguration.rsus) {
-                if (roadSideUnitConfiguration != null) {
-                    RoadSideUnitSpawner roadSideUnitSpawner = new RoadSideUnitSpawner(roadSideUnitConfiguration);
-                    rsus.add(roadSideUnitSpawner);
-                    stationarySpawners.add(roadSideUnitSpawner);
+        // Servers
+        if (mappingConfiguration.servers != null) {
+            for (CServer serverConfiguration : mappingConfiguration.servers) {
+                if (serverConfiguration != null) {
+                    ServerSpawner serverSpawner = new ServerSpawner(serverConfiguration);
+                    servers.add(serverSpawner);
+                    stationarySpawners.add(serverSpawner);
                 }
             }
         }
@@ -156,13 +156,13 @@ public class SpawningFramework {
                 }
             }
         }
-        // Servers
-        if (mappingConfiguration.servers != null) {
-            for (CServer serverConfiguration : mappingConfiguration.servers) {
-                if (serverConfiguration != null) {
-                    ServerSpawner serverSpawner = new ServerSpawner(serverConfiguration);
-                    servers.add(serverSpawner);
-                    stationarySpawners.add(serverSpawner);
+        // RSUs
+        if (mappingConfiguration.rsus != null) {
+            for (CRoadSideUnit roadSideUnitConfiguration : mappingConfiguration.rsus) {
+                if (roadSideUnitConfiguration != null) {
+                    RoadSideUnitSpawner roadSideUnitSpawner = new RoadSideUnitSpawner(roadSideUnitConfiguration);
+                    rsus.add(roadSideUnitSpawner);
+                    stationarySpawners.add(roadSideUnitSpawner);
                 }
             }
         }
@@ -484,15 +484,15 @@ public class SpawningFramework {
     void timeAdvance(long time, RtiAmbassador rti, RandomNumberGenerator rng) throws InternalFederateException {
         this.time = time;
 
+        // Server, TMC, RSU, Charging Station Initialization
+        if (!immobileUnitsInitialized) {
+            initStationaryUnits();
+            immobileUnitsInitialized = true;
+        }
         // traffic light initialization
         if (scenarioTrafficLightRegistration != null && !trafficLightsInitialized) {
             initTrafficLights(time, rti, rng);
             trafficLightsInitialized = true;
-        }
-        // RSU, TMC, Charging Station Initialization
-        if (!immobileUnitsInitialized) {
-            initStationaryUnits();
-            immobileUnitsInitialized = true;
         }
 
         Iterator<VehicleFlowGenerator> vehicleFlowIt = vehicleFlowGenerators.iterator();

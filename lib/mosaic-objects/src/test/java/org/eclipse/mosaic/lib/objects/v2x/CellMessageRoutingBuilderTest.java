@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.geo.GeoRectangle;
@@ -55,7 +55,7 @@ public class CellMessageRoutingBuilderTest {
         MessageRouting routing = builder.broadcast().geographical(geoCircle).build();
 
         // assert
-        assertEquals(DestinationType.CELL_GEOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.CELL_GEOCAST, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoCircle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -67,7 +67,7 @@ public class CellMessageRoutingBuilderTest {
         MessageRouting routing = builder.broadcast().geographical(geoRectangle).build();
 
         // assert
-        assertEquals(DestinationType.CELL_GEOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.CELL_GEOCAST, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoRectangle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -79,7 +79,7 @@ public class CellMessageRoutingBuilderTest {
         MessageRouting routing = builder.broadcast().mbs().geographical(geoCircle).build();
 
         // assert
-        assertEquals(DestinationType.CELL_GEOCAST_MBMS, routing.getDestination().getType());
+        assertEquals(RoutingType.CELL_GEOCAST_MBMS, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoCircle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -91,7 +91,7 @@ public class CellMessageRoutingBuilderTest {
         MessageRouting routing = builder.broadcast().mbs().geographical(geoRectangle).build();
 
         // assert
-        assertEquals(DestinationType.CELL_GEOCAST_MBMS, routing.getDestination().getType());
+        assertEquals(RoutingType.CELL_GEOCAST_MBMS, routing.getDestination().getRoutingType());
         assertTrue(routing.getDestination().isGeocast());
         assertTrue(routing.getDestination().getGeoArea() instanceof GeoRectangle);
         assertTrue(routing.getDestination().getAddress().isBroadcast());
@@ -103,7 +103,7 @@ public class CellMessageRoutingBuilderTest {
         MessageRouting routing = builder.destination(ipAddress).topological().build();
 
         // assert
-        assertEquals(DestinationType.CELL_TOPOCAST, routing.getDestination().getType());
+        assertEquals(RoutingType.CELL_TOPOCAST, routing.getDestination().getRoutingType());
         assertFalse(routing.getDestination().isGeocast());
         //Because there are no hops by cell communication
         assertEquals(-1, routing.getDestination().getTimeToLive());

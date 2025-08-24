@@ -34,7 +34,7 @@ import org.eclipse.mosaic.fed.cell.message.CellModuleMessage;
 import org.eclipse.mosaic.fed.cell.message.StreamResult;
 import org.eclipse.mosaic.fed.cell.module.streammodules.UpstreamModule;
 import org.eclipse.mosaic.interactions.communication.V2xMessageAcknowledgement;
-import org.eclipse.mosaic.lib.enums.DestinationType;
+import org.eclipse.mosaic.lib.enums.RoutingType;
 import org.eclipse.mosaic.lib.enums.NegativeAckReason;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
@@ -616,7 +616,7 @@ public class UpstreamModuleStreamingTest {
         Inet4Address inet4Address = (Inet4Address) Inet4Address.getByName("10.2.0.0");
         when(destinationAddressContainer.getAddress()).thenReturn(mock(NetworkAddress.class));
         when(destinationAddressContainer.getAddress().getIPv4Address()).thenReturn(inet4Address);
-        when(destinationAddressContainer.getType()).thenReturn(DestinationType.CELL_TOPOCAST);
+        when(destinationAddressContainer.getRoutingType()).thenReturn(RoutingType.CELL_TOPOCAST);
         routing.set(new MessageStreamRouting(destinationAddressContainer, sourceAddressContainerMock, EVENT_DURATION, EXPECTED_BANDWIDTH));
 
         SampleV2xMessage sampleV2XMessage = new SampleV2xMessage(routing.get(), 5);
