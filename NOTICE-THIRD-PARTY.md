@@ -269,6 +269,14 @@ org.locationtech.jts:jts-core (1.19.0)
  * Source: https://github.com/locationtech/jts/jts-modules/jts-core
 
 
+Project Lombok (1.18.38)
+
+ * License: MIT
+ * Maven artifact: `org.projectlombok:lombok:1.18.38`
+ * Project: https://projectlombok.org
+ * Source: https://github.com/projectlombok/lombok
+
+
 Protocol Buffers [Core] (3.23.2)
 
  * License: BSD-3-Clause
