@@ -57,6 +57,7 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     // FLAGS
     private static final boolean CREATE_DISTANCES_FILE_FLAG = true;
     private static final boolean INCLUDE_PYTHON_SCRIPT_LOGS_FLAG = false;
+	private static final boolean START_DISPATCHER_INSIDE_WINDOWS_TERMINAL = false;
     // ================== END OF CUSTOM SCENARIO PARAMETERS ==================
 
     // TABLES
@@ -78,7 +79,11 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
         if (CREATE_DISTANCES_FILE_FLAG) {
             createFileWithDistancesInMinutesBetweenStops();
         }
-        startDispatcher(getLog(), SCENARIO_NAME, PATH_TO_DISPATCHER);
+		// In the Windows terminal using the 'wsl' command it is much slower than
+		// starting it manually under WSL, does not work optimal
+		if (START_DISPATCHER_INSIDE_WINDOWS_TERMINAL) {
+			startDispatcher(getLog(), SCENARIO_NAME, PATH_TO_DISPATCHER);
+		}
     }
 
     @Override
