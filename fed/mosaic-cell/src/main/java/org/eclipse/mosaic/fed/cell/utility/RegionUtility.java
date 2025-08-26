@@ -84,11 +84,11 @@ public class RegionUtility {
             return ConfigurationData.INSTANCE.getNetworkConfig().globalNetwork;
         }
 
-        CNetworkProperties region = SimulationData.INSTANCE.getRegionOfNode(node);
+        CNetworkProperties region = SimulationData.INSTANCE.getNetworkPropertiesOfNode(node);
 
         if (region == null) {
             region = getRegionForPosition(SimulationData.INSTANCE.getPositionOfNode(node));
-            SimulationData.INSTANCE.setRegionOfNode(node, region);
+            SimulationData.INSTANCE.setNetworkPropertiesOfNode(node, region);
         }
         log.trace("Getting region for node {} at region {}", node, region.id);
         return region;
@@ -103,7 +103,7 @@ public class RegionUtility {
      */
     public static String getRegionIdForNode(String nodeId) throws InternalFederateException {
         Validate.notNull(nodeId, "Could not get the region id because the nodeId is null");
-        final CNetworkProperties nodeRegion = SimulationData.INSTANCE.getRegionOfNode(nodeId);
+        final CNetworkProperties nodeRegion = SimulationData.INSTANCE.getNetworkPropertiesOfNode(nodeId);
 
         if (nodeRegion == null) {
             throw new InternalFederateException("Could not find the region id for node " + nodeId);

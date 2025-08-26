@@ -471,7 +471,7 @@ public class CellAmbassador extends AbstractFederateAmbassador {
 
         CNetworkProperties currentRegion = RegionUtility.getRegionForPosition(vehicleData.getProjectedPosition());
         if (HandoverUtility.isAfterHandover(currentRegion.id, previousRegion)) {
-            simData.setRegionOfNode(vehicleData.getName(), currentRegion);
+            simData.setNetworkPropertiesOfNode(vehicleData.getName(), currentRegion);
             return Optional.of(new HandoverInfo(vehicleData.getName(), currentRegion.id, previousRegion));
         }
         return Optional.empty();
@@ -555,7 +555,7 @@ public class CellAmbassador extends AbstractFederateAmbassador {
 
     private void registerStationaryNode(String nodeId, CellConfiguration cellConfiguration,
                                         long interactionTime, CNetworkProperties properties) {
-        simData.setRegionOfNode(nodeId, properties);
+        simData.setNetworkPropertiesOfNode(nodeId, properties);
         simData.setSpeedOfNode(nodeId, 0);
         simData.setCellConfigurationOfNode(nodeId, cellConfiguration);
 
@@ -568,7 +568,7 @@ public class CellAmbassador extends AbstractFederateAmbassador {
     }
 
     private void registerServer(String serverName, String serverGroup) {
-        CNetworkProperties serverProperties = ConfigurationData.INSTANCE.getServerRegionFromConfiguration(serverGroup);
+        CNetworkProperties serverProperties = ConfigurationData.INSTANCE.getNetworkPropertiesForServer(serverGroup);
         if (serverProperties != null) {
             registeredServers.put(serverName, serverProperties);
         } else {

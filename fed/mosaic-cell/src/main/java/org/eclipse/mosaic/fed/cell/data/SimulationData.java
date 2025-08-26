@@ -48,7 +48,7 @@ public enum SimulationData {
      */
     private static class SimulationNode {
         private CartesianPoint position;
-        private CNetworkProperties region;
+        private CNetworkProperties networkProperties;
         private Double speed;
         private CellConfiguration cellConfiguration;
     }
@@ -75,13 +75,13 @@ public enum SimulationData {
      * Set or update the region for a node.
      *
      * @param nodeId the id of the node.
-     * @param region the new region for the node.
+     * @param networkProperties the new region for the node.
      */
-    public void setRegionOfNode(String nodeId, CNetworkProperties region) {
-        Validate.notNull(region, "Unable to setRegionOfNode for nodeId=" + nodeId + ", because the given region is null");
-        Validate.notNull(nodeId, "Unable to setRegionOfNode for nodeId=" + nodeId + ", region=" + region.id);
+    public void setNetworkPropertiesOfNode(String nodeId, CNetworkProperties networkProperties) {
+        Validate.notNull(networkProperties, "Unable to setNetworkPropertiesOfNode for nodeId=" + nodeId + ", because the given region is null");
+        Validate.notNull(nodeId, "Unable to setNetworkPropertiesOfNode for nodeId=" + nodeId + ", networkProperties=" + networkProperties.id);
 
-        getOrCreate(nodeId).region = region;
+        getOrCreate(nodeId).networkProperties = networkProperties;
     }
 
     /**
@@ -167,9 +167,9 @@ public enum SimulationData {
      * @param nodeId The id of the node.
      * @return Region of the node if existing else null.
      */
-    public CNetworkProperties getRegionOfNode(String nodeId) {
+    public CNetworkProperties getNetworkPropertiesOfNode(String nodeId) {
         SimulationNode node = simulationNodeMap.get(nodeId);
-        return node != null ? node.region : null;
+        return node != null ? node.networkProperties : null;
     }
 
     /**
