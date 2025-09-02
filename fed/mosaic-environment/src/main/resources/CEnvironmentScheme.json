@@ -16,37 +16,28 @@
             "description": "Object to define a single event configuration.",
             "type": "object",
             "properties": {
-                "type": { 
-                    "description": "Type of the event.",
-                    "$ref": "#/definitions/eventType" 
+                "location": {
+                    "description": "The location of the event, this can either be a geoArea or a string representing a specific road segment. If not given, the event is valid everywhere.",
+                    "$ref": "#/definitions/eventLocation"
                 },
-                "location": { 
-                    "description": "The location of the event,, this can either be a geoArea or a string representing a specific road segment.",
-                    "$ref": "#/definitions/eventLocation" 
+                "time": {
+                    "description": "Time of the event. If not given, the event is valid all the time.",
+                    "$ref": "#/definitions/eventTime"
                 },
-                "time": { 
-                    "description": "Time of the event.",
-                    "$ref": "#/definitions/eventTime" 
-                }
-            },
-            "required": [ "type", "location", "time" ]
-        },
-        "eventType": {
-            "title": "eventType",
-            "description": "Object to define the type of an event.",
-            "type": "object",
-            "properties": {
-                "sensorType": { 
-                    "description": "Represents the type of sensor value this event is emitting (e.g. Ice, Snow, or an arbitrary Obstacle). The value can be set to any valid string.",
+                "type": {
+                    "description": "Represents the type of event value this event is emitting (e.g., TRACTION_HAZARD, VISIBILITY_HAZARD, WIND, TEMPERATURE, or an arbitrary EVENT). The value can be set to any valid string.",
                     "type": "string"
                 },
                 "value": {
-                    "description": "Used for assigning a value to the event. It can be used as the strength of an event, the amount of free parking spots in a parking lot, etc.",
-                    "type": "integer", 
-                    "default": 1 
+                    "description": "Used for assigning a value to the event. It can be used as the strength of an event, the road surface quality, or the name of a specific event cause, etc.",
+                    "anyOf": [
+                        { "type": "string", "maxLength": 30 },
+                        { "type": "number", "minimum": 0 },
+                        { "type": "object" }
+                    ]
                 }
             },
-            "required": [ "sensorType" ]
+            "required": [ "type", "value" ]
         },
         "eventLocation": {
             "title": "eventLocation",
@@ -68,7 +59,7 @@
             "description": "Object to define the area in which the event is located in.",
             "type": "object",
             "properties": {
-                "type": { 
+                "type": {
                     "description": "The type of the area.",
                     "type": "string",
                     "enum": [ "Rectangle", "Circle", "Polygon" ]
@@ -85,14 +76,14 @@
             "description": "Object to define geographical point coordinates.",
             "type": "object",
             "properties": {
-                "longitude": { 
-                    "description":"East-west position of a point on earth.",
+                "longitude": {
+                    "description": "East-west position of a point on earth.",
                     "type": "number",
                     "maximum": 180,
                     "minimum": -180
                 },
-                "latitude": { 
-                    "description":"North-south position of a point on earth.",
+                "latitude": {
+                    "description": "North-south position of a point on earth.",
                     "type": "number",
                     "maximum": 90,
                     "minimmum": -90
@@ -105,9 +96,9 @@
             "description": "Object to define an immutable pair of a geoPoint center position and a radius in meters.",
             "type": "object",
             "properties": {
-                "center": { 
+                "center": {
                     "description": "Center of the circle.",
-                    "$ref": "#/definitions/geoPoint" 
+                    "$ref": "#/definitions/geoPoint"
                 },
                 "radius": {
                     "description": "Radius of the circle in m.",
@@ -122,13 +113,13 @@
             "description": "Object to define an immutable pair of two different GeoPoints. Together they form a rectangular area.",
             "type": "object",
             "properties": {
-                "a": { 
+                "a": {
                     "description": "GeoPoint defining the north-western vertex of the rectangle.",
-                    "$ref": "#/definitions/geoPoint" 
+                    "$ref": "#/definitions/geoPoint"
                 },
-                "b": { 
+                "b": {
                     "description": "GeoPoint defining the south-eastern vertex of the rectangle.",
-                    "$ref": "#/definitions/geoPoint" 
+                    "$ref": "#/definitions/geoPoint"
                 }
             },
             "required": [ "a", "b" ]

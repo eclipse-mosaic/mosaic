@@ -29,10 +29,12 @@ import org.eclipse.mosaic.fed.application.ambassador.simulation.navigation.Routi
 import org.eclipse.mosaic.fed.application.ambassador.util.UnitLogger;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.fed.application.app.api.perception.BasicSensorModule;
-import org.eclipse.mosaic.lib.enums.SensorType;
+import org.eclipse.mosaic.lib.enums.EnvironmentEventCause;
+import org.eclipse.mosaic.lib.enums.TractionHazard;
 import org.eclipse.mosaic.lib.geo.GeoArea;
 import org.eclipse.mosaic.lib.objects.addressing.AdHocMessageRoutingBuilder;
 import org.eclipse.mosaic.lib.objects.addressing.SourceAddressContainer;
+import org.eclipse.mosaic.lib.objects.environment.Sensor;
 import org.eclipse.mosaic.lib.objects.road.IConnection;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.v2x.MessageRouting;
@@ -50,6 +52,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WeatherWarningAppTest {
@@ -90,7 +94,7 @@ public class WeatherWarningAppTest {
         app.setUp(operatingSystem, log);
 
         // set sensor data
-        setSensor(SensorType.ICE, 10);
+        setSensor(Sensor.TRACTION_HAZARD, TractionHazard.ICE);
         // setup position of vehicle to inflict sending of V2xMessage
         setupVehiclePosition();
         // setup message routing
@@ -122,8 +126,8 @@ public class WeatherWarningAppTest {
         verify(operatingSystem.getNavigationModule()).switchRoute(any());
     }
 
-    private void setSensor(SensorType sensorType, int value) {
-        when(operatingSystem.getBasicSensorModule().getStrengthOf(same(sensorType))).thenReturn(value);
+    private  <T> void setSensor(Sensor<T> sensor, T value) {
+        when(operatingSystem.getBasicSensorModule().getSensorValue(same(sensor))).thenReturn(Optional.of(value));
     }
 
     private void setupMessageRouting() {
@@ -168,8 +172,7 @@ public class WeatherWarningAppTest {
 
     private boolean assertDenm(Denm denm) {
         assertEquals(25 / 3.6f, denm.getCausedSpeed(), 0.1f);
-        assertEquals(10, denm.getEventStrength());
-        assertEquals(SensorType.ICE, denm.getWarningType());
+        assertEquals(EnvironmentEventCause.ADVERSE_WEATHER_CONDITION_ADHESION, denm.getEventCause());
         return true;
     }
 

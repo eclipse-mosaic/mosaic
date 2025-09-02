@@ -25,20 +25,27 @@ public class CEvent implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Type of the event.
-     */
-    public CEventType type = new CEventType();
-
-    /**
      * The location of the event,, this can either be a
      * {@link org.eclipse.mosaic.lib.geo.GeoArea} or
      * a {@link String} representing a specific road segment.
      */
-    public CEventLocation location = new CEventLocation();
+    public CEventLocation location = null;
 
     /**
      * Time of the event.
      */
-    public CEventTime time = new CEventTime();
+    public CEventTime time = null;
+
+    /**
+     * This represents the type of the in that area, e.g. Ice, or Snow.
+     */
+    public String type;
+
+    /**
+     * This is a value used for assigning a value to the event,
+     * it can be used as the strength of an event, or the
+     * amount of free parking spots in a parking lot, etc.
+     */
+    public Object value = null;
 }
 

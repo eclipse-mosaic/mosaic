@@ -1,10 +1,8 @@
 {
     "events": [
         {
-            "type": {
-                "sensorType": "OBSTACLE",
-                "value": 1
-            },
+            "type": "EVENT",
+            "value": "OBSTACLE_ON_ROAD",
             "location": {
                 "area": {
                     "type": "Rectangle",
@@ -24,10 +22,8 @@
             }
         },
         {
-            "type": {
-                "sensorType": "ICE",
-                "value": 10
-            },
+            "type": "TRACTION_HAZARD",
+            "value": "ICE",
             "location": {
                 "area": {
                     "type": "Circle",
@@ -44,10 +40,8 @@
             }
         },
         {
-            "type": {
-                "sensorType": "ROADWORKS",
-                "value": 15
-            },
+            "type": "EVENT",
+            "value": "ROADWORKS",
             "location": {
                 "area": {
                     "type": "Polygon",
@@ -77,9 +71,10 @@
             }
         },
         {
-            "type": {
-                "sensorType": "PARKING_LOT",
-                "value": 10
+            "type": "WIND",
+            "value": {
+                "speed": 10,
+                "direction": 42
             },
             "location": {
                 "roadSegmentId": "seg0"

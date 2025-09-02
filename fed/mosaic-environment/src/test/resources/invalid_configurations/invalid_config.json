@@ -1,10 +1,7 @@
 {
     "events": [
         {
-            "type": {
-                "sensorType": "OBSTACLE",
-                "value": 20
-            },
+            "type": "TEMPERATURE",
             "location": {
                 "area": {
                     "type": "Rectangle",
