@@ -20,6 +20,7 @@ import org.eclipse.mosaic.lib.util.gson.TimeFieldAdapter;
 
 import com.google.gson.annotations.JsonAdapter;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +32,13 @@ import java.util.Map;
  */
 public class CSumo implements Serializable {
 
-    private static final long serialVersionUID = 1479294781446446539L;
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Starts the GUI interface of SUMO, if set to true (default: false).
+     */
+    public boolean visualizer = false;
 
     /**
      * The Interval after which positions are published.
@@ -167,5 +174,6 @@ public class CSumo implements Serializable {
 
     public final static String HIGHLIGHT_CHANGE_LANE = "changeLane";
     public final static String HIGHLIGHT_CHANGE_ROUTE = "changeRoute";
+
 }
 
