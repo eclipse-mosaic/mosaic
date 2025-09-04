@@ -284,7 +284,7 @@ public class MappingAmbassador extends AbstractFederateAmbassador {
     }
 
     @Override
-    protected void processTimeAdvanceGrant(long time) throws InternalFederateException {
+    protected boolean processTimeAdvanceGrant(long time) throws InternalFederateException {
         try {
             framework.timeAdvance(time, rti, randomNumberGenerator);
         } catch (InternalFederateException e) {
@@ -292,6 +292,7 @@ public class MappingAmbassador extends AbstractFederateAmbassador {
             log.error("Error while processing timeAdvanceGrant", ex);
             throw ex;
         }
+        return true;
     }
 
     @Override
