@@ -3,7 +3,17 @@
         {
             "name": "DefaultPerson",
             "weight": 1.0,
-            "applications": [ "org.eclipse.mosaic.test.app.sumopersons.HelloWorldApp" ]
+            "applications": [
+                "org.eclipse.mosaic.test.app.sumopersons.KeepAliveAgentApp",
+                "org.eclipse.mosaic.test.app.sumopersons.PingAgentApp"
+            ]
+        }
+    ],
+    "servers": [
+        {
+            "name": "PingPongServer",
+            "group": "DefaultServer",
+            "applications": [ "org.eclipse.mosaic.test.app.sumopersons.PongServerApp" ]
         }
     ]
 }

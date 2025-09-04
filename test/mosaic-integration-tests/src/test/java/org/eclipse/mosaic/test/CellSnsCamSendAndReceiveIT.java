@@ -125,8 +125,8 @@ public class CellSnsCamSendAndReceiveIT {
         assertOccurrences(CELL_LOG, ".*CellAmbassador - Added RSU \\(id=rsu_1.*", 1);
         assertOccurrences(CELL_LOG, ".*CellAmbassador - Added RSU \\(id=rsu_2.*", 1);
         assertOccurrences(CELL_LOG, ".*CellAmbassador - Added RSU \\(id=rsu_3.*", 1);
-        assertOccurrences(CELL_LOG, ".*CellAmbassador - Added VEH \\(id=veh_0.*", 1);
-        assertOccurrences(CELL_LOG, ".*CellAmbassador - Added VEH \\(id=veh_1.*", 1);
+        assertOccurrences(CELL_LOG, ".*CellAmbassador - Added MOBILE NODE \\(id=veh_0.*", 1);
+        assertOccurrences(CELL_LOG, ".*CellAmbassador - Added MOBILE NODE \\(id=veh_1.*", 1);
         assertOccurrences(CELL_LOG, ".*CellAmbassador - Added Server \\(TMC\\) \\(id=tmc_0.*", 1);
     }
 
@@ -135,9 +135,9 @@ public class CellSnsCamSendAndReceiveIT {
         // activations
         assertOccurrences(CELL_LOG, ".*CellAmbassador - Enabled \\(Configured\\) Cell Communication for entity=rsu.*", 3);
         assertOccurrences(CELL_LOG, ".*CellAmbassador - Enabled \\(Configured\\) Cell Communication for entity=tmc.*", 1);
-        assertOccurrences(CELL_LOG, ".*CellAmbassador - Enabled \\(Configured\\) Cell Communication for vehicle.*", 3);
+        assertOccurrences(CELL_LOG, ".*CellAmbassador - Enabled \\(Configured\\) Cell Communication for mobile node=veh.*", 3);
         // deactivations
-        assertOccurrences(CELL_LOG, ".*CellAmbassador - Disabled Cell Communication for vehicle.*", 3);
+        assertOccurrences(CELL_LOG, ".*CellAmbassador - Disabled Cell Communication for mobile node.*", 3);
     }
 
     @Test

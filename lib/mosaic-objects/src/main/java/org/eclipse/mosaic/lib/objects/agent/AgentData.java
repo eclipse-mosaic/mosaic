@@ -59,6 +59,7 @@ public class AgentData extends UnitData {
         IN_PT_VEHICLE_AT_STOP
     }
 
+    private final double speed;
     private final String assignedVehicle;
     private final AgentRoute.Leg currentLeg;
     private final TripStatus tripStatus;
@@ -69,15 +70,24 @@ public class AgentData extends UnitData {
      * @param time            The time at which this data object was created.
      * @param name            The name of the agent.
      * @param position        The current geo position of the agent.
+     * @param speed           The speed the agent in [m/s].
      * @param assignedVehicle The currently assigned vehicle of the agent (if any).
      * @param currentLeg      The currently assigned leg of the agent (if any).
      * @param status          The current trip status of the agent, such as waiting, walking, or inside a vehicle.
      */
-    public AgentData(long time, String name, GeoPoint position, String assignedVehicle, AgentRoute.Leg currentLeg, TripStatus status) {
+    public AgentData(long time, String name, GeoPoint position, double speed, String assignedVehicle, AgentRoute.Leg currentLeg, TripStatus status) {
         super(time, name, position);
+        this.speed = speed;
         this.assignedVehicle = assignedVehicle;
         this.currentLeg = currentLeg;
         this.tripStatus = status;
+    }
+
+    /**
+     * Returns the speed of the agent in [m/s].
+     */
+    public double getSpeed() {
+        return speed;
     }
 
     /**
@@ -125,6 +135,7 @@ public class AgentData extends UnitData {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .appendSuper(super.hashCode())
+                .append(speed)
                 .append(assignedVehicle)
                 .append(tripStatus)
                 .append(currentLeg)
@@ -135,6 +146,7 @@ public class AgentData extends UnitData {
     public String toString() {
         return new ToStringBuilder(this, SHORT_PREFIX_STYLE)
                 .appendSuper(super.toString())
+                .append("speed", speed)
                 .append("assignedVehicle", assignedVehicle)
                 .append("state", tripStatus)
                 .append("currentLeg", currentLeg)
