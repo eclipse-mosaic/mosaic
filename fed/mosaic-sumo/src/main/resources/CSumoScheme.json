@@ -4,6 +4,11 @@
     "title": "SUMO",
     "description": "Schema describing the JSON file structure for the SUMO configuration.",
     "properties": {
+        "visualizer": {
+            "description": "Starts the GUI interface of SUMO, if set to true (default: false).",
+            "type": "boolean",
+            "default": false
+        },
         "updateInterval": {
             "description": "The Interval after which positions are published. If defined as a number, then the default unit is ms. Alternatively this can be defined as a string to include the unit of measurement (e.g. '1 s'). Define the size of one simulation step in sumo.",
             "anyOf": [

@@ -16,7 +16,7 @@
 package org.eclipse.mosaic.test.junit;
 
 import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
-import org.eclipse.mosaic.fed.sumo.ambassador.SumoGuiAmbassador;
+import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.lib.objects.addressing.IpResolver;
 import org.eclipse.mosaic.lib.objects.v2x.etsi.EtsiPayloadConfiguration;
 import org.eclipse.mosaic.lib.transform.GeoProjection;
@@ -148,9 +148,9 @@ public class MosaicSimulationRule extends TemporaryFolder {
      */
     public MosaicSimulationRule activateSumoGui() {
         watchdog(0); // when using GUI watchdog pretty much has to be disabled
-        getRuntimeConfiguration().federates.stream().filter(s -> s.id.equals("sumo")).forEach(
-                s -> s.classname = SumoGuiAmbassador.class.getCanonicalName()
-        );
+        addScenarioDirectoryManipulator(new ConfigFileManipulator<>(
+                "sumo/sumo_config.json", CSumo.class, c -> c.visualizer = true
+        ));
         return this;
     }
 

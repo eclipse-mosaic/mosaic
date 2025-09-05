@@ -1,3 +1,4 @@
 {
-    "updateInterval": 100
+    "updateInterval": "100ms",
+    "visualizer": false
 }

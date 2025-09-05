@@ -132,22 +132,40 @@ public class ProcessLoggingThread extends Thread {
 
         private final BlockingQueue<String> lineQueue = new LinkedBlockingQueue<>(LINE_BUFFER_SIZE);
 
+        private boolean closed = false;
+
         private TeeInputStream(ProcessLoggingThread parent) {
-            new Thread(() -> {
-                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new PipedOutputStream(this), Charsets.UTF_8))) {
-                    while (!parent.closed) {
-                        writer.write(lineQueue.take());
-                        writer.newLine();
+            try {
+                // create the pipe outside the thread to make sure it's connected when the consumer of the TeeInputStream starts reading it
+                final PipedOutputStream pipe = new PipedOutputStream(this);
+                new Thread(() -> {
+                    try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(pipe, Charsets.UTF_8))) {
+                        while (!parent.closed) {
+                            String line = lineQueue.take();
+                            if (closed) {
+                                return;
+                            }
+                            writer.write(line);
+                            writer.newLine();
+                            writer.flush();
+                        }
+                        writer.write(-1); // EOF
                         writer.flush();
+                    } catch (IOException | InterruptedException e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        parent.tees.remove(this);
                     }
-                    writer.write(-1); // EOF
-                    writer.flush();
-                } catch (IOException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    parent.tees.remove(this);
-                }
-            }).start();
+                }).start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            closed = true;
         }
     }
 }
