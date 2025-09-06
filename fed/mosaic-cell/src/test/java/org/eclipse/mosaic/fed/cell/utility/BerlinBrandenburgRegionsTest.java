@@ -74,7 +74,7 @@ public class BerlinBrandenburgRegionsTest {
                 CartesianPoint cartesianPoint = GeoProjection.getInstance().geographicToCartesian(geoPoint);
 
                 SimulationData.INSTANCE.setPositionOfNode(nodeId, cartesianPoint);
-                SimulationData.INSTANCE.setRegionOfNode(nodeId, RegionUtility.getRegionForPosition(cartesianPoint));
+                SimulationData.INSTANCE.setNetworkPropertiesOfNode(nodeId, RegionUtility.getNetworkPropertiesForRegionAt(cartesianPoint));
 
                 CNetworkProperties region = RegionUtility.getRegionForNode(nodeId);
 

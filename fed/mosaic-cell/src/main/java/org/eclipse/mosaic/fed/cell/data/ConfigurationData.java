@@ -101,7 +101,7 @@ public enum ConfigurationData {
      * @param serverGroupName name of the defined group in mapping
      * @return the configured {@code CNetworkProperties} if server region exists, else {@code null}
      */
-    public CNetworkProperties getServerRegionFromConfiguration(String serverGroupName) {
+    public CNetworkProperties getNetworkPropertiesForServer(String serverGroupName) {
         for (CNetworkProperties server : networkConfig.servers) {
             if (server.id.equals(serverGroupName)) {
                 return server;
