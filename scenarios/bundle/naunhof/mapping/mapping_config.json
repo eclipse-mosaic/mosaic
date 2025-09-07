@@ -1,0 +1,15 @@
+{
+  "prototypes": [
+    {
+      "name": "TaxiSumo",
+      "applications": [ "org.eclipse.mosaic.app.taxi.SumoTaxiTraciInteractionApp" ]
+    }
+  ],
+  "vehicles": [],
+  "servers" : [
+    {
+      "name": "TaxiDispatcher",
+      "applications": [ "org.eclipse.mosaic.app.taxi.ExampleTaxiDispatchingServer" ]
+    }
+  ]
+}

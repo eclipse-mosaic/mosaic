@@ -1,0 +1,37 @@
+{
+    "simulation": {
+        "id": "naunhof",
+        "duration": "1000s",
+        "randomSeed": 268965854,
+        "projection": {
+            "centerCoordinates": {
+                "latitude": 51.27795647971541,
+                "longitude": 12.588756299573525
+            },
+            "cartesianOffset": {
+                "x": -327912.78,
+                "y": -5680449.37
+            }
+        },
+        "network": {
+            "netMask": "255.255.0.0",
+            "vehicleNet": "10.1.0.0",
+            "rsuNet": "10.2.0.0",
+            "tlNet": "10.3.0.0",
+            "csNet": "10.4.0.0",
+            "serverNet": "10.5.0.0",
+            "tmcNet": "10.6.0.0"
+        }
+    },
+    "federates": {
+        "application": true,
+        "environment": false,
+        "cell": false,
+        "ns3": false,
+        "omnetpp": false,
+        "output": true,
+        "sns": false,
+        "sumo": true,
+        "phabmacs": false
+    }
+}

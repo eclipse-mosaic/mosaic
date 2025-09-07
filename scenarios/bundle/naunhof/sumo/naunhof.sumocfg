@@ -1,0 +1,12 @@
+<configuration>
+	<input>
+		<net-file value="naunhof.net.xml"/>
+		<route-files value="naunhof.rou.xml"/>
+		<device.taxi.dispatch-algorithm value="traci"/>
+        <device.taxi.idle-algorithm value="stop"/>
+	</input>
+	<time>
+		<begin value="0" />
+		<end value="1000" />
+	</time>
+</configuration>
