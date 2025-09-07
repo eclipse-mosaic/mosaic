@@ -9,7 +9,7 @@
   "servers" : [
     {
       "name": "TaxiDispatcher",
-      "applications": [ "org.eclipse.mosaic.app.taxi.ExampleTaxiDispatchingServer" ]
+      "applications": [ "org.eclipse.mosaic.app.taxi.TaxiDispatchingServer" ]
     }
   ]
 }

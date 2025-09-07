@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.app.taxi;
 
-import org.eclipse.mosaic.app.taxi.util.DataBaseCommunication;
+import org.eclipse.mosaic.app.taxi.util.DatabaseCommunication;
 import org.eclipse.mosaic.app.taxi.util.TaxiDispatchData;
 import org.eclipse.mosaic.app.taxi.util.TaxiLatestData;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
@@ -44,7 +44,7 @@ import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.executePythonSc
 import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.startDispatcher;
 import static org.eclipse.mosaic.app.taxi.util.ParserUtil.parseMosaicVehicleIdToTaxiDbIndex;
 
-public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
+public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
     // ================== DEFINE YOUR CUSTOM SCENARIO PARAMETERS ==================
     // SCENARIO
     private static final String SCENARIO_NAME = "theodorHeuss";
@@ -68,12 +68,12 @@ public class ExampleTaxiDispatchingServer extends AbstractApplication<ServerOper
     private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
     private static int lastRegisteredTaxiDbIndex = 0;
     private static int lastSavedReservationMosaicIndex = -1;
-    private static DataBaseCommunication dataBaseCommunication;
+    private static DatabaseCommunication dataBaseCommunication;
 
     @Override
     public void onStartup() {
         executePythonScripts(getLog(), INCLUDE_PYTHON_SCRIPT_LOGS_FLAG, SCENARIO_NAME);
-        dataBaseCommunication = new DataBaseCommunication(getLog());
+        dataBaseCommunication = new DatabaseCommunication(getLog());
         dataBaseCommunication.checkTablesState(NOT_EMPTY_TABLES, false);
         dataBaseCommunication.checkTablesState(EMPTY_TABLES, true);
         if (CREATE_DISTANCES_FILE_FLAG) {

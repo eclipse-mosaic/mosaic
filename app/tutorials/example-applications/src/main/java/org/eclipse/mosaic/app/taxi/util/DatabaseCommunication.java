@@ -24,11 +24,11 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.eclipse.mosaic.app.taxi.ExampleTaxiDispatchingServer.*;
+import static org.eclipse.mosaic.app.taxi.TaxiDispatchingServer.*;
 import static org.eclipse.mosaic.app.taxi.util.Constants.*;
 import static org.eclipse.mosaic.app.taxi.util.ParserUtil.*;
 
-public class DataBaseCommunication {
+public class DatabaseCommunication {
 
 	private static final String COMMA_DELIMITER = ",";
 	private static final String ID_COLUMN_NAME = "id";
@@ -36,7 +36,7 @@ public class DataBaseCommunication {
 	private final UnitLogger unitLogger;
 	private Connection dbConnection;
 
-	public DataBaseCommunication(UnitLogger unitLogger) {
+	public DatabaseCommunication(UnitLogger unitLogger) {
 		this.unitLogger = unitLogger;
 		connectToDatabase();
 	}
