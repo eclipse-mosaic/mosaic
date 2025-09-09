@@ -69,6 +69,7 @@ import org.eclipse.mosaic.rti.api.parameters.AmbassadorParameter;
 import org.eclipse.mosaic.rti.api.parameters.FederatePriority;
 import org.eclipse.mosaic.rti.config.CLocalHost;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
@@ -86,6 +87,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.locks.LockSupport;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -98,24 +102,45 @@ import javax.annotation.concurrent.NotThreadSafe;
 public class SumoAmbassador extends AbstractFederateAmbassador {
 
     /**
-     * Configuration object.
+     * Maximum number of attempts to connect to SUMO process.
      */
-    CSumo sumoConfig;
+    private final static int MAX_CONNECTION_ATTEMPTS = 10;
 
     /**
-     * Simulation time at which the positions are published next.
+     * Sleep after each connection try. Unit: [ns].
      */
-    long nextTimeStep;
+    private final static long SLEEP_AFTER_ATTEMPT = TIME.SECOND;
+
+    /**
+     * Configuration object.
+     */
+    protected CSumo sumoConfig;
 
     /**
      * Connection to SUMO.
      */
-    Bridge bridge;
+    protected Bridge bridge;
 
     /**
      * Socket with which data is exchanged with SUMO.
      */
-    Socket socket;
+    @VisibleForTesting
+    protected Socket socket;
+
+    /**
+     * The port of SUMO's TraciServer
+     */
+    private int sumoPort = -1;
+
+    /**
+     * Simulation time at which the positions are published next.
+     */
+    private long nextTimeStep;
+
+    /**
+     * Command used to start Sumo.
+     */
+    private FederateExecutor federateExecutor = null;
 
     /**
      * Indicates whether advance time is called for the first time.
@@ -127,33 +152,16 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
      */
     private final List<Interaction> interactionList = new ArrayList<>();
 
-
-    /**
-     * Sleep after each connection try. Unit: [ms].
-     */
-    private final static long SLEEP_AFTER_ATTEMPT = 1000L;
-
-    /**
-     * Command used to start Sumo.
-     */
-    FederateExecutor federateExecutor = null;
-
     /**
      * Last time of a call to advance time.
      */
     private long lastAdvanceTime = -1;
-
 
     /**
      * An event scheduler which is currently used to change the speed to
      * a given value after slowing down the vehicle.
      */
     private final EventScheduler eventScheduler = new DefaultEventScheduler();
-
-    /**
-     * Maximum amount of attempts to connect to SUMO.
-     */
-    private int connectionAttempts = 5;
 
     /**
      * Caches the {@link VehicleRoutesInitialization}-interaction until the {@link VehicleTypesInitialization}-interaction
@@ -217,8 +225,9 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
     @Nonnull
     @Override
     public FederateExecutor createFederateExecutor(String host, int port, CLocalHost.OperatingSystem os) {
-        // SUMO needs to start the federate by itself, therefore we need to store the federate starter locally and use it later
-        federateExecutor = new ExecutableFederateExecutor(descriptor, getFromSumoHome("sumo"), getProgramArguments(port));
+        // SUMO needs to start the federate by itself, therefore we need to store relevant information locally and use it later
+        sumoPort = port;
+
         return new NopFederateExecutor();
     }
 
@@ -242,98 +251,72 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
      */
     @Override
     public void connectToFederate(String host, InputStream in, InputStream err) throws InternalFederateException {
-        int port = -1;
         try {
-            log.debug("connectToFederate(String host, InputStream in, InputStream err)");
-            final String portTag = "port";
-            final String success = "Starting server on port";
-            final String error = "Error";
+            log.debug("Connect to SUMO process output.");
+            if (!sumoConfig.visualizer) {
+                // In the non-visualizer case we read the TraCI port from SUMO stdout to make sure that the TraCI server is up running
+                log.info("Read TraCI server port from SUMO stdout");
+                sumoPort = getPortFromStdOut(in);
+            } // In the case with SUMO-GUI we don't have stdout to read from, so we try to connect until we succeed
 
-            BufferedReader sumoInputReader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-            String line;
-            // hold the thread for a second to allow sumo to print possible error message to the error stream
-            Thread.sleep(1000);
-            while (((line = sumoInputReader.readLine()) != null)) {
-                if (!line.isEmpty()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug(line);
-                    }
-                    // SUMO is started, and the port is extracted from its
-                    // output
-                    if (line.contains(success)) {
-                        String[] split = StringUtils.split(line, ' ');
-                        for (int i = 0; i < split.length; i++) {
-                            if (split[i].equals(portTag)) {
-                                port = Integer.parseInt(split[i + 1]);
-                                connectToFederate(host, port);
-                            }
-                        }
-                        break;
-                    }
-                    // an error occurred while starting SUMO
-                    if (line.contains(error)) {
-                        log.error(line);
-                        break;
-                    }
-                }
-            }
+            connectToFederate(host, sumoPort);
 
             // Print errors, if socket was not created
             if (socket == null) {
-                String myError = "Could not connect to socket: host: " + host + " port: " + port;
-                log.error(myError);
-                BufferedReader sumoErrorReader = new BufferedReader(new InputStreamReader(err, StandardCharsets.UTF_8));
-                while (((line = sumoErrorReader.readLine()) != null)) {
-                    if (!line.isEmpty()) {
-                        log.error(line);
-                    }
-                }
-
-                // specialized error message for missing port
-                if (port == -1) {
-                    throw new InternalFederateException("Could not read port from SUMO. SUMO seems to be crashed.");
-                }
-
-                throw new InternalFederateException(myError);
+                throw new InternalFederateException("Could not connect to socket at host " + host + ":" + sumoPort);
             }
-        } catch (InterruptedException | IOException | RuntimeException e) {
+        } catch (IOException | RuntimeException e) {
             throw new InternalFederateException(e);
         }
     }
 
+    private int getPortFromStdOut(InputStream in) throws IOException, InternalFederateException {
+        final String error = "Error";
+        final Pattern portPattern = Pattern.compile(".*Starting server on port ([0-9]+).*");
+
+        BufferedReader sumoInputReader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+
+        Matcher portMatcher;
+        String line;
+        while ((line = sumoInputReader.readLine()) != null) {
+            // SUMO is started, and the port is extracted from its output
+            portMatcher = portPattern.matcher(line);
+            if (portMatcher.find()) {
+                return Integer.parseInt(portMatcher.group(1));
+            } else if (line.contains(error)) {
+                // an error occurred while starting SUMO
+                break;
+            }
+        }
+        throw new InternalFederateException("Could not read port from SUMO. SUMO seems to be crashed.");
+    }
+
     /**
-     * Connects to SUMO using the given host and port.
+     * Connects to SUMO's TraCI server using the given host and port.
      *
      * @param host host on which SUMO is running.
      * @param port port on which TraCI is listening.
      */
     @Override
     public void connectToFederate(String host, int port) {
-        try {
-            log.debug("connectToFederate(String host, int port) method");
-            socket = new Socket(host, port);
+        log.info("Connect to SUMO TraCI server at {}:{}", host, port);
+        int attemps = 0;
+        while (attemps++ < MAX_CONNECTION_ATTEMPTS) {
+            try {
+                socket = new Socket(host, port);
 
-            // set performance preference to lowest latency
-            socket.setPerformancePreferences(0, 100, 10);
-
-            // disable Nagle's algorithm (TcpNoDelay Flag) to decrease latency even further
-            socket.setTcpNoDelay(true);
-            log.debug("Created TraCI Connection with the following specs: ");
-            log.debug("    Receive Buffer Size: {}", socket.getReceiveBufferSize());
-            log.debug("    Send Buffer Size: {}", socket.getSendBufferSize());
-            log.debug("    Keep alive: {}", socket.getKeepAlive());
-            log.debug("    TCP NoDelay: {}", socket.getTcpNoDelay());
-        } catch (UnknownHostException ex) {
-            log.error("Unknown host: {}", ex.getMessage());
-        } catch (IOException ex) {
-            log.warn("Error while connecting to SUMO. Retrying.");
-            if (connectionAttempts-- > 0) {
-                try {
-                    Thread.sleep(SLEEP_AFTER_ATTEMPT);
-                } catch (InterruptedException e) {
-                    log.error("Could not execute Thread.sleep({}). Reason: {}", SLEEP_AFTER_ATTEMPT, e.getMessage());
-                }
-                connectToFederate(host, port);
+                // set performance preference to lowest latency
+                socket.setPerformancePreferences(0, 100, 10);
+                // disable Nagle's algorithm (TcpNoDelay Flag) to decrease latency even further
+                socket.setTcpNoDelay(true);
+                log.info("Successfully created SUMO TraCI Connection.");
+                return;
+            } catch (UnknownHostException ex) {
+                log.error("Unknown host: {}", ex.getMessage());
+                return;
+            } catch (IOException ex) {
+                log.warn("SUMO TraCI server seems not to be ready yet. Retrying.");
+                LockSupport.parkNanos(SLEEP_AFTER_ATTEMPT);
             }
         }
     }
@@ -574,12 +557,25 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
         log.info("Directory: {}", dir);
 
         try {
+            if (sumoConfig.visualizer) {
+                log.info("Visualizer is enabled: starting SUMO-GUI.");
+                LogStatements.printStartSumoGuiInfo();
+            }
+
+            final String executable = sumoConfig.visualizer ? "sumo-gui" : "sumo";
+            federateExecutor = new ExecutableFederateExecutor(descriptor, getFromSumoHome(executable), getProgramArguments(sumoPort));
+
             Process p = federateExecutor.startLocalFederate(dir);
 
-            connectToFederate("localhost", p.getInputStream(), p.getErrorStream());
-            // read error output of process in an extra thread
-            new ProcessLoggingThread("sumo", p.getInputStream(), log::info).start();
-            new ProcessLoggingThread("sumo", p.getErrorStream(), log::error).start();
+            ProcessLoggingThread stdOut = new ProcessLoggingThread("sumo", p.getInputStream(), log::info);
+            ProcessLoggingThread errOut = new ProcessLoggingThread("sumo", p.getErrorStream(), log::error);
+            try (InputStream teedStdOut = stdOut.teeInputStream(); InputStream teedErrOut = errOut.teeInputStream()) {
+                stdOut.start();
+                errOut.start();
+                connectToFederate("localhost", teedStdOut, teedErrOut);
+            } catch (IOException e) {
+                throw new InternalFederateException("Error while reading output of Sumo", e);
+            }
 
         } catch (FederateExecutor.FederateStarterException e) {
             log.error("Error while executing command: {}", federateExecutor.toString());
@@ -669,7 +665,6 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
         }
         log.info("Finished simulation");
     }
-
 
     /**
      * Find the first configuration file.

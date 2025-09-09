@@ -109,13 +109,13 @@ public class TraciClientBridge implements Bridge {
             // tests the connection to SUMO by calling GetVersion before continuing to setup other commands
             new org.eclipse.mosaic.fed.sumo.bridge.traci.SimulationGetVersion().execute(this);
         } catch (InternalFederateException | CommandException e) {
-            throw new IOException("Could not load establish connection to SUMO due to an unknown error.", e);
+            throw new IOException("Could not establish connection to SUMO due to an unknown error.", e);
         }
 
         try {
             new SimulationSetOrder().execute(this, sumoConfiguration.simulationClientOrder);
         } catch (Exception e) {
-            throw new IOException("Could not load establish connection to SUMO due to an unknown error.", e);
+            throw new IOException("Could not set order of TraCI clients due to an unknown error.", e);
         }
 
         this.simulationControl = new SimulationFacade(this, sumoConfiguration);

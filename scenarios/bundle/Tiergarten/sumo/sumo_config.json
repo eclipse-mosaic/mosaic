@@ -7,5 +7,7 @@
         "TrafficLightCar": {
             "carFollowModel": "Krauss"
         }
-    }
+    },
+    "updateInterval": "1s",
+    "visualizer": false
 }
