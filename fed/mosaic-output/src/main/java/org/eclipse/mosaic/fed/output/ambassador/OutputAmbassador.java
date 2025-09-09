@@ -166,10 +166,10 @@ public class OutputAmbassador extends AbstractFederateAmbassador {
     }
 
     @Override
-    public void processTimeAdvanceGrant(long time) throws InternalFederateException {
+    public boolean processTimeAdvanceGrant(long time) throws InternalFederateException {
         try {
             if (time != this.nextTimestep || this.globalUpdateInterval <= 0) {
-                return;
+                return true;
             }
 
             for (GeneratorInformation generator : this.generators.values()) {
@@ -189,6 +189,7 @@ public class OutputAmbassador extends AbstractFederateAmbassador {
         } catch (Exception e) {
             throw new InternalFederateException(e);
         }
+        return true;
     }
 
     @Override

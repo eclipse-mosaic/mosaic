@@ -588,7 +588,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
     }
 
     @Override
-    public synchronized void processTimeAdvanceGrant(long time) throws InternalFederateException {
+    public synchronized boolean processTimeAdvanceGrant(long time) throws InternalFederateException {
         if (bridge instanceof TraciClientBridge && socket == null) {
             throw new InternalFederateException("Error during advance time (" + time + "): Sumo not yet ready.");
         }
@@ -601,7 +601,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
 
         if (time < nextTimeStep) {
             // process time advance only if time is equal or greater than the next simulation time step
-            return;
+            return true;
         }
 
         if (time > lastAdvanceTime) {
@@ -652,6 +652,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
             log.error("Error during advanceTime({})", time, e);
             throw new InternalFederateException(e);
         }
+        return true;
     }
 
     @Override
