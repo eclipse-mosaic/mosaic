@@ -15,7 +15,6 @@
 
 package org.eclipse.mosaic.fed.application.app.api.os.modules;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.SimplePerceptionConfiguration;
 import org.eclipse.mosaic.fed.application.app.api.perception.BasicSensorModule;
 import org.eclipse.mosaic.fed.application.app.api.perception.LidarSensorModule;
 import org.eclipse.mosaic.fed.application.app.api.perception.PerceptionModule;
@@ -31,7 +30,7 @@ public interface Perceptive {
     /**
      * Returns a perception module for this unit, which is able to return object information of its surrounding.
      */
-    PerceptionModule<SimplePerceptionConfiguration> getPerceptionModule();
+    PerceptionModule getPerceptionModule();
 
     /**
      * Returns a basic sensor module which provides single integer values for given {@link Sensor}s.

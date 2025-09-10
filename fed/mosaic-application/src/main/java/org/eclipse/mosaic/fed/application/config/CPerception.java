@@ -15,15 +15,15 @@
 
 package org.eclipse.mosaic.fed.application.config;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.SumoIndex;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.TrafficLightIndex;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.VehicleGrid;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.VehicleIndex;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.VehicleTree;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.WallIndex;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.WallTree;
 import org.eclipse.mosaic.lib.geo.GeoRectangle;
 import org.eclipse.mosaic.lib.gson.TypeFieldTypeAdapter;
+import org.eclipse.mosaic.lib.perception.PerceptionModel;
+import org.eclipse.mosaic.lib.perception.index.TrafficLightIndex;
+import org.eclipse.mosaic.lib.perception.index.VehicleGrid;
+import org.eclipse.mosaic.lib.perception.index.VehicleIndex;
+import org.eclipse.mosaic.lib.perception.index.VehicleTree;
+import org.eclipse.mosaic.lib.perception.index.WallIndex;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 import org.eclipse.mosaic.lib.util.gson.UnitFieldAdapter;
 
 import com.google.gson.Gson;
@@ -33,12 +33,19 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Configuration for the perception backend used in the ApplicationSimulator
  * to determine surrounding vehicles, traffic lights, and buildings.
  */
 public class CPerception implements Serializable {
+
+    /**
+     * If set to true, uses the perception index of the SUMO traffic
+     * simulator, instead of the built-in one. Default: false.
+     */
+    public boolean useSumoPerception = false;
 
     /**
      * Backend for the spatial index providing vehicle information.
@@ -69,7 +76,7 @@ public class CPerception implements Serializable {
     public static abstract class CVehicleIndex implements Serializable {
 
         /**
-         * Defines if the vehicle index is enabled. Default: false
+         * Defines if the vehicle index is enabled. Default: true
          */
         public boolean enabled = true;
 
@@ -117,7 +124,7 @@ public class CPerception implements Serializable {
 
             @Override
             public VehicleIndex create() {
-                return enabled ? new SumoIndex() : null;
+                return enabled ? new SumoDummyIndex() : null;
             }
         }
     }
@@ -144,7 +151,7 @@ public class CPerception implements Serializable {
         public int bucketSize = 20;
 
         public WallIndex create() {
-            return enabled ? new WallTree(bucketSize) : null;
+            return enabled ? new WallIndex(bucketSize) : null;
         }
     }
 
@@ -164,7 +171,6 @@ public class CPerception implements Serializable {
                 }
                 return switch (type.toLowerCase()) {
                     case "grid" -> CVehicleIndex.Grid.class;
-                    case "sumo" -> CVehicleIndex.Sumo.class;
                     case "tree" -> CVehicleIndex.Tree.class;
                     default -> throw new IllegalArgumentException("Unknown index type " + type + ". Known types are: grid, tree, sumo.");
                 };
@@ -176,8 +182,6 @@ public class CPerception implements Serializable {
                     return "tree";
                 } else if (typeClass.equals(CVehicleIndex.Grid.class)) {
                     return "grid";
-                } else if (typeClass.equals(CVehicleIndex.Sumo.class)) {
-                    return "sumo";
                 }
                 return null;
             }
@@ -187,6 +191,34 @@ public class CPerception implements Serializable {
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
             return (TypeAdapter<T>) new CVehicleIndexTypeAdapter(this, gson).nullSafe();
+        }
+    }
+
+    private static class SumoDummyIndex extends VehicleIndex {
+
+        @Override
+        protected void initialize() {
+
+        }
+
+        @Override
+        public List<VehicleObject> getVehiclesInRange(PerceptionModel perceptionModel) {
+            return List.of();
+        }
+
+        @Override
+        protected void onVehicleAdded(VehicleObject vehicleObject) {
+
+        }
+
+        @Override
+        protected void onIndexUpdate() {
+
+        }
+
+        @Override
+        protected void onVehicleRemoved(VehicleObject vehicleObject) {
+
         }
     }
 

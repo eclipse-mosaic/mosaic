@@ -1,14 +1,5 @@
 {
     "perceptionConfiguration": {
-        "vehicleIndex": {
-            "enabled": true,
-            "type": "sumo"
-        },
-        "trafficLightIndex": {
-            "enabled": true
-        },
-        "wallIndex": {
-            "enabled": true
-        }
+        "useSumoPerception": true
     }
 }

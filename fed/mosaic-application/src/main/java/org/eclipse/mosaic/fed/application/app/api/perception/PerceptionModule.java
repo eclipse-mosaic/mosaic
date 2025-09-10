@@ -15,27 +15,29 @@
 
 package org.eclipse.mosaic.fed.application.app.api.perception;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.SpatialObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.TrafficLightObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.VehicleObject;
 import org.eclipse.mosaic.lib.math.Vector3d;
+import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.objects.BuildingWall;
+import org.eclipse.mosaic.lib.perception.objects.SpatialObject;
+import org.eclipse.mosaic.lib.perception.objects.TrafficLightObject;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 import org.eclipse.mosaic.lib.spatial.Edge;
 
 import java.util.Collection;
 import java.util.List;
 
-public interface PerceptionModule<ConfigT extends PerceptionModuleConfiguration> {
+public interface PerceptionModule {
     /**
      * Enables and configures this perception module.
      *
      * @param configuration the configuration object
      */
-    void enable(ConfigT configuration);
+    void enable(PerceptionConfiguration configuration);
 
     /**
      * Returns The configuration of the {@link PerceptionModule}.
      */
-    ConfigT getConfiguration();
+    PerceptionConfiguration getConfiguration();
 
     /**
      * Returns {@code true} if {@link PerceptionModule} is enabled, otherwise {@code false}.
@@ -68,5 +70,5 @@ public interface PerceptionModule<ConfigT extends PerceptionModuleConfiguration>
      *
      * @return a list of all surrounding building walls in the for of {@link Edge}s
      */
-    Collection<Edge<Vector3d>> getSurroundingWalls();
+    Collection<BuildingWall> getSurroundingWalls();
 }
