@@ -18,8 +18,6 @@ package org.eclipse.mosaic.fed.application.ambassador.simulation.electric;
 import static org.eclipse.mosaic.lib.geo.GeoPoint.latLon;
 import static org.junit.Assert.assertEquals;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.electric.objects.ChargingStationObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.electric.providers.ChargingStationIndex;
 import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.junit.GeoProjectionRule;

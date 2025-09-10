@@ -26,12 +26,6 @@ import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
 import org.eclipse.mosaic.fed.application.ambassador.SimulationKernelRule;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.VehicleUnit;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.navigation.CentralNavigationComponent;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.TrafficObjectIndex;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.VehicleObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.TrafficLightIndex;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.VehicleGrid;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.VehicleIndex;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.providers.VehicleTree;
 import org.eclipse.mosaic.fed.application.config.CApplicationAmbassador;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.geo.CartesianRectangle;
@@ -45,6 +39,13 @@ import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightProgram;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightState;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
+import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.PerceptionIndex;
+import org.eclipse.mosaic.lib.perception.index.TrafficLightIndex;
+import org.eclipse.mosaic.lib.perception.index.VehicleGrid;
+import org.eclipse.mosaic.lib.perception.index.VehicleIndex;
+import org.eclipse.mosaic.lib.perception.index.VehicleTree;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 import org.eclipse.mosaic.lib.util.scheduling.EventManager;
 
 import org.junit.Before;
@@ -71,7 +72,6 @@ public class SimplePerceptionModuleTest {
     private final CentralPerceptionComponent cpcMock = mock(CentralPerceptionComponent.class);
     private final CentralNavigationComponent cncMock = mock(CentralNavigationComponent.class);
 
-
     @Rule
     public MockitoRule initRule = MockitoJUnit.rule();
 
@@ -86,7 +86,7 @@ public class SimplePerceptionModuleTest {
     @Rule
     public IpResolverRule ipResolverRule = new IpResolverRule();
 
-    public TrafficObjectIndex trafficObjectIndex;
+    public PerceptionIndex perceptionIndex;
 
     private SimplePerceptionModule simplePerceptionModule;
 
@@ -103,8 +103,7 @@ public class SimplePerceptionModuleTest {
 
     @Before
     public void setup() {
-        when(cpcMock.getScenarioBounds())
-                .thenReturn(new CartesianRectangle(new MutableCartesianPoint(100, 90, 0), new MutableCartesianPoint(310, 115, 0)));
+        CartesianRectangle bounds = new CartesianRectangle(new MutableCartesianPoint(100, 90, 0), new MutableCartesianPoint(310, 115, 0));
         SimulationKernel.SimulationKernel.setConfiguration(new CApplicationAmbassador());
 
         VehicleIndex vehicleIndex = switch (vehicleIndexType) {
@@ -113,17 +112,19 @@ public class SimplePerceptionModuleTest {
             default -> null;
         };
 
-        trafficObjectIndex = new TrafficObjectIndex.Builder(mock((Logger.class)))
+        perceptionIndex = new PerceptionIndex.Builder(mock((Logger.class)), bounds)
                 .withVehicleIndex(vehicleIndex)
                 .withTrafficLightIndex(new TrafficLightIndex(20))
                 .build();
+
         // setup cpc
-        when(cpcMock.getTrafficObjectIndex()).thenReturn(trafficObjectIndex);
+        when(cpcMock.getPerceptionIndex()).thenReturn(perceptionIndex);
         // setup perception module
         VehicleUnit egoVehicleUnit = spy(new VehicleUnit("veh_0", mock(VehicleType.class), null));
         doReturn(egoVehicleData).when(egoVehicleUnit).getVehicleData();
-        simplePerceptionModule = spy(new SimplePerceptionModule(egoVehicleUnit, null, mock(Logger.class)));
-        simplePerceptionModule.enable(new SimplePerceptionConfiguration.Builder(90d, 200d).build());
+        PerceptionModuleOwner owner = new PerceptionModuleOwner.VehicleUnitAdapter(egoVehicleUnit);
+        simplePerceptionModule = spy(new SimplePerceptionModule(owner, null, mock(Logger.class)));
+        simplePerceptionModule.enable(new PerceptionConfiguration.Builder(90d, 200d).build());
 
         // setup ego vehicle
         when(egoVehicleData.getHeading()).thenReturn(90d);
@@ -179,28 +180,28 @@ public class SimplePerceptionModuleTest {
 
     @Test
     public void vehicleCanBePerceived_FarLeft_270viewingAngle() {
-        simplePerceptionModule.enable(new SimplePerceptionConfiguration.Builder(270d, 200d).build()); // overwrite config
+        simplePerceptionModule.enable(new PerceptionConfiguration.Builder(270d, 200d).build()); // overwrite config
         setupVehicles(new MutableCartesianPoint(105, 115, 0));
         assertEquals(1, simplePerceptionModule.getPerceivedVehicles().size());
     }
 
     @Test
     public void vehicleCanBePerceived_FarRight_270viewingAngle() {
-        simplePerceptionModule.enable(new SimplePerceptionConfiguration.Builder(270d, 200d).build()); // overwrite config
+        simplePerceptionModule.enable(new PerceptionConfiguration.Builder(270d, 200d).build()); // overwrite config
         setupVehicles(new MutableCartesianPoint(105, 90, 0));
         assertEquals(1, simplePerceptionModule.getPerceivedVehicles().size());
     }
 
     @Test
     public void vehicleCanBeRemoved() {
-        simplePerceptionModule.enable(new SimplePerceptionConfiguration.Builder(360d, 1000d).build());
+        simplePerceptionModule.enable(new PerceptionConfiguration.Builder(360d, 1000d).build());
         List<VehicleData> addedVehicles = setupVehicles(
                 new MutableCartesianPoint(105, 90, 0),
                 new MutableCartesianPoint(105, 90, 0),
                 new MutableCartesianPoint(105, 90, 0)
         );
         // assert all vehicles have been added
-        assertEquals(3, trafficObjectIndex.getNumberOfVehicles());
+        assertEquals(3, perceptionIndex.getNumberOfVehicles());
         assertEquals(3, simplePerceptionModule.getPerceivedVehicles().size());
         // modify vehicle objects
         List<VehicleData> adjustedVehicles = addedVehicles.stream()
@@ -210,11 +211,11 @@ public class SimplePerceptionModuleTest {
                                 .movement(1d, 1d, 1d) // adjust vehicles
                                 .create())
                 .toList();
-        trafficObjectIndex.updateVehicles(adjustedVehicles);
+        perceptionIndex.updateVehicles(adjustedVehicles);
         // try to remove vehicles
-        trafficObjectIndex.removeVehicles(addedVehicles.stream().map(VehicleData::getName).toList());
+        perceptionIndex.removeVehicles(addedVehicles.stream().map(VehicleData::getName).toList());
         // assert vehicles have been properly removed
-        assertEquals(0, trafficObjectIndex.getNumberOfVehicles());
+        assertEquals(0, perceptionIndex.getNumberOfVehicles());
         assertTrue(simplePerceptionModule.getPerceivedVehicles().isEmpty());
     }
 
@@ -240,9 +241,9 @@ public class SimplePerceptionModuleTest {
             when(vehicleType.getLength()).thenReturn(5d);
             when(vehicleType.getWidth()).thenReturn(2.5d);
             when(vehicleType.getHeight()).thenReturn(10d);
-            trafficObjectIndex.registerVehicleType(vehicleName, vehicleType);
+            perceptionIndex.registerVehicleType(vehicleName, vehicleType);
         }
-        trafficObjectIndex.updateVehicles(vehiclesInIndex);
+        perceptionIndex.updateVehicles(vehiclesInIndex);
         return vehiclesInIndex;
     }
 
@@ -262,6 +263,6 @@ public class SimplePerceptionModuleTest {
             trafficLightMocks.add(trafficLightMock);
         }
         TrafficLightGroup trafficLightGroup = new TrafficLightGroup("tls", trafficLightProgramsMocks, trafficLightMocks);
-        trafficObjectIndex.addTrafficLightGroup(trafficLightGroup);
+        perceptionIndex.addTrafficLightGroup(trafficLightGroup);
     }
 }

@@ -16,7 +16,6 @@
 package org.eclipse.mosaic.fed.application.ambassador.simulation.perception;
 
 import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.TrafficObjectIndex;
 import org.eclipse.mosaic.fed.application.config.CPerception;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
@@ -24,6 +23,7 @@ import org.eclipse.mosaic.lib.database.Database;
 import org.eclipse.mosaic.lib.geo.CartesianRectangle;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroup;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
+import org.eclipse.mosaic.lib.perception.PerceptionIndex;
 import org.eclipse.mosaic.lib.routing.VehicleRouting;
 import org.eclipse.mosaic.lib.routing.database.DatabaseRouting;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
@@ -45,7 +45,6 @@ public class CentralPerceptionComponent {
 
     private final static Logger LOG = LoggerFactory.getLogger(CentralPerceptionComponent.class);
 
-    private CartesianRectangle scenarioBounds;
     /**
      * Configuration containing parameters for setting up the spatial indexes.
      */
@@ -54,7 +53,7 @@ public class CentralPerceptionComponent {
     /**
      * The spatial index used to store and find objects by their positions.
      */
-    private TrafficObjectIndex trafficObjectIndex;
+    private PerceptionIndex perceptionIndex;
 
     /**
      * The last {@link VehicleUpdates} interaction which is used to update the vehicleIndex.
@@ -89,10 +88,11 @@ public class CentralPerceptionComponent {
         try {
             VehicleRouting routing = SimulationKernel.SimulationKernel.getCentralNavigationComponent().getRouting();
             // evaluate bounding box for perception
-            scenarioBounds = configuration.perceptionArea == null
-                    ? routing.getScenarioBounds() : configuration.perceptionArea.toCartesian();
+            final CartesianRectangle scenarioBounds = configuration.perceptionArea == null
+                    ? routing.getScenarioBounds()
+                    : configuration.perceptionArea.toCartesian();
 
-            TrafficObjectIndex.Builder indexBuilder = new TrafficObjectIndex.Builder(LOG);
+            PerceptionIndex.Builder indexBuilder = new PerceptionIndex.Builder(LOG, scenarioBounds);
             if (configuration.vehicleIndex != null) {
                 indexBuilder.withVehicleIndex(configuration.vehicleIndex.create());
             }
@@ -105,21 +105,25 @@ public class CentralPerceptionComponent {
                     indexBuilder.withWallIndex(configuration.wallIndex.create(), database);
                 }
             }
-            trafficObjectIndex = indexBuilder.build();
+            perceptionIndex = indexBuilder.build();
         } catch (Exception e) {
             throw new InternalFederateException("Couldn't initialize CentralPerceptionComponent", e);
         }
     }
 
-    /**
-     * Returns the {@link TrafficObjectIndex} storing all vehicles.
-     */
-    public TrafficObjectIndex getTrafficObjectIndex() {
-        return trafficObjectIndex;
+    public AbstractPerceptionModule createPerceptionModule(PerceptionModuleOwner owner, Database database, Logger log) {
+        if (configuration.useSumoPerception) {
+            return new SumoPerceptionModule(owner, database, log);
+        }
+        return new SimplePerceptionModule(owner, database, log);
     }
 
-    public CartesianRectangle getScenarioBounds() {
-        return scenarioBounds;
+    /**
+     * Returns the {@link PerceptionIndex} storing all perception relevant objects, such
+     * as vehicles, traffic lights, or buildings.
+     */
+    public PerceptionIndex getPerceptionIndex() {
+        return perceptionIndex;
     }
 
     /**
@@ -130,16 +134,16 @@ public class CentralPerceptionComponent {
         if (updateVehicleIndex) {
             // do not update index until next VehicleUpdates interaction is received
             updateVehicleIndex = false;
-            for (VehicleUpdates updates: latestVehicleUpdates.values()) {
+            for (VehicleUpdates updates : latestVehicleUpdates.values()) {
                 // using Iterables.concat allows iterating over both lists subsequently without creating a new list
-                trafficObjectIndex.updateVehicles(Iterables.concat(updates.getAdded(), updates.getUpdated()));
+                perceptionIndex.updateVehicles(Iterables.concat(updates.getAdded(), updates.getUpdated()));
             }
         }
         if (updateTrafficLightIndex) {
             // do not update index until next TrafficLightUpdates interaction is received
             updateVehicleIndex = false;
             // using Iterables.concat allows iterating over both lists subsequently without creating a new list
-            trafficObjectIndex.updateTrafficLights(latestTrafficLightUpdates.getUpdated());
+            perceptionIndex.updateTrafficLights(latestTrafficLightUpdates.getUpdated());
         }
     }
 
@@ -151,7 +155,7 @@ public class CentralPerceptionComponent {
      * @param vehicleType the vehicle type of the vehicle
      */
     public void registerVehicleType(String vehicleId, VehicleType vehicleType) {
-        trafficObjectIndex.registerVehicleType(vehicleId, vehicleType);
+        perceptionIndex.registerVehicleType(vehicleId, vehicleType);
     }
 
     /**
@@ -163,8 +167,8 @@ public class CentralPerceptionComponent {
         latestVehicleUpdates.put(vehicleUpdates.getSenderId(), vehicleUpdates);
         updateVehicleIndex = true;
         // we need to remove arrived vehicles in every simulation step, otherwise we could have dead vehicles in the index
-        if (trafficObjectIndex.getNumberOfVehicles() > 0) {
-            trafficObjectIndex.removeVehicles(vehicleUpdates.getRemovedNames());
+        if (perceptionIndex.getNumberOfVehicles() > 0) {
+            perceptionIndex.removeVehicles(vehicleUpdates.getRemovedNames());
         }
     }
 
@@ -175,7 +179,7 @@ public class CentralPerceptionComponent {
      * @param trafficLightGroup the registered traffic light group interaction
      */
     public void addTrafficLightGroup(TrafficLightGroup trafficLightGroup) {
-        trafficObjectIndex.addTrafficLightGroup(trafficLightGroup);
+        perceptionIndex.addTrafficLightGroup(trafficLightGroup);
     }
 
     /**

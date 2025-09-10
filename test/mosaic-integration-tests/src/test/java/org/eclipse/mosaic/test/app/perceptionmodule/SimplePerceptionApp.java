@@ -16,13 +16,13 @@
 
 package org.eclipse.mosaic.test.app.perceptionmodule;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.SimplePerceptionConfiguration;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.TrafficLightObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.VehicleObject;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
+import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.objects.TrafficLightObject;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 import org.eclipse.mosaic.rti.TIME;
 
@@ -47,8 +47,8 @@ public class SimplePerceptionApp extends AbstractApplication<VehicleOperatingSys
     }
 
     private void enablePerceptionModule() {
-        SimplePerceptionConfiguration perceptionModuleConfiguration =
-                new SimplePerceptionConfiguration.Builder(VIEWING_ANGLE, VIEWING_RANGE).build();
+        PerceptionConfiguration perceptionModuleConfiguration =
+                new PerceptionConfiguration.Builder(VIEWING_ANGLE, VIEWING_RANGE).build();
         getOs().getPerceptionModule().enable(perceptionModuleConfiguration);
     }
 

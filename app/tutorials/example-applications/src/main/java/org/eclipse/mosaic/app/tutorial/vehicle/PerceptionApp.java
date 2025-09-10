@@ -15,17 +15,17 @@
 
 package org.eclipse.mosaic.app.tutorial.vehicle;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.SimplePerceptionConfiguration;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.errormodels.DistanceFilter;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.errormodels.PositionModifier;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.errormodels.SimpleOcclusion;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.VehicleObject;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
 import org.eclipse.mosaic.interactions.vehicle.VehicleParametersChange;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleParameter;
+import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.modifier.DistanceFilter;
+import org.eclipse.mosaic.lib.perception.modifier.PositionModifier;
+import org.eclipse.mosaic.lib.perception.modifier.SimpleOcclusion;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import com.google.common.collect.Lists;
@@ -71,8 +71,8 @@ public class PerceptionApp extends AbstractApplication<VehicleOperatingSystem> i
         // filter adding noise to longitudinal and lateral
         PositionModifier positionModifier = new PositionModifier(getRandom());
 
-        SimplePerceptionConfiguration perceptionModuleConfiguration =
-                new SimplePerceptionConfiguration.Builder(VIEWING_ANGLE, VIEWING_RANGE)
+        PerceptionConfiguration perceptionModuleConfiguration =
+                new PerceptionConfiguration.Builder(VIEWING_ANGLE, VIEWING_RANGE)
                         .addModifiers(simpleOcclusion, distanceFilter, positionModifier)
                         .build();
         getOs().getPerceptionModule().enable(perceptionModuleConfiguration);
