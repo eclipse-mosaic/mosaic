@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @RunWith(Parameterized.class)
 public class EventSchedulerTest {
@@ -40,14 +40,14 @@ public class EventSchedulerTest {
     /**
      * A list to add all processed events.
      */
-    final List<Event> processedEvents = new ArrayList<>();
+    final List<Event> processedEvents = new CopyOnWriteArrayList<>();
 
     /**
      * An event processor to add processed events to the list.
      */
     final EventProcessor processor = new EventProcessor() {
         @Override
-        public void processEvent(final Event event) throws Exception {
+        public void processEvent(final Event event) {
             processedEvents.add(event);
         }
 
@@ -81,7 +81,7 @@ public class EventSchedulerTest {
         if (eventSchedulerThreads == 1) {
             eventScheduler = new DefaultEventScheduler();
         } else {
-            eventScheduler = new MultiThreadedEventScheduler(2);
+            eventScheduler = new MultiThreadedEventScheduler(eventSchedulerThreads);
         }
         // first of all create some events and add them to the scheduler
         eventScheduler.addEvent(new Event(0, processor, null));
