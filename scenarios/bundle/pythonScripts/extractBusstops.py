@@ -39,7 +39,7 @@ def main(scenario_name: str):
     net_offset_x, net_offset_y = map(float, location.attrib["netOffset"].split(","))
     proj_string = location.attrib["projParameter"]
     # Set up transformer from UTM to WGS84
-    utm33 = CRS.from_proj4("+proj=utm +zone=33 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+    utm33 = CRS.from_proj4(proj_string)
     wgs84 = CRS.from_epsg(4326)  # Standard lat/lon
 
     transformer = Transformer.from_crs(utm33, wgs84, always_xy=True)
