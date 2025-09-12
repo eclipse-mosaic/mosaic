@@ -49,6 +49,8 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     // SCENARIO
     private static final String SCENARIO_NAME = "theodorHeuss";
     private static final String PATH_TO_DISPATCHER = "/PUT/YOUR/PATH/HERE";
+    private static final String PATH_TO_DISPATCHER_WSL = "/PUT/YOUR/PATH/HERE";
+	private static final String PATH_TO_DISPATCHER_WINDOWS = "/PUT/YOUR/PATH/HERE";
 
     // DISPATCHER CONFIGS
     public static final int ORDER_MAX_DETOUR_IN_PERCENTAGE_DISPATCHER_CONFIG = 70;
@@ -82,7 +84,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		// In the Windows terminal using the 'wsl' command it is much slower than
 		// starting it manually under WSL, does not work optimal
 		if (START_DISPATCHER_INSIDE_WINDOWS_TERMINAL) {
-			startDispatcher(getLog(), SCENARIO_NAME, PATH_TO_DISPATCHER);
+			startDispatcher(getLog(), SCENARIO_NAME, PATH_TO_DISPATCHER_WSL);
 		}
     }
 
@@ -274,8 +276,11 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     }
 
     private void createFileWithDistancesInMinutesBetweenStops() {
-        String filePath = "C:\\Users\\Kotse\\VSCodeProjects\\kern_Github";
-        File file = new File(filePath + FileSystems.getDefault().getSeparator() + "distances.txt");
+		if (PATH_TO_DISPATCHER_WINDOWS.endsWith("/PUT/YOUR/PATH/HERE")) {
+			throw new RuntimeException("Path to dispatcher is not set");
+		}
+
+        File file = new File(PATH_TO_DISPATCHER_WINDOWS + FileSystems.getDefault().getSeparator() + "distances.txt");
 
 		List<String> edges = dataBaseCommunication.fetchAllBusStopEdgeIds();
 		long start = System.currentTimeMillis();
