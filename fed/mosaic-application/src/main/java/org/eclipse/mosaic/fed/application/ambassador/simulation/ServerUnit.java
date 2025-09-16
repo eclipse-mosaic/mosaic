@@ -18,7 +18,7 @@ package org.eclipse.mosaic.fed.application.ambassador.simulation;
 import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
 import org.eclipse.mosaic.fed.application.ambassador.ErrorRegister;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.communication.CamBuilder;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.electric.objects.ChargingStationObject;
+import org.eclipse.mosaic.fed.application.ambassador.simulation.electric.ChargingStationObject;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.navigation.RoutingNavigationModule;
 import org.eclipse.mosaic.fed.application.app.api.navigation.RoutingModule;
 import org.eclipse.mosaic.fed.application.app.api.os.ServerOperatingSystem;

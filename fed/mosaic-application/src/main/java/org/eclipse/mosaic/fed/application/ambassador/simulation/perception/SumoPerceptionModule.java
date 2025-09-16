@@ -15,13 +15,13 @@
 
 package org.eclipse.mosaic.fed.application.ambassador.simulation.perception;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.SpatialObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.TrafficLightObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.VehicleObject;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSightDistanceConfiguration;
 import org.eclipse.mosaic.lib.database.Database;
-import org.eclipse.mosaic.lib.math.Vector3d;
-import org.eclipse.mosaic.lib.spatial.Edge;
+import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.objects.BuildingWall;
+import org.eclipse.mosaic.lib.perception.objects.SpatialObject;
+import org.eclipse.mosaic.lib.perception.objects.TrafficLightObject;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 
 import org.slf4j.Logger;
 
@@ -31,18 +31,21 @@ import java.util.List;
 
 public class SumoPerceptionModule extends AbstractPerceptionModule {
 
+    private final PerceptionModuleOwner owner;
+
     public SumoPerceptionModule(PerceptionModuleOwner owner, Database database, Logger log) {
         super(owner, database, log);
+        this.owner = owner;
     }
 
     @Override
-    public void enable(SimplePerceptionConfiguration configuration) {
+    public void enable(PerceptionConfiguration configuration) {
         super.enable(configuration);
-        this.owner.sendInteractionToRti(new VehicleSightDistanceConfiguration(
-                this.owner.getSimulationTime(),
+        owner.sendInteractionToRti(new VehicleSightDistanceConfiguration(
+                owner.getSimulationTime(),
                 owner.getId(),
-                this.configuration.getViewingRange(),
-                this.configuration.getViewingAngle()
+                configuration.getViewingRange(),
+                configuration.getViewingAngle()
         ));
     }
 
@@ -71,7 +74,7 @@ public class SumoPerceptionModule extends AbstractPerceptionModule {
     }
 
     @Override
-    public Collection<Edge<Vector3d>> getSurroundingWalls() {
+    public Collection<BuildingWall> getSurroundingWalls() {
         this.log.debug("Wall perception not implemented for {}.", this.getClass().getSimpleName());
         return new ArrayList<>();
     }

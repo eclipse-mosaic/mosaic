@@ -57,6 +57,7 @@
         <module>lib/mosaic-geomath</module>
         <module>lib/mosaic-interactions</module>
         <module>lib/mosaic-network</module>
+        <module>lib/mosaic-perception</module>
         <module>lib/mosaic-objects</module>
         <module>lib/mosaic-routing</module>
         <module>lib/mosaic-utils</module>
