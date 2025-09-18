@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 LABEL \
     description="Docker image containing the MOSAIC adapted ns-3 federate" \
