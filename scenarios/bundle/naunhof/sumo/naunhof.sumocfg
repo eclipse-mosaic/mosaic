@@ -2,7 +2,7 @@
 	<input>
 		<net-file value="naunhof.net.xml"/>
 		<route-files value="naunhof.rou.xml"/>
-		<additional-files value="naunhof.bus.add.xml"/>
+		<additional-files value="naunhof.public_stops.add.xml"/>
 		<device.taxi.dispatch-algorithm value="traci"/>
         <device.taxi.idle-algorithm value="stop"/>
 	</input>
