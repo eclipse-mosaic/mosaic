@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <!-- StoppingPlaces -->
+    <busStop id="bs_1" lane="28124696#0_0" startPos="288.84" endPos="298.84" personCapacity="10"/>
+    <busStop id="bs_2" lane="28124693#0_0" startPos="233.22" endPos="243.22" personCapacity="10"/>
+    <busStop id="bs_3" lane="28747054#0_0" startPos="40.44" endPos="50.44" personCapacity="10"/>
+    <busStop id="bs_4" lane="-238136477_0" startPos="9.23" endPos="19.23" personCapacity="10"/>
+    <busStop id="bs_5" lane="-28132131_0" startPos="193.84" endPos="203.84" personCapacity="10"/>
+    <busStop id="bs_6" lane="289937319_0" startPos="42.59" endPos="52.59" personCapacity="10"/>
+    <busStop id="bs_7" lane="67624333_0" startPos="18.39" endPos="28.39" personCapacity="10"/>
+    <busStop id="bs_8" lane="103093870#1_0" startPos="8.45" endPos="18.45" personCapacity="10"/>
+    <busStop id="bs_9" lane="25790390_0" startPos="65.79" endPos="75.79" personCapacity="10"/>
+    <busStop id="bs_10" lane="132619396#0_0" startPos="56.71" endPos="66.71" personCapacity="10"/>
+    <busStop id="bs_11" lane="-38128295#0_0" startPos="51.10" endPos="61.10" personCapacity="10"/>
+    <busStop id="bs_12" lane="1361425836#1_0" startPos="152.20" endPos="162.20" personCapacity="10"/>
+    <busStop id="bs_13" lane="-60702646_0" startPos="39.20" endPos="49.20" personCapacity="10"/>
+    <busStop id="bs_14" lane="-25807021#2_0" startPos="182.11" endPos="192.11" personCapacity="10"/>
+    <busStop id="bs_15" lane="-25593394#0_0" startPos="76.93" endPos="86.93" personCapacity="10"/>
+    <busStop id="bs_16" lane="-25727611#1_0" startPos="35.11" endPos="45.11" personCapacity="10"/>
+    <busStop id="bs_17" lane="-661814892_0" startPos="26.12" endPos="36.12" personCapacity="10"/>
+    <busStop id="bs_18" lane="238136480#1_0" startPos="10.47" endPos="20.47" personCapacity="10"/>
+    <busStop id="bs_19" lane="25593376#3_0" startPos="63.92" endPos="73.92" personCapacity="10"/>
+    <busStop id="bs_20" lane="25939498#3_0" startPos="19.48" endPos="29.48" personCapacity="10"/>
+    <busStop id="bs_22" lane="44443593#2_0" startPos="42.54" endPos="52.54" personCapacity="10"/>
+    <busStop id="bs_23" name="railway_station" lane="-25415039#3_0" startPos="168.68" endPos="178.68" personCapacity="10"/>
+    <busStop id="bs_24" lane="37996159#1_0" startPos="65.28" endPos="75.28" personCapacity="10"/>
+    <busStop id="bs_25" lane="-32091203#2_0" startPos="76.70" endPos="86.70" personCapacity="10"/>
+    <busStop id="bs_26" lane="28727437#1_0" startPos="84.26" endPos="94.26" personCapacity="10"/>
+    <busStop id="bs_27" lane="24996585#0_0" startPos="69.75" endPos="79.75" personCapacity="10"/>
+    <busStop id="bs_28" lane="1215949438_0" startPos="16.43" endPos="26.43" personCapacity="10"/>
+    <busStop id="bs_29" lane="26668849#2_0" startPos="8.88" endPos="18.88" personCapacity="10"/>
+    <busStop id="bs_30" lane="-25335407#2_0" startPos="35.34" endPos="45.34" personCapacity="10"/>
+    <busStop id="bs_31" lane="28140027#0_0" startPos="30.28" endPos="40.28" personCapacity="10"/>
+    <busStop id="bs_32" lane="-193164108#1_0" startPos="106.89" endPos="116.89" personCapacity="10"/>
+    <busStop id="bs_34" lane="1189365209_0" startPos="50.18" endPos="60.18" personCapacity="10"/>
+    <busStop id="bs_35" lane="-742449277#0_0" startPos="19.17" endPos="29.17" personCapacity="10"/>
+    <busStop id="bs_36" lane="-1022042157#2_0" startPos="196.32" endPos="206.32" personCapacity="10"/>
+    <busStop id="bs_37" lane="28725589_0" startPos="156.51" endPos="166.51" personCapacity="10"/>
+    <trainStop id="ts_1" name="train_stop1" lane="374359231_0" startPos="258.80" endPos="268.80" personCapacity="100"/>
+    <trainStop id="ts_2" name="train_stop2" lane="374605591#0_0" startPos="178.46" endPos="188.46" personCapacity="100"/>
+</additional>

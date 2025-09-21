@@ -80,7 +80,7 @@ def generate_random_person_trips(
             "to": to_lane,
             "lines": "taxi"
         })
-    person_index += 1
+        person_index += 1
 
     # Generate the remaining random trips
     for _ in range(random_count):
@@ -122,10 +122,10 @@ if __name__ == "__main__":
         print("Please provide a valid scenario name of type string!")
     except ValueError:
         generate_random_person_trips(
-            bus_add_file="../{0}/sumo/{0}.public_stops.add.xml".format(sys.argv[1]),
+            bus_add_file="../{0}/sumo/{0}.bus.add.xml".format(sys.argv[1]),
             output_file="person_trips.xml",
-            num_trips=100,
+            num_trips=50,
             fixed_stop_id="bs_23",   # must exist in bus.add.xml
-            fixed_stop_percentage=0.4,
+            fixed_stop_percentage=0.5,
             depart_time_range=(0, 3600)  # departures between 0–1h
         )

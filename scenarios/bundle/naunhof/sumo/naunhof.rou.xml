@@ -7,8 +7,4 @@
         <param key="device.taxi.dropOffDuration" value="60"/>
     </vType>
 
-<!--    <vehicle id="t1" type="TaxiSumo" route="1" depart="0.00" departPos="free" line="taxi"/>-->
-<!--    <person id="p1" depart="0.00" color="green">-->
-<!--        <ride from="" to="" lines="taxi"/>-->
-<!--    </person>-->
 </routes>

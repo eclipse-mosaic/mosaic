@@ -51,13 +51,14 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     private static final String PATH_TO_DISPATCHER = "/PUT/YOUR/PATH/HERE";
     private static final String PATH_TO_DISPATCHER_WSL = "/PUT/YOUR/PATH/HERE";
 	private static final String PATH_TO_DISPATCHER_WINDOWS = "/PUT/YOUR/PATH/HERE";
+    private static final String SCENARIO_NAME = "naunhof";
 
     // DISPATCHER CONFIGS
     public static final int ORDER_MAX_DETOUR_IN_PERCENTAGE_DISPATCHER_CONFIG = 70;
     public static final int ORDER_MAX_WAIT_IN_MINUTES_DISPATCHER_CONFIG = 10;
 
     // FLAGS
-    private static final boolean CREATE_DISTANCES_FILE_FLAG = true;
+    private static final boolean CREATE_DISTANCES_FILE_AND_TERMINATE_FLAG = true;
     private static final boolean INCLUDE_PYTHON_SCRIPT_LOGS_FLAG = false;
 	private static final boolean START_DISPATCHER_INSIDE_WINDOWS_TERMINAL = false;
     // ================== END OF CUSTOM SCENARIO PARAMETERS ==================
@@ -78,9 +79,12 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
         dataBaseCommunication = new DatabaseCommunication(getLog());
         dataBaseCommunication.checkTablesState(NOT_EMPTY_TABLES, false);
         dataBaseCommunication.checkTablesState(EMPTY_TABLES, true);
-        if (CREATE_DISTANCES_FILE_FLAG) {
-            createFileWithDistancesInMinutesBetweenStops();
-        }
+
+		if (CREATE_DISTANCES_FILE_AND_TERMINATE_FLAG) {
+			createFileWithDistancesInMinutesBetweenStops();
+			System.exit(0);
+		}
+
 		// In the Windows terminal using the 'wsl' command it is much slower than
 		// starting it manually under WSL, does not work optimal
 		if (START_DISPATCHER_INSIDE_WINDOWS_TERMINAL) {
@@ -314,6 +318,6 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			throw new RuntimeException(e);
 		}
 		long finish = System.currentTimeMillis();
-		System.out.printf("Time elapsed while creating distances file: %s ms%n", finish - start);
+		System.out.printf("Distances file created! Time elapsed: %s ms%n", finish - start);
 	}
 }

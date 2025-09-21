@@ -24,7 +24,7 @@ def add_bus_stop_to_db(stop, lat, lon):
     insert_values_query = ("INSERT INTO stop (bearing, latitude, longitude, name, type, capacity, sumo_edge) "
                            "VALUES (0, %s, %s, %s, NULL, %s, %s)")
     sumo_edge = stop.attrib["lane"]
-    values = (lat, lon, stop.attrib["id"], stop.attrib["personCapacity"], sumo_edge[:len(sumo_edge) - 2])
+    values = (lat, lon, stop.attrib["id"], stop.attrib["personCapacity"], sumo_edge[:-2])
     my_db_connection.cursor().execute(insert_values_query, values)
     my_db_connection.commit()
 
