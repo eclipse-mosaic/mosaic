@@ -47,8 +47,7 @@ import static org.eclipse.mosaic.app.taxi.util.ParserUtil.parseMosaicVehicleIdTo
 public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
     // ================== DEFINE YOUR CUSTOM SCENARIO PARAMETERS ==================
     // SCENARIO
-    private static final String SCENARIO_NAME = "theodorHeuss";
-    private static final String PATH_TO_DISPATCHER = "/PUT/YOUR/PATH/HERE";
+    private static final String SCENARIO_NAME = "naunhof";
     private static final String PATH_TO_DISPATCHER_WSL = "/PUT/YOUR/PATH/HERE";
 	private static final String PATH_TO_DISPATCHER_WINDOWS = "/PUT/YOUR/PATH/HERE";
     private static final String SCENARIO_NAME = "naunhof";
