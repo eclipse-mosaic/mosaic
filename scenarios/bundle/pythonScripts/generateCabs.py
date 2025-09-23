@@ -80,5 +80,5 @@ if __name__ == "__main__":
         generate_taxi_vehicles(
             bus_add_file="../{0}/sumo/{0}.bus.add.xml".format(sys.argv[1]),
             output_file="generated_taxis.xml",
-            num_vehicles=20
+            num_vehicles=25
         )

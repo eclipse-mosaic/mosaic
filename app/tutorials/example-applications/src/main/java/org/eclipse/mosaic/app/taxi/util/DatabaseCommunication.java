@@ -190,6 +190,7 @@ public class DatabaseCommunication {
 	}
 
 	public void markLegAsCompleted(Integer legId) {
+		//todo: fix case when one reservation is completed during the drop-off
 		try {
 			PreparedStatement updateLeg = dbConnection.prepareStatement(
 				"UPDATE leg SET completed = ?, status = ? WHERE id = ?"
@@ -331,60 +332,6 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public List<TaxiDispatchData> fetchAvailableTaxiDispatchData(HashMap<String, TaxiLatestData> cabsLatestData) {
-		try {
-			PreparedStatement fetchOrders = dbConnection.prepareStatement(
-				"SELECT taxi_order.id, taxi_order.sumo_id, taxi_order.cab_id " +
-					"FROM taxi_order JOIN route ON taxi_order.route_id = route.id JOIN leg ON route.id = leg.route_id " +
-					"WHERE taxi_order.status = ? ORDER BY route.id, leg.id");
-			fetchOrders.setInt(1, DISPATCHER_ASSIGNED_ORDER_STATUS);
-			ResultSet fetchedOrders = fetchOrders.executeQuery();
-
-			if (!fetchedOrders.next()) {
-				return List.of();
-			}
-
-			List<TaxiDispatchData> taxiDispatchDataList = new ArrayList<>();
-			List<String> assignedOrderIds = new ArrayList<>(Collections.singleton(fetchedOrders.getString(ID_COLUMN_NAME)));
-			List<String> currentTaxiOrders = new ArrayList<>(Collections.singleton(fetchedOrders.getString("sumo_id")));
-			long currentCabId = fetchedOrders.getLong("cab_id");
-
-			while (fetchedOrders.next()) {
-				if (currentCabId != fetchedOrders.getLong("cab_id")) {
-					taxiDispatchDataList.add(
-						new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentCabId), currentTaxiOrders)
-					);
-
-					currentTaxiOrders = new ArrayList<>();
-					currentCabId = fetchedOrders.getLong("cab_id");
-					assignedOrderIds.add(fetchedOrders.getString(ID_COLUMN_NAME));
-				}
-
-				currentTaxiOrders.add(fetchedOrders.getString("sumo_id"));
-			}
-
-			taxiDispatchDataList.add(
-				new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentCabId), currentTaxiOrders)
-			);
-
-			fetchOrders.close();
-			fetchOrders.close();
-
-			if (assignedOrderIds.isEmpty() || assignedOrderIds.size() != taxiDispatchDataList.size()) {
-				throw new RuntimeException("Dispatch data is not set correctly!");
-			}
-
-			fetchAvailableRoutesAndUpdateCabLatestData(assignedOrderIds, cabsLatestData);
-			markOrdersAsAccepted(assignedOrderIds);
-
-			return taxiDispatchDataList;
-		} catch(SQLException e) {
-			unitLogger.error("Error while fetching available orders", e);
-		}
-
-		return List.of();
-	}
-
 	public int insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations, RoutingModule routingModule) {
 		try {
 			PreparedStatement insertReservations = dbConnection.prepareStatement(
@@ -424,46 +371,267 @@ public class DatabaseCommunication {
 		}
 	}
 
-	private void fetchAvailableRoutesAndUpdateCabLatestData(List<String> orderIds, HashMap<String, TaxiLatestData> cabsLatestData) {
-		try {
-			PreparedStatement fetchRoutes = dbConnection.prepareStatement(
-				"SELECT taxi_order.id, taxi_order.cab_id, leg.id, leg.from_stand, leg.to_stand " +
-					"FROM taxi_order JOIN route ON taxi_order.route_id = route.id JOIN leg ON route.id = leg.route_id " +
-					"WHERE taxi_order.id IN (%s) ORDER BY route.id, leg.id".formatted(String.join(COMMA_DELIMITER, orderIds))
-			);
+	private void initializeCabLatestData(List<String> orderIds, HashMap<String, TaxiLatestData> cabsLatestData) {
+		String sqlOrders = """
+			SELECT id, route_id, cab_id
+			FROM taxi_order
+			WHERE id IN (%s)
+		""".formatted(String.join(COMMA_DELIMITER, orderIds));
 
-			ResultSet fetchedRoutes = fetchRoutes.executeQuery();
-			if (!fetchedRoutes.next()) {
-				return;
-			}
+		String sqlLegs = """
+			SELECT id, from_stand, to_stand, route_id
+			FROM leg
+			WHERE route_id = ? ORDER BY id
+		""";
 
-			long currentCabId =  fetchedRoutes.getLong("cab_id");
-			ArrayList<Integer> legsToVisit = new ArrayList<>(Collections.singleton(fetchedRoutes.getInt("leg.id")));
-			ArrayList<String> busStopIds = new ArrayList<>(Collections.singleton(fetchedRoutes.getString("to_stand")));
-
-			while (fetchedRoutes.next()) {
-				if (currentCabId != fetchedRoutes.getLong("cab_id")) {
-					cabsLatestData.put(parseTaxiDbIndexToMosaicVehicleId(currentCabId),
-						new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null,
-							legsToVisit));
-
-					//reset variables and save the new values there
-					currentCabId = fetchedRoutes.getLong("cab_id");
-					busStopIds = new ArrayList<>();
-					legsToVisit = new ArrayList<>();
+		List<TaxiOrder> orders = new ArrayList<>();
+		try (PreparedStatement ps = dbConnection.prepareStatement(sqlOrders)) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					orders.add(new TaxiOrder(
+						rs.getLong("id"),
+						-1,
+						-1,
+						rs.getLong("route_id"),
+						"",
+						rs.getLong("cab_id")
+					));
 				}
 
-				busStopIds.add(fetchedRoutes.getString("to_stand"));
-				legsToVisit.add(fetchedRoutes.getInt("leg.id"));
+				if (orders.isEmpty()) {
+					return;
+				}
+			}
+		} catch(SQLException e) {
+			unitLogger.error("Error while fetching orders", e);
+		}
+
+		for (int i = 0; i < orders.size(); i++) {
+			long currentRouteId = orders.get(i).routeId;
+			long currentCabId = orders.get(i).cabId;
+
+			if (i != orders.size() - 1) {
+				if (orders.get(i + 1).routeId == currentRouteId) {
+					continue;
+				}
+			}
+
+			List<Leg> legs = new ArrayList<>();
+			try (PreparedStatement ps = dbConnection.prepareStatement(sqlLegs)) {
+				ps.setLong(1, currentRouteId);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						legs.add(new Leg(
+							rs.getLong("id"),
+							rs.getInt("from_stand"),
+							rs.getInt("to_stand"),
+							rs.getLong("route_id")
+						));
+					}
+				}
+			} catch(SQLException e) {
+				unitLogger.error("Error while fetching legs", e);
+			}
+
+			ArrayList<Integer> legsToVisit = new ArrayList<>();
+			ArrayList<String> busStopIds = new ArrayList<>();
+
+			for (Leg leg : legs) {
+				legsToVisit.add((int) leg.id);
+				busStopIds.add(String.valueOf(leg.toStand));
 			}
 
 			cabsLatestData.put(parseTaxiDbIndexToMosaicVehicleId(currentCabId),
-				new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null, legsToVisit));
+				new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null,
+					legsToVisit));
+		}
+	}
 
-			fetchedRoutes.close();
-			fetchRoutes.close();
+	public List<TaxiDispatchData> newMethodForRouteFetching(HashMap<String, TaxiLatestData> cabsLatestData) {
+		// Query 2: get legs for the route
+		String sqlLegs = """
+			SELECT id, from_stand, to_stand, route_id
+			FROM leg
+			WHERE route_id = ? ORDER BY id
+		""";
+
+		// Fill the lists
+		List<TaxiOrder> orders = fetchAssignedTaxiOrders();
+		if (orders.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<String> acceptedOrderIds = new ArrayList<>();
+		List<TaxiDispatchData> taxiDispatchData = new ArrayList<>();
+		List<TaxiOrder> currentOrders = new ArrayList<>();
+		for (int i = 0; i < orders.size(); i++) {
+			long currentRouteId = orders.get(i).routeId;
+			currentOrders.add(orders.get(i));
+
+			// Collect orders with the same route
+			if (i != orders.size() - 1) {
+				if (orders.get(i + 1).routeId == currentRouteId) {
+					continue;
+				}
+			}
+
+			// Taxi has still not finished with previous order
+			if (cabsLatestData.get(parseTaxiDbIndexToMosaicVehicleId(currentOrders.get(0).cabId)).getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
+				currentOrders.clear();
+				continue;
+			}
+
+			List<Leg> legs = new ArrayList<>();
+			try (PreparedStatement ps = dbConnection.prepareStatement(sqlLegs)) {
+				ps.setLong(1, currentRouteId);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						legs.add(new Leg(
+							rs.getLong("id"),
+							rs.getInt("from_stand"),
+							rs.getInt("to_stand"),
+							rs.getLong("route_id")
+						));
+					}
+				}
+			} catch(SQLException e) {
+				unitLogger.error("Error while fetching legs", e);
+			}
+
+			// Only 1 order
+			if (currentOrders.size() == 1) {
+				taxiDispatchData.add(new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentOrders.get(0).cabId), List.of(currentOrders.get(0).sumoId)));
+				acceptedOrderIds.add(String.valueOf(currentOrders.get(0).id));
+				currentOrders.clear();
+				continue;
+			}
+
+			// More than one orders
+			List<String> dispatchSequence = new ArrayList<>();
+
+			// Only 1 leg
+			if (legs.size() == 1) {
+				for(TaxiOrder order : currentOrders) {
+					if(legs.get(0).fromStand == order.fromStand) {
+						dispatchSequence.add(order.sumoId);
+					}
+				}
+				for(TaxiOrder order : currentOrders) {
+					if(legs.get(0).toStand == order.toStand) {
+						dispatchSequence.add(order.sumoId);
+					}
+				}
+			} else { // More than one legs
+				for (int j = 0; j < legs.size(); j++) {
+					// First leg
+					if (j == 0) {
+						for (TaxiOrder order: currentOrders) {
+							if (legs.get(j).fromStand == order.fromStand) {
+								dispatchSequence.add(order.sumoId);
+							}
+						}
+						continue;
+					}
+
+					// Orders to pick up
+					for (TaxiOrder order: currentOrders) {
+						if (legs.get(j).fromStand == order.fromStand) {
+							dispatchSequence.add(order.sumoId);
+						}
+					}
+					// Orders to drop off
+					for (TaxiOrder order: currentOrders) {
+						if (legs.get(j).fromStand == order.toStand) {
+							dispatchSequence.add(order.sumoId);
+						}
+					}
+
+					// Last leg
+					if (j == legs.size() - 1) {
+						for (TaxiOrder order: currentOrders) {
+							if (legs.get(j).toStand == order.toStand) {
+								dispatchSequence.add(order.sumoId);
+							}
+						}
+					}
+				}
+			}
+
+			if (dispatchSequence.size() % 2 != 0) {
+				throw new RuntimeException("Odd size of dispatch sequence: %s".formatted(String.join(",", dispatchSequence)));
+			}
+
+			taxiDispatchData.add(new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentOrders.get(0).cabId), dispatchSequence));
+			acceptedOrderIds.addAll(currentOrders.stream()
+				.map(taxiOrder -> String.valueOf(taxiOrder.id))
+				.toList()
+			);
+			currentOrders.clear();
+		}
+
+		initializeCabLatestData(acceptedOrderIds, cabsLatestData);
+		markOrdersAsAccepted(acceptedOrderIds);
+
+		return taxiDispatchData;
+	}
+
+	private List<TaxiOrder> fetchAssignedTaxiOrders() {
+		String sqlOrders = """
+			SELECT id, from_stand, to_stand, route_id, sumo_id, cab_id
+			FROM taxi_order
+			WHERE status = ?
+		""";
+
+		List<TaxiOrder> taxiOrders = new ArrayList<>();
+		try (PreparedStatement ps = dbConnection.prepareStatement(sqlOrders)) {
+			ps.setLong(1, DISPATCHER_ASSIGNED_ORDER_STATUS);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					taxiOrders.add(new TaxiOrder(
+						rs.getLong("id"),
+						rs.getInt("from_stand"),
+						rs.getInt("to_stand"),
+						rs.getLong("route_id"),
+						rs.getString("sumo_id"),
+						rs.getLong("cab_id")
+					));
+				}
+			}
 		} catch(SQLException e) {
-			unitLogger.error("Error while fetching available routes", e);
+			unitLogger.error("Error while fetching orders", e);
+		}
+		return taxiOrders;
+	}
+
+	private static class TaxiOrder {
+		long id;
+		int fromStand;
+		int toStand;
+		long routeId;
+		String sumoId;
+		long cabId;
+
+		public TaxiOrder(long id, int fromStand, int toStand, long routeId, String sumoId, long cabId) {
+			this.id = id;
+			this.fromStand = fromStand;
+			this.toStand = toStand;
+			this.routeId = routeId;
+			this.sumoId = sumoId;
+			this.cabId = cabId;
+		}
+	}
+
+	private static class Leg {
+		long id;
+		int fromStand;
+		int toStand;
+		long routeId;
+
+		public Leg(long id, int fromStand, int toStand, long routeId) {
+			this.id = id;
+			this.fromStand = fromStand;
+			this.toStand = toStand;
+			this.routeId = routeId;
 		}
 	}
 }

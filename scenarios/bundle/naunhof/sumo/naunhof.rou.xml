@@ -7,4 +7,232 @@
         <param key="device.taxi.dropOffDuration" value="60"/>
     </vType>
 
+<!-- VEHICLES -->
+    <vehicle id="t1" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="26668849#2"/>
+    </vehicle>
+    <vehicle id="t2" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="25939498#3"/>
+    </vehicle>
+    <vehicle id="t3" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-28132131"/>
+    </vehicle>
+    <vehicle id="t4" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="103093870#1"/>
+    </vehicle>
+    <vehicle id="t5" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-25727611#1"/>
+    </vehicle>
+    <vehicle id="t6" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-1022042157#2"/>
+    </vehicle>
+    <vehicle id="t7" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="238136480#1"/>
+    </vehicle>
+    <vehicle id="t8" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="1059785584#0"/>
+    </vehicle>
+    <vehicle id="t9" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-25807021#2"/>
+    </vehicle>
+    <vehicle id="t10" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="28727437#1"/>
+    </vehicle>
+    <vehicle id="t11" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-32091203#2"/>
+    </vehicle>
+    <vehicle id="t12" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="28124693#0"/>
+    </vehicle>
+    <vehicle id="t13" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-252947536#1"/>
+    </vehicle>
+    <vehicle id="t14" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-75902756#1"/>
+    </vehicle>
+    <vehicle id="t15" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-122259339#5"/>
+    </vehicle>
+    <vehicle id="t16" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="1361425836#1"/>
+    </vehicle>
+    <vehicle id="t17" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="24996585#0"/>
+    </vehicle>
+    <vehicle id="t18" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="37996159#1"/>
+    </vehicle>
+    <vehicle id="t19" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-38128299#1"/>
+    </vehicle>
+    <vehicle id="t20" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="1021479206#5"/>
+    </vehicle>
+    <vehicle id="t21" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-25415039#3"/>
+    </vehicle>
+    <vehicle id="t22" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="1215949438"/>
+    </vehicle>
+    <vehicle id="t23" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-37996558#1"/>
+    </vehicle>
+    <vehicle id="t24" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="44642805#0"/>
+    </vehicle>
+    <vehicle id="t25" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+        <route edges="-25335407#2"/>
+    </vehicle>
+
+<!-- PERSONS -->
+    <person id="p1" depart="45">
+        <ride from="-25790384" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p2" depart="86">
+        <ride from="-193164108#1" to="1361425836#1" lines="taxi"/>
+    </person>
+    <person id="p3" depart="125">
+        <ride from="26668849#2" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p4" depart="182">
+        <ride from="-25727611#1" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p5" depart="265">
+        <ride from="-238136477" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p6" depart="289">
+        <ride from="-37996558#1" to="-25790384" lines="taxi"/>
+    </person>
+    <person id="p7" depart="292">
+        <ride from="28124696#0" to="44642805#0" lines="taxi"/>
+    </person>
+    <person id="p8" depart="321">
+        <ride from="-60702646" to="-238136477" lines="taxi"/>
+    </person>
+    <person id="p9" depart="332">
+        <ride from="-25335407#2" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p10" depart="389">
+        <ride from="-25593394#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p11" depart="406">
+        <ride from="67624333" to="1361425836#1" lines="taxi"/>
+    </person>
+    <person id="p12" depart="481">
+        <ride from="44642805#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p13" depart="512">
+        <ride from="44642805#0" to="26668849#2" lines="taxi"/>
+    </person>
+    <person id="p14" depart="538">
+        <ride from="-25790384" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p15" depart="640">
+        <ride from="-25415039#3" to="1021479206#5" lines="taxi"/>
+    </person>
+    <person id="p16" depart="663">
+        <ride from="28725589" to="-238136477" lines="taxi"/>
+    </person>
+    <person id="p17" depart="728">
+        <ride from="-193164108#1" to="25790390" lines="taxi"/>
+    </person>
+    <person id="p18" depart="748">
+        <ride from="1021479206#5" to="1215949438" lines="taxi"/>
+    </person>
+    <person id="p19" depart="781">
+        <ride from="-238136477" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p20" depart="815">
+        <ride from="44642805#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p21" depart="837">
+        <ride from="44642805#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p22" depart="868">
+        <ride from="-25335407#2" to="-32091203#2" lines="taxi"/>
+    </person>
+    <person id="p23" depart="892">
+        <ride from="37996159#1" to="28727437#1" lines="taxi"/>
+    </person>
+    <person id="p24" depart="1905">
+        <ride from="-193164108#1" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p25" depart="1972">
+        <ride from="-661814892" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p26" depart="2153">
+        <ride from="1189365209" to="-742449277#0" lines="taxi"/>
+    </person>
+    <person id="p27" depart="2193">
+        <ride from="-25807021#2" to="-674298787#0" lines="taxi"/>
+    </person>
+    <person id="p28" depart="2231">
+        <ride from="26668849#2" to="28140027#0" lines="taxi"/>
+    </person>
+    <person id="p29" depart="2263">
+        <ride from="28140027#0" to="-661814892" lines="taxi"/>
+    </person>
+    <person id="p30" depart="2336">
+        <ride from="-1022042157#2" to="-28132132#0" lines="taxi"/>
+    </person>
+    <person id="p31" depart="2423">
+        <ride from="28727437#1" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p32" depart="2635">
+        <ride from="25939498#3" to="-193164108#1" lines="taxi"/>
+    </person>
+    <person id="p33" depart="2714">
+        <ride from="-193164108#1" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p34" depart="2722">
+        <ride from="268504689#2" to="-253010733#1" lines="taxi"/>
+    </person>
+    <person id="p35" depart="2728">
+        <ride from="44642805#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p36" depart="2806">
+        <ride from="-674298787#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p37" depart="2901">
+        <ride from="-32091203#2" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p38" depart="2922">
+        <ride from="-661814892" to="37996159#1" lines="taxi"/>
+    </person>
+    <person id="p39" depart="2933">
+        <ride from="37996159#1" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p40" depart="2954">
+        <ride from="28140027#0" to="-25335407#2" lines="taxi"/>
+    </person>
+    <person id="p41" depart="3013">
+        <ride from="28140027#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p42" depart="3084">
+        <ride from="103093870#1" to="238136480#1" lines="taxi"/>
+    </person>
+    <person id="p43" depart="3086">
+        <ride from="-37996558#1" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p44" depart="3095">
+        <ride from="-25593394#0" to="-25727611#1" lines="taxi"/>
+    </person>
+    <person id="p45" depart="3157">
+        <ride from="44642805#0" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p46" depart="3167">
+        <ride from="-661814892" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p47" depart="3321">
+        <ride from="-252947536#1" to="25790390" lines="taxi"/>
+    </person>
+    <person id="p48" depart="3356">
+        <ride from="-18784601#1" to="132619396#0" lines="taxi"/>
+    </person>
+    <person id="p49" depart="3394">
+        <ride from="-238136477" to="-25415039#3" lines="taxi"/>
+    </person>
+    <person id="p50" depart="3439">
+        <ride from="-38128295#0" to="-25415039#3" lines="taxi"/>
+    </person>
 </routes>

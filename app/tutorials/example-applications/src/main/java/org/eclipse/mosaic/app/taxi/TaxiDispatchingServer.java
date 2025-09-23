@@ -57,8 +57,9 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     public static final int ORDER_MAX_WAIT_IN_MINUTES_DISPATCHER_CONFIG = 10;
 
     // FLAGS
-    private static final boolean CREATE_DISTANCES_FILE_AND_TERMINATE_FLAG = true;
-    private static final boolean INCLUDE_PYTHON_SCRIPT_LOGS_FLAG = false;
+	private static final boolean EXECUTE_PYTHON_SCRIPTS_AND_TERMINATE = false;
+    private static final boolean CREATE_DISTANCES_FILE_AND_TERMINATE = false;
+    private static final boolean INCLUDE_PYTHON_SCRIPT_LOGS = false;
 	private static final boolean START_DISPATCHER_INSIDE_WINDOWS_TERMINAL = false;
     // ================== END OF CUSTOM SCENARIO PARAMETERS ==================
 
@@ -74,12 +75,16 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
     @Override
     public void onStartup() {
-        executePythonScripts(getLog(), INCLUDE_PYTHON_SCRIPT_LOGS_FLAG, SCENARIO_NAME);
+		if (EXECUTE_PYTHON_SCRIPTS_AND_TERMINATE) {
+        	executePythonScripts(getLog(), INCLUDE_PYTHON_SCRIPT_LOGS, SCENARIO_NAME);
+			System.exit(0);
+		}
+
         dataBaseCommunication = new DatabaseCommunication(getLog());
         dataBaseCommunication.checkTablesState(NOT_EMPTY_TABLES, false);
         dataBaseCommunication.checkTablesState(EMPTY_TABLES, true);
 
-		if (CREATE_DISTANCES_FILE_AND_TERMINATE_FLAG) {
+		if (CREATE_DISTANCES_FILE_AND_TERMINATE) {
 			createFileWithDistancesInMinutesBetweenStops();
 			System.exit(0);
 		}
@@ -123,10 +128,12 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
             lastSavedReservationMosaicIndex += dataBaseCommunication.insertNewReservationsInDb(unassignedReservations, getOs().getRoutingModule());
         }
 
-        List<TaxiDispatchData> taxiDispatchDataList = dataBaseCommunication.fetchAvailableTaxiDispatchData(cabsLatestData);
+        List<TaxiDispatchData> taxiDispatchDataList = dataBaseCommunication.newMethodForRouteFetching(cabsLatestData);
 
         if (!taxiDispatchDataList.isEmpty()) {
             for (TaxiDispatchData taxiDispatchData : taxiDispatchDataList) {
+				System.out.printf("Taxi ID: %s, Reservations: %s%n",
+					taxiDispatchData.taxiId(), String.join(",", taxiDispatchData.reservationIds()));
                 getOs().sendInteractionToRti(
                     new TaxiDispatch(getOs().getSimulationTime(), taxiDispatchData.taxiId(), taxiDispatchData.reservationIds())
                 );
@@ -152,7 +159,11 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
             TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
 
             if (latestData.getLastStatus() == TaxiVehicleData.OCCUPIED_TAXIS) {
-                latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
+				//delivered final customer
+				//update cab's last location, route
+				dataBaseCommunication.updateRouteStatusByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
+				dataBaseCommunication.updateOrdersByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ORDER_STATUS, false);
+                latestData.setLastStatus(TaxiVehicleData.EMPTY_TAXIS);
                 latestData.getEdgesToVisit().clear();
                 latestData.setCurrentLegId(null);
                 latestData.getNextLegIds().clear();
@@ -189,19 +200,17 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
                 dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
                 dataBaseCommunication.markLegAsCompleted(finishedLegId);
 
-                Integer currentLegId = null;
                 if (latestData.getNextLegIds().isEmpty()) {
-                    //delivered final customer
-                    //update cab's last location, route
-                    dataBaseCommunication.updateRouteStatusByLegId(finishedLegId, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-                    dataBaseCommunication.updateOrdersByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false);
+					continue;
                 } else {
-                    currentLegId = latestData.getNextLegIds().remove(0);
+                    Integer currentLegId = latestData.getNextLegIds().remove(0);
+                	latestData.setCurrentLegId(currentLegId);
                     dataBaseCommunication.markLegAsStarted(currentLegId);
                 }
 
-                latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
-                latestData.setCurrentLegId(currentLegId);
+				if (latestData.getLastStatus() != TaxiVehicleData.OCCUPIED_TAXIS) {
+                	latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
+				}
             }
         }
     }
@@ -258,7 +267,6 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		}
     }
 
-    // TODO check if this distance is good enough for the dispatcher
     public static int calculateDistanceInMinutesBetweenTwoStops(String fromStopEdge, String toStopEdge, RoutingModule routingModule) {
         GeoPoint startPoint = routingModule
             .getConnection(fromStopEdge)
@@ -289,7 +297,8 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		long start = System.currentTimeMillis();
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file, false));
-            //first element is total count of bus stops + 1 because of Kern
+            // first element is total count of bus stops + 1
+			// because Kern is implemented to start from 1 when handling IDs
 			writer.append(String.valueOf(edges.size() + 1)).append("\n");
 
             // Kern takes also stops with id=0, so we should fill the matrix here with an irrelevant value

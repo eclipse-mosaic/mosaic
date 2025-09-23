@@ -54,10 +54,7 @@ def generate_random_person_trips(
     fixed_count = int(num_trips * fixed_stop_percentage) if fixed_stop_id else 0
     random_count = num_trips - fixed_count
 
-    # Create root element for output
-    routes = ET.Element("routes")
-
-    person_index = 1
+    persons = []
 
     # Generate trips ending at the fixed stop
     for _ in range(fixed_count):
@@ -71,35 +68,45 @@ def generate_random_person_trips(
         from_lane = from_stop["lane"][:-2]
         to_lane = to_stop["lane"][:-2]
 
-        person = ET.SubElement(routes, "person", {
-            "id": f"p{person_index}",
-            "depart": str(depart_time)
-        })
-        ET.SubElement(person, "ride", {
+        persons.append({
+            "depart": depart_time,
             "from": from_lane,
-            "to": to_lane,
-            "lines": "taxi"
+            "to": to_lane
         })
-        person_index += 1
 
     # Generate the remaining random trips
     for _ in range(random_count):
         from_stop = random.choice(stops)
         possible_stops = [s for s in stops if s["id"] != from_stop["id"]]
         to_stop = random.choice(possible_stops)
+
         depart_time = random.randint(*depart_time_range)
         from_lane = from_stop["lane"][:-2]
         to_lane = to_stop["lane"][:-2]
-        person = ET.SubElement(routes, "person", {
-            "id": f"p{person_index}",
-            "depart": str(depart_time)
-        })
-        ET.SubElement(person, "ride", {
+
+        persons.append({
+            "depart": depart_time,
             "from": from_lane,
-            "to": to_lane,
+            "to": to_lane
+        })
+
+    # Sort persons by depart time
+    persons.sort(key=lambda p: p["depart"])
+
+    # Create root element for output
+    routes = ET.Element("routes")
+
+    # Add persons to XML with renumbered IDs
+    for i, p in enumerate(persons, start=1):
+        person_elem = ET.SubElement(routes, "person", {
+            "id": f"p{i}",
+            "depart": str(p["depart"])
+        })
+        ET.SubElement(person_elem, "ride", {
+            "from": p["from"],
+            "to": p["to"],
             "lines": "taxi"
         })
-        person_index += 1
 
     # Convert to string and pretty print
     xml_str = ET.tostring(routes, encoding="utf-8")
