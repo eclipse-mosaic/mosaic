@@ -127,7 +127,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
             lastSavedReservationMosaicIndex += dataBaseCommunication.insertNewReservationsInDb(unassignedReservations, getOs().getRoutingModule());
         }
 
-        List<TaxiDispatchData> taxiDispatchDataList = dataBaseCommunication.newMethodForRouteFetching(cabsLatestData);
+        List<TaxiDispatchData> taxiDispatchDataList = dataBaseCommunication.fetchTaxiDispatchDataAndUpdateLatestData(cabsLatestData);
 
         if (!taxiDispatchDataList.isEmpty()) {
             for (TaxiDispatchData taxiDispatchData : taxiDispatchDataList) {

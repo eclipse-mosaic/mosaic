@@ -287,29 +287,45 @@ public class DatabaseCommunication {
 	}
 
 	private ArrayList<String> fetchBusStopEdgesByIds(ArrayList<String> busStopIds) {
-		ArrayList<String> busStopEdgeIds = new ArrayList<>(busStopIds.size());
+		String placeholders = busStopIds.stream()
+			.map(id -> "?")
+			.collect(Collectors.joining(", "));
 
-		try {
-			String sql = String.format("SELECT sumo_edge FROM stop WHERE id IN (%1$s) ORDER BY FIELD(id, %1$s)",
-				String.join(COMMA_DELIMITER, busStopIds));
-			PreparedStatement fetchBusStopEdges = dbConnection.prepareStatement(sql);
-			ResultSet fetchedBusStopEdges = fetchBusStopEdges.executeQuery();
+		String sql = """
+        	SELECT id, sumo_edge
+        	FROM stop
+        	WHERE id IN (%s)
+        """.formatted(placeholders);
 
-			while(fetchedBusStopEdges.next()) {
-				busStopEdgeIds.add(fetchedBusStopEdges.getString("sumo_edge"));
+		Map<String, String> edgesById = new HashMap<>();
+
+		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
+			int index = 1;
+			for (String id : busStopIds) {
+				ps.setString(index++, id);
 			}
 
-			fetchedBusStopEdges.close();
-			fetchBusStopEdges.close();
-
-			if (busStopEdgeIds.size() != busStopIds.size()) {
-				throw new RuntimeException("Number of fetched bus stops sumo_edge IDs is incorrect!");
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					edgesById.put(rs.getString("id"), rs.getString("sumo_edge"));
+				}
 			}
 		} catch (SQLException e) {
-			unitLogger.error("Could not execute get cab locations query", e);
+			unitLogger.error("Error while fetching bus stop edges", e);
 		}
 
-		return busStopEdgeIds;
+		// Preserve the order of input IDs
+		List<String> busStopEdgeIds = busStopIds.stream()
+			.map(id -> {
+				String edge = edgesById.get(id);
+				if (edge == null) {
+					throw new IllegalStateException("Missing sumo_edge for stop id " + id);
+				}
+				return edge;
+			})
+			.toList();
+
+		return new ArrayList<>(busStopEdgeIds);
 	}
 
 	public void setTaxiFreeStatusInDbByIds(List<Integer> taxisToUpdateIds) {
@@ -372,20 +388,113 @@ public class DatabaseCommunication {
 	}
 
 	private void initializeCabLatestData(List<String> orderIds, HashMap<String, TaxiLatestData> cabsLatestData) {
-		String sqlOrders = """
-			SELECT id, route_id, cab_id
-			FROM taxi_order
-			WHERE id IN (%s)
-		""".formatted(String.join(COMMA_DELIMITER, orderIds));
+		if (orderIds.isEmpty()) {
+			return;
+		}
 
-		String sqlLegs = """
-			SELECT id, from_stand, to_stand, route_id
-			FROM leg
-			WHERE route_id = ? ORDER BY id
-		""";
+		List<TaxiOrder> orders = fetchOrdersByIds(orderIds);
+		if (orders.isEmpty()) {
+			return;
+		}
+
+		Map<Long, List<TaxiOrder>> ordersByRoute =
+			orders.stream().collect(Collectors.groupingBy(o -> o.routeId));
+
+		Map<Long, List<Leg>> legsByRoute = fetchLegsByRoute(ordersByRoute.keySet());
+
+		for (var entry : ordersByRoute.entrySet()) {
+			long routeId = entry.getKey();
+			List<TaxiOrder> routeOrders = entry.getValue();
+
+			// All orders on a route should have same cabId
+			long cabId = routeOrders.get(0).cabId;
+			String cabKey = parseTaxiDbIndexToMosaicVehicleId(cabId);
+
+			List<Leg> legs = legsByRoute.getOrDefault(routeId, List.of());
+
+			List<Integer> legsToVisit = legs.stream()
+				.map(leg -> (int) leg.id)
+				.toList();
+
+			List<String> busStopIds = legs.stream()
+				.map(leg -> String.valueOf(leg.toStand))
+				.toList();
+
+			TaxiLatestData data = new TaxiLatestData(
+				TaxiVehicleData.EMPTY_TAXIS,
+				fetchBusStopEdgesByIds(new ArrayList<>(busStopIds)),
+				null,
+				new ArrayList<>(legsToVisit)
+			);
+
+			cabsLatestData.put(cabKey, data);
+		}
+	}
+
+	public List<TaxiDispatchData> fetchTaxiDispatchDataAndUpdateLatestData(HashMap<String, TaxiLatestData> cabsLatestData) {
+		List<TaxiOrder> orders = fetchAssignedTaxiOrders();
+		if (orders.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		Map<Long, List<TaxiOrder>> ordersGroupedByRoute = orders.stream()
+			.collect(Collectors.groupingBy(o -> o.routeId));
+
+		Map<Long, List<Leg>> legsGroupedByRoute = fetchLegsByRoute(ordersGroupedByRoute.keySet());
+
+		List<String> acceptedOrderIds = new ArrayList<>();
+		List<TaxiDispatchData> taxiDispatchData = new ArrayList<>();
+
+		for (var entry : ordersGroupedByRoute.entrySet()) {
+			long routeId = entry.getKey();
+			List<TaxiOrder> routeOrders = entry.getValue();
+
+			TaxiOrder firstOrder = routeOrders.get(0);
+			String cabId = parseTaxiDbIndexToMosaicVehicleId(firstOrder.cabId);
+
+			// Skip if cab is busy
+			if (cabsLatestData.get(cabId).getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
+				continue;
+			}
+
+			List<Leg> legs = legsGroupedByRoute.getOrDefault(routeId, List.of());
+
+			List<String> dispatchSequence = (routeOrders.size() == 1)
+				? List.of(firstOrder.sumoId)
+				: buildDispatchSequence(legs, routeOrders);
+
+			taxiDispatchData.add(new TaxiDispatchData(cabId, dispatchSequence));
+
+			acceptedOrderIds.addAll(routeOrders.stream()
+				.map(o -> String.valueOf(o.id))
+				.toList());
+		}
+
+		initializeCabLatestData(acceptedOrderIds, cabsLatestData);
+		markOrdersAsAccepted(acceptedOrderIds);
+
+		return taxiDispatchData;
+	}
+
+	private List<TaxiOrder> fetchOrdersByIds(List<String> orderIds) {
+		String placeholders = orderIds.stream()
+			.map(id -> "?")
+			.collect(Collectors.joining(","));
+
+		String sql = """
+        	SELECT id, route_id, cab_id
+        	FROM taxi_order
+        	WHERE id IN (%s)
+        """.formatted(placeholders);
 
 		List<TaxiOrder> orders = new ArrayList<>();
-		try (PreparedStatement ps = dbConnection.prepareStatement(sqlOrders)) {
+
+		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
+			int index = 1;
+			for (String id : orderIds) {
+				ps.setLong(index++, Long.parseLong(id));
+			}
+
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
 					orders.add(new TaxiOrder(
@@ -397,182 +506,55 @@ public class DatabaseCommunication {
 						rs.getLong("cab_id")
 					));
 				}
-
-				if (orders.isEmpty()) {
-					return;
-				}
 			}
-		} catch(SQLException e) {
-			unitLogger.error("Error while fetching orders", e);
+		} catch (SQLException e) {
+			unitLogger.error("Error while fetching orders by IDs", e);
 		}
 
-		for (int i = 0; i < orders.size(); i++) {
-			long currentRouteId = orders.get(i).routeId;
-			long currentCabId = orders.get(i).cabId;
-
-			if (i != orders.size() - 1) {
-				if (orders.get(i + 1).routeId == currentRouteId) {
-					continue;
-				}
-			}
-
-			List<Leg> legs = new ArrayList<>();
-			try (PreparedStatement ps = dbConnection.prepareStatement(sqlLegs)) {
-				ps.setLong(1, currentRouteId);
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						legs.add(new Leg(
-							rs.getLong("id"),
-							rs.getInt("from_stand"),
-							rs.getInt("to_stand"),
-							rs.getLong("route_id")
-						));
-					}
-				}
-			} catch(SQLException e) {
-				unitLogger.error("Error while fetching legs", e);
-			}
-
-			ArrayList<Integer> legsToVisit = new ArrayList<>();
-			ArrayList<String> busStopIds = new ArrayList<>();
-
-			for (Leg leg : legs) {
-				legsToVisit.add((int) leg.id);
-				busStopIds.add(String.valueOf(leg.toStand));
-			}
-
-			cabsLatestData.put(parseTaxiDbIndexToMosaicVehicleId(currentCabId),
-				new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, fetchBusStopEdgesByIds(busStopIds), null,
-					legsToVisit));
-		}
+		return orders;
 	}
 
-	public List<TaxiDispatchData> newMethodForRouteFetching(HashMap<String, TaxiLatestData> cabsLatestData) {
-		// Query 2: get legs for the route
-		String sqlLegs = """
-			SELECT id, from_stand, to_stand, route_id
-			FROM leg
-			WHERE route_id = ? ORDER BY id
-		""";
+	private List<String> buildDispatchSequence(List<Leg> legs, List<TaxiOrder> orders) {
+		List<String> sequence = new ArrayList<>();
 
-		// Fill the lists
-		List<TaxiOrder> orders = fetchAssignedTaxiOrders();
-		if (orders.isEmpty()) {
-			return Collections.emptyList();
-		}
+		for (int i = 0; i < legs.size(); i++) {
+			Leg leg = legs.get(i);
 
-		List<String> acceptedOrderIds = new ArrayList<>();
-		List<TaxiDispatchData> taxiDispatchData = new ArrayList<>();
-		List<TaxiOrder> currentOrders = new ArrayList<>();
-		for (int i = 0; i < orders.size(); i++) {
-			long currentRouteId = orders.get(i).routeId;
-			currentOrders.add(orders.get(i));
-
-			// Collect orders with the same route
-			if (i != orders.size() - 1) {
-				if (orders.get(i + 1).routeId == currentRouteId) {
-					continue;
-				}
-			}
-
-			// Taxi has still not finished with previous order
-			if (cabsLatestData.get(parseTaxiDbIndexToMosaicVehicleId(currentOrders.get(0).cabId)).getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
-				currentOrders.clear();
+			// First leg-> only pick-ups
+			if (i == 0) {
+				orders.stream()
+					.filter(o -> o.fromStand == leg.fromStand)
+					.map(o -> o.sumoId)
+					.forEach(sequence::add);
 				continue;
 			}
 
-			List<Leg> legs = new ArrayList<>();
-			try (PreparedStatement ps = dbConnection.prepareStatement(sqlLegs)) {
-				ps.setLong(1, currentRouteId);
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						legs.add(new Leg(
-							rs.getLong("id"),
-							rs.getInt("from_stand"),
-							rs.getInt("to_stand"),
-							rs.getLong("route_id")
-						));
-					}
-				}
-			} catch(SQLException e) {
-				unitLogger.error("Error while fetching legs", e);
+			// Pickups
+			orders.stream()
+				.filter(o -> o.fromStand == leg.fromStand)
+				.map(o -> o.sumoId)
+				.forEach(sequence::add);
+
+			// Dropoffs at this fromStand
+			orders.stream()
+				.filter(o -> o.toStand == leg.fromStand)
+				.map(o -> o.sumoId)
+				.forEach(sequence::add);
+
+			// Last leg → dropoffs at final toStand
+			if (i == legs.size() - 1) {
+				orders.stream()
+					.filter(o -> o.toStand == leg.toStand)
+					.map(o -> o.sumoId)
+					.forEach(sequence::add);
 			}
-
-			// Only 1 order
-			if (currentOrders.size() == 1) {
-				taxiDispatchData.add(new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentOrders.get(0).cabId), List.of(currentOrders.get(0).sumoId)));
-				acceptedOrderIds.add(String.valueOf(currentOrders.get(0).id));
-				currentOrders.clear();
-				continue;
-			}
-
-			// More than one orders
-			List<String> dispatchSequence = new ArrayList<>();
-
-			// Only 1 leg
-			if (legs.size() == 1) {
-				for(TaxiOrder order : currentOrders) {
-					if(legs.get(0).fromStand == order.fromStand) {
-						dispatchSequence.add(order.sumoId);
-					}
-				}
-				for(TaxiOrder order : currentOrders) {
-					if(legs.get(0).toStand == order.toStand) {
-						dispatchSequence.add(order.sumoId);
-					}
-				}
-			} else { // More than one legs
-				for (int j = 0; j < legs.size(); j++) {
-					// First leg
-					if (j == 0) {
-						for (TaxiOrder order: currentOrders) {
-							if (legs.get(j).fromStand == order.fromStand) {
-								dispatchSequence.add(order.sumoId);
-							}
-						}
-						continue;
-					}
-
-					// Orders to pick up
-					for (TaxiOrder order: currentOrders) {
-						if (legs.get(j).fromStand == order.fromStand) {
-							dispatchSequence.add(order.sumoId);
-						}
-					}
-					// Orders to drop off
-					for (TaxiOrder order: currentOrders) {
-						if (legs.get(j).fromStand == order.toStand) {
-							dispatchSequence.add(order.sumoId);
-						}
-					}
-
-					// Last leg
-					if (j == legs.size() - 1) {
-						for (TaxiOrder order: currentOrders) {
-							if (legs.get(j).toStand == order.toStand) {
-								dispatchSequence.add(order.sumoId);
-							}
-						}
-					}
-				}
-			}
-
-			if (dispatchSequence.size() % 2 != 0) {
-				throw new RuntimeException("Odd size of dispatch sequence: %s".formatted(String.join(",", dispatchSequence)));
-			}
-
-			taxiDispatchData.add(new TaxiDispatchData(parseTaxiDbIndexToMosaicVehicleId(currentOrders.get(0).cabId), dispatchSequence));
-			acceptedOrderIds.addAll(currentOrders.stream()
-				.map(taxiOrder -> String.valueOf(taxiOrder.id))
-				.toList()
-			);
-			currentOrders.clear();
 		}
 
-		initializeCabLatestData(acceptedOrderIds, cabsLatestData);
-		markOrdersAsAccepted(acceptedOrderIds);
+		if (sequence.size() % 2 != 0) {
+			throw new IllegalStateException("Odd dispatch sequence: " + sequence);
+		}
 
-		return taxiDispatchData;
+		return sequence;
 	}
 
 	private List<TaxiOrder> fetchAssignedTaxiOrders() {
@@ -601,6 +583,51 @@ public class DatabaseCommunication {
 			unitLogger.error("Error while fetching orders", e);
 		}
 		return taxiOrders;
+	}
+
+	private Map<Long, List<Leg>> fetchLegsByRoute(Set<Long> routeIds) {
+		if (routeIds.isEmpty()) {
+			return Map.of();
+		}
+
+		String placeholders = routeIds.stream()
+			.map(id -> "?")
+			.collect(Collectors.joining(", "));
+
+		String sql = """
+			SELECT id, from_stand, to_stand, passengers, route_id
+			FROM leg
+			WHERE route_id IN (%s)
+			ORDER BY route_id, id
+		""".formatted(placeholders);
+
+		Map<Long, List<Leg>> legsByRoute = new HashMap<>();
+
+		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
+			int index = 1;
+			for (Long routeId : routeIds) {
+				ps.setLong(index++, routeId);
+			}
+
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					Leg leg = new Leg(
+						rs.getLong("id"),
+						rs.getInt("from_stand"),
+						rs.getInt("to_stand"),
+						rs.getLong("route_id")
+					);
+
+					legsByRoute
+						.computeIfAbsent(leg.routeId, k -> new ArrayList<>())
+						.add(leg);
+				}
+			}
+		} catch (SQLException e) {
+			unitLogger.error("Error while fetching legs for routes: {}", routeIds, e);
+		}
+
+		return legsByRoute;
 	}
 
 	private static class TaxiOrder {
