@@ -50,7 +50,6 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     private static final String SCENARIO_NAME = "naunhof";
     private static final String PATH_TO_DISPATCHER_WSL = "/PUT/YOUR/PATH/HERE";
 	private static final String PATH_TO_DISPATCHER_WINDOWS = "/PUT/YOUR/PATH/HERE";
-    private static final String SCENARIO_NAME = "naunhof";
 
     // DISPATCHER CONFIGS
     public static final int ORDER_MAX_DETOUR_IN_PERCENTAGE_DISPATCHER_CONFIG = 70;
