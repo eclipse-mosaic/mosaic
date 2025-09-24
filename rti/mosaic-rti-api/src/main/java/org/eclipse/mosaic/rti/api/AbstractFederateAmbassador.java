@@ -86,8 +86,9 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
      *
      * @param time The timestamp towards which the federate can advance it local time.
      */
-    protected void processTimeAdvanceGrant(long time) throws InternalFederateException {
+    protected boolean processTimeAdvanceGrant(long time) throws InternalFederateException {
         log.trace("processTimeAdvanceGrant(time); time: {}", time);
+        return true;
     }
 
     /**
@@ -100,7 +101,7 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
      * @throws InternalFederateException an exception inside of a joined federate occurs
      */
     @Override
-    public final synchronized void advanceTime(long time) throws InternalFederateException {
+    public synchronized boolean advanceTime(long time) throws InternalFederateException {
         Interaction nextInteraction = interactionQueue.getNextInteraction(time);
         while (nextInteraction != null) {
             rti.getMonitor().onProcessInteraction(getId(), nextInteraction);
@@ -108,6 +109,7 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
             nextInteraction = interactionQueue.getNextInteraction(time);
         }
         processTimeAdvanceGrant(time);
+        return true;
     }
 
     /**
@@ -126,14 +128,7 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
         try {
             // request time advance to process interaction if necessary
             if (isTimeConstrained()) {
-                final long lookahead;
-                if (isTimeRegulating()) {
-                    lookahead = this.lookahead;
-                } else {
-                    // request with MAX lookahead since federate promised not to send any time stamped interactions (!timeRegulating)
-                    lookahead = Long.MAX_VALUE;
-                }
-                rti.requestAdvanceTime(interaction.getTime(), lookahead, descriptor.getPriority());
+                this.requestAdvanceTime(interaction.getTime());
                 interactionQueue.add(interaction);
             } else {
                 // not time constrained --> doesn't care about timestamps
@@ -146,6 +141,20 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
         } catch (IllegalValueException e) {
             log.error("Error while receiving interaction.", e);
         }
+    }
+
+    /*
+     * Helper method to request time advance
+     */
+    protected void requestAdvanceTime(long time) throws InternalFederateException, IllegalValueException {
+        final long lookahead;
+        if (isTimeRegulating()) {
+            lookahead = this.lookahead;
+        } else {
+            // request with MAX lookahead since federate promised not to send any time stamped interactions (!timeRegulating)
+            lookahead = Long.MAX_VALUE;
+        }
+        rti.requestAdvanceTime(time, lookahead, descriptor.getPriority());
     }
 
     @Override
@@ -289,7 +298,7 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
          *
          * @param time time in [ns]
          */
-        protected Interaction getNextInteraction(long time) {
+        public Interaction getNextInteraction(long time) {
             if (this.peek() != null && this.peek().getTime() <= time) {
                 return this.poll();
             }
