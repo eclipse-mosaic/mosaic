@@ -35,7 +35,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.util.HashMap;
 import java.util.List;
 
@@ -285,46 +284,55 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
         return (int) timeInMinutes;
     }
 
-    private void createFileWithDistancesInMinutesBetweenStops() {
+	private void createFileWithDistancesInMinutesBetweenStops() {
 		if (PATH_TO_DISPATCHER_WINDOWS.endsWith("/PUT/YOUR/PATH/HERE")) {
-			throw new RuntimeException("Path to dispatcher is not set");
+			throw new IllegalStateException("Path to dispatcher is not set");
 		}
 
-        File file = new File(PATH_TO_DISPATCHER_WINDOWS + FileSystems.getDefault().getSeparator() + "distances.txt");
-
 		List<String> edges = dataBaseCommunication.fetchAllBusStopEdgeIds();
+		File file = new File(PATH_TO_DISPATCHER_WINDOWS, "distances.txt");
+
 		long start = System.currentTimeMillis();
-		try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file, false));
-            // first element is total count of bus stops + 1
-			// because Kern is implemented to start from 1 when handling IDs
-			writer.append(String.valueOf(edges.size() + 1)).append("\n");
-
-            // Kern takes also stops with id=0, so we should fill the matrix here with an irrelevant value
-			for (int i = 0; i < edges.size() + 1; i++) {
-				for (int j = 0; j < edges.size() + 1; j++) {
-                    if (i == 0 || j == 0) {
-                        writer.append("10000");
-                    } else if (i == j) {
-						writer.append("0");
-					} else {
-						writer.append(
-							String.valueOf(calculateDistanceInMinutesBetweenTwoStops(edges.get(i-1), edges.get(j-1), getOs().getRoutingModule())));
-					}
-
-					if (j == edges.size()) {
-						writer.append("\n");
-                        continue;
-					}
-
-                    writer.append(",");
-				}
-			}
-			writer.close();
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
+			writeDistanceMatrixHeader(writer, edges.size());
+			writeDistanceMatrix(writer, edges);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+
 		long finish = System.currentTimeMillis();
 		System.out.printf("Distances file created! Time elapsed: %s ms%n", finish - start);
+	}
+
+	private void writeDistanceMatrixHeader(BufferedWriter writer, int edgesSum) throws IOException {
+		// first element is total count of bus stops + 1
+		// because Kern is implemented to start from 0 when handling IDs and here they start from 1
+		writer.append(String.valueOf(edgesSum + 1)).append("\n");
+	}
+
+	private void writeDistanceMatrix(BufferedWriter writer, List<String> edges) throws IOException {
+		// Kern takes also stops with id=0, so we should fill the matrix here with an irrelevant value
+		for (int i = 0; i < edges.size() + 1; i++) {
+			for (int j = 0; j < edges.size() + 1; j++) {
+				if (i == 0 || j == 0) {
+					writer.append("10000");
+				}
+				else if (i == j) {
+					writer.append("0");
+				}
+				else {
+					writer.append(String.valueOf(
+						calculateDistanceInMinutesBetweenTwoStops(edges.get(i - 1), edges.get(j - 1),
+							getOs().getRoutingModule())));
+				}
+
+				if (j == edges.size()) {
+					writer.append("\n");
+					continue;
+				}
+
+				writer.append(",");
+			}
+		}
 	}
 }
