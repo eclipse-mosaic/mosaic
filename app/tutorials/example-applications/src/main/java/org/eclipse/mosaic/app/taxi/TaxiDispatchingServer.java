@@ -66,10 +66,10 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     private static final List<String> EMPTY_TABLES = List.of("taxi_order", "leg", "route", "freetaxi_order");
 
     // GLOBAL VARIABLES
-    private static final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
-    private static int lastRegisteredTaxiDbIndex = 0;
-    private static int lastSavedReservationMosaicIndex = -1;
-    private static DatabaseCommunication dataBaseCommunication;
+    private final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
+    private int lastRegisteredTaxiDbIndex = 0;
+    private int lastSavedReservationMosaicIndex = -1;
+    private DatabaseCommunication dataBaseCommunication;
 
     @Override
     public void onStartup() {
@@ -102,18 +102,16 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     @Override
     public void onTaxiDataUpdate(List<TaxiVehicleData> taxis, List<TaxiReservation> taxiReservations) {
 
-        // select all empty taxis
-        List<TaxiVehicleData> emptyTaxis = taxis.stream()
-            .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TAXIS)
-            .toList();
-
-        if (!emptyTaxis.isEmpty()) {
-            checkForNotRegisteredTaxisInDb(emptyTaxis);
-            checkAlreadyDeliveredTaxis(emptyTaxis);
-        }
-
-        checkEmptyToPickUpTaxis(taxis);
-        checkOccupiedTaxis(taxis);
+		for (TaxiVehicleData taxi : taxis) {
+			switch (taxi.getState()) {
+				case TaxiVehicleData.EMPTY_TAXIS -> {
+					handleNotRegisteredTaxiInDb(taxi);
+					handleAlreadyDeliveredTaxi(taxi);
+				}
+				case TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS -> handleEmptyToPickUpTaxi(taxi);
+				case TaxiVehicleData.OCCUPIED_TAXIS -> handleOccupiedTaxi(taxi);
+			}
+		}
 
         // select all unassigned reservations
         List<TaxiReservation> unassignedReservations = taxiReservations.stream()
@@ -144,126 +142,97 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
     }
 
-    private void checkAlreadyDeliveredTaxis(List<TaxiVehicleData> emptyTaxis) {
-        List<TaxiVehicleData> alreadyDeliveredTaxis = emptyTaxis.stream()
-            .filter(taxi -> Integer.parseInt(taxi.getNumberOfCustomersServed()) > 0)
-            .toList();
+	private void handleNotRegisteredTaxiInDb(TaxiVehicleData taxi) {
+		int taxiDbIndex = parseMosaicVehicleIdToTaxiDbIndex(taxi.getId());
 
-        if (alreadyDeliveredTaxis.isEmpty()) {
-            return;
-        }
-
-        for (TaxiVehicleData taxi : alreadyDeliveredTaxis) {
-            TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
-
-            if (latestData.getLastStatus() == TaxiVehicleData.OCCUPIED_TAXIS) {
-				//delivered final customer
-				//update cab's last location, route
-				dataBaseCommunication.updateRouteStatusByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-				dataBaseCommunication.updateOrdersByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ORDER_STATUS, false);
-                latestData.setLastStatus(TaxiVehicleData.EMPTY_TAXIS);
-                latestData.getEdgesToVisit().clear();
-                latestData.setCurrentLegId(null);
-                latestData.getNextLegIds().clear();
-            }
-        }
-
-        List<Integer> alreadyDeliveredIds = alreadyDeliveredTaxis.stream()
-            .map(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()))
-            .toList();
-        dataBaseCommunication.setTaxiFreeStatusInDbByIds(alreadyDeliveredIds);
-    }
-
-    private void checkOccupiedTaxis(List<TaxiVehicleData> taxis) {
-        List<TaxiVehicleData> occupiedTaxis = taxis.stream()
-            .filter(taxi -> taxi.getState() == TaxiVehicleData.OCCUPIED_TAXIS)
-            .toList();
-
-        if (occupiedTaxis.isEmpty()) {
-            return;
-        }
-
-        for (TaxiVehicleData taxi : occupiedTaxis) {
-            TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
-
-            if (latestData.getEdgesToVisit().isEmpty() && latestData.getNextLegIds().isEmpty()) {
-                continue; //taxi already delivered last customer, but have to wait for TraCI to send it with EMPTY status
-            }
-
-            if (latestData.getEdgesToVisit().get(0).equals(taxi.getVehicleData().getRoadPosition().getConnectionId())) {
-                latestData.getEdgesToVisit().remove(0);
-                Integer finishedLegId = latestData.getCurrentLegId();
-
-                //set current stop as cab location and mark legs as started/completed
-                dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
-                dataBaseCommunication.markLegAsCompleted(finishedLegId);
-
-                if (latestData.getNextLegIds().isEmpty()) {
-					continue;
-                } else {
-                    Integer currentLegId = latestData.getNextLegIds().remove(0);
-                	latestData.setCurrentLegId(currentLegId);
-                    dataBaseCommunication.markLegAsStarted(currentLegId);
-                }
-
-				if (latestData.getLastStatus() != TaxiVehicleData.OCCUPIED_TAXIS) {
-                	latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
-				}
-            }
-        }
-    }
-
-    private void checkEmptyToPickUpTaxis(List<TaxiVehicleData> taxis) {
-        List<TaxiVehicleData> emptyToPickupTaxis = taxis.stream()
-            .filter(taxi -> taxi.getState() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS)
-            .toList();
-
-        if (emptyToPickupTaxis.isEmpty()) {
-            return;
-        }
-
-        for (TaxiVehicleData taxi : emptyToPickupTaxis) {
-            TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
-            if (latestData.getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
-                continue;
-            }
-
-            //mark leg and route as started
-            Integer currentLeg = latestData.getNextLegIds().remove(0);
-            dataBaseCommunication.markLegAsStarted(currentLeg);
-            dataBaseCommunication.updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-            dataBaseCommunication.updateOrdersByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
-
-            latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
-            latestData.setCurrentLegId(currentLeg);
-        }
-    }
-
-    private void checkForNotRegisteredTaxisInDb(List<TaxiVehicleData> emptyTaxis) {
-        List<TaxiVehicleData> taxisToRegister = emptyTaxis.stream()
-            .filter(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()) > lastRegisteredTaxiDbIndex)
-            .toList();
-
-        if (taxisToRegister.isEmpty()) {
-            return;
-        }
-
-        List<Integer> idsToRegister = emptyTaxis.stream()
-            .map(taxiVehicleData -> parseMosaicVehicleIdToTaxiDbIndex(taxiVehicleData.getId()))
-            .toList();
-
-        dataBaseCommunication.setTaxiFreeStatusInDbByIds(idsToRegister);
-        lastRegisteredTaxiDbIndex += idsToRegister.size();
-
-		for (TaxiVehicleData taxiVehicleData : taxisToRegister) {
-            if (taxiVehicleData.getVehicleData() == null) {
-                throw new RuntimeException("On registering: Taxi with Veh Id %s not spawned on a free position! Vehicle data is null!".formatted(taxiVehicleData.getId()));
-            }
-
-			cabsLatestData.put(taxiVehicleData.getId(),
-				new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, null, null, null));
+		if (taxiDbIndex <= lastRegisteredTaxiDbIndex) {
+			return;
 		}
-    }
+
+		dataBaseCommunication.setTaxiFreeStatusInDbByIds(List.of(taxiDbIndex));
+		lastRegisteredTaxiDbIndex++;
+
+		if (taxi.getVehicleData() == null) {
+			throw new RuntimeException("On registering: Taxi with Mosaic Id %s not spawned on a free position! Vehicle data is null!".formatted(taxi.getId()));
+		}
+		cabsLatestData.put(taxi.getId(),
+			new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, null, null, null));
+	}
+
+	private void handleAlreadyDeliveredTaxi(TaxiVehicleData taxi) {
+		if (Integer.parseInt(taxi.getNumberOfCustomersServed()) == 0) {
+			return;
+		}
+
+		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
+
+		if (latestData.getLastStatus() == TaxiVehicleData.EMPTY_TAXIS) {
+			return;
+		}
+
+		// delivered final customer
+		// update cab's last location, route
+		dataBaseCommunication.updateRouteStatusByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
+		dataBaseCommunication.updateOrdersByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ORDER_STATUS, false);
+		latestData.setLastStatus(TaxiVehicleData.EMPTY_TAXIS);
+		latestData.getEdgesToVisit().clear();
+		latestData.setCurrentLegId(null);
+		latestData.getNextLegIds().clear();
+
+		dataBaseCommunication.setTaxiFreeStatusInDbByIds(List.of(parseMosaicVehicleIdToTaxiDbIndex(taxi.getId())));
+	}
+
+	private void handleEmptyToPickUpTaxi(TaxiVehicleData taxi) {
+		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
+
+		if (latestData.getLastStatus() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS) {
+			return;
+		}
+
+		if (latestData.getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
+			throw new RuntimeException("Status should have been set to empty before");
+		}
+
+		latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
+
+		//mark leg and route as started
+		Integer currentLeg = latestData.getNextLegIds().remove(0);
+		latestData.setCurrentLegId(currentLeg);
+
+		dataBaseCommunication.markLegAsStarted(currentLeg);
+		dataBaseCommunication.updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
+		dataBaseCommunication.updateOrdersByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
+	}
+
+	private void handleOccupiedTaxi(TaxiVehicleData taxi) {
+		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
+
+		if (latestData.getLastStatus() != TaxiVehicleData.OCCUPIED_TAXIS) {
+			latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
+		}
+
+		// taxi already delivered last customer, but have to wait for TraCI to send it with EMPTY status
+		if (latestData.getEdgesToVisit().isEmpty() && latestData.getNextLegIds().isEmpty()) {
+			return;
+		}
+
+		if (latestData.getEdgesToVisit().get(0).equals(taxi.getVehicleData().getRoadPosition().getConnectionId())) {
+			latestData.getEdgesToVisit().remove(0);
+			Integer finishedLegId = latestData.getCurrentLegId();
+
+			//set current stop as cab location and mark legs as started/completed
+			dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
+			dataBaseCommunication.markLegAsCompleted(finishedLegId);
+
+			if (latestData.getNextLegIds().isEmpty()) {
+				return;
+			}
+
+			Integer currentLegId = latestData.getNextLegIds().remove(0);
+			latestData.setCurrentLegId(currentLegId);
+			dataBaseCommunication.markLegAsStarted(currentLegId);
+		}
+	}
 
     public static int calculateDistanceInMinutesBetweenTwoStops(String fromStopEdge, String toStopEdge, RoutingModule routingModule) {
         GeoPoint startPoint = routingModule
