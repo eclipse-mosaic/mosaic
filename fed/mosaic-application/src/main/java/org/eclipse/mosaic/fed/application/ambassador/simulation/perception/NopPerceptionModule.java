@@ -15,12 +15,12 @@
 
 package org.eclipse.mosaic.fed.application.ambassador.simulation.perception;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.SpatialObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.TrafficLightObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.VehicleObject;
 import org.eclipse.mosaic.lib.database.Database;
-import org.eclipse.mosaic.lib.math.Vector3d;
-import org.eclipse.mosaic.lib.spatial.Edge;
+import org.eclipse.mosaic.lib.perception.PerceptionEgo;
+import org.eclipse.mosaic.lib.perception.objects.BuildingWall;
+import org.eclipse.mosaic.lib.perception.objects.SpatialObject;
+import org.eclipse.mosaic.lib.perception.objects.TrafficLightObject;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 
 import org.slf4j.Logger;
 
@@ -34,8 +34,8 @@ import java.util.List;
  */
 public class NopPerceptionModule extends AbstractPerceptionModule {
 
-    public NopPerceptionModule(PerceptionModuleOwner owner, Database database, Logger log) {
-        super(owner, database, log);
+    public NopPerceptionModule(PerceptionEgo ego, Database database, Logger log) {
+        super(ego, database, log);
         log.debug("No vehicle index configured, leading to disabled perception.");
     }
 
@@ -58,7 +58,7 @@ public class NopPerceptionModule extends AbstractPerceptionModule {
     }
 
     @Override
-    public Collection<Edge<Vector3d>> getSurroundingWalls() {
+    public Collection<BuildingWall> getSurroundingWalls() {
         log.debug("No wall index provider configured, leading to disabled perception.");
         return new ArrayList<>();
     }

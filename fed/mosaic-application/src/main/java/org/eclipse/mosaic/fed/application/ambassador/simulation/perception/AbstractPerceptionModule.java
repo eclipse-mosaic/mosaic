@@ -15,44 +15,43 @@
 
 package org.eclipse.mosaic.fed.application.ambassador.simulation.perception;
 
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.errormodels.PerceptionModifier;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.SpatialObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.TrafficLightObject;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.index.objects.VehicleObject;
 import org.eclipse.mosaic.fed.application.app.api.perception.PerceptionModule;
 import org.eclipse.mosaic.lib.database.Database;
-import org.eclipse.mosaic.lib.math.Vector3d;
-import org.eclipse.mosaic.lib.spatial.Edge;
+import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.PerceptionEgo;
+import org.eclipse.mosaic.lib.perception.PerceptionModifier;
+import org.eclipse.mosaic.lib.perception.objects.SpatialObject;
+import org.eclipse.mosaic.lib.perception.objects.TrafficLightObject;
+import org.eclipse.mosaic.lib.perception.objects.VehicleObject;
 
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-public abstract class AbstractPerceptionModule implements PerceptionModule<SimplePerceptionConfiguration> {
+public abstract class AbstractPerceptionModule implements PerceptionModule {
 
     private static final double DEFAULT_VIEWING_ANGLE = 40;
     private static final double DEFAULT_VIEWING_RANGE = 200;
 
-    protected final PerceptionModuleOwner owner;
+    protected final PerceptionEgo ego;
     protected final Logger log;
     protected final Database database;
 
-    protected SimplePerceptionConfiguration configuration;
+    protected PerceptionConfiguration configuration;
 
-    AbstractPerceptionModule(PerceptionModuleOwner owner, Database database, Logger log) {
-        this.owner = owner;
+    AbstractPerceptionModule(PerceptionEgo ego, Database database, Logger log) {
+        this.ego = ego;
         this.log = log;
         this.database = database;
     }
 
     @Override
-    public void enable(SimplePerceptionConfiguration configuration) {
+    public void enable(PerceptionConfiguration configuration) {
         if (configuration == null) {
             log.warn("Provided perception configuration is null. Using default configuration with viewingAngle={}°, viewingRange={}m.",
                     DEFAULT_VIEWING_ANGLE, DEFAULT_VIEWING_RANGE);
-            this.configuration = new SimplePerceptionConfiguration.Builder(DEFAULT_VIEWING_ANGLE, DEFAULT_VIEWING_ANGLE).build();
+            this.configuration = new PerceptionConfiguration.Builder(DEFAULT_VIEWING_ANGLE, DEFAULT_VIEWING_ANGLE).build();
         } else {
             this.configuration = configuration;
         }
@@ -64,7 +63,7 @@ public abstract class AbstractPerceptionModule implements PerceptionModule<Simpl
     }
 
     @Override
-    public SimplePerceptionConfiguration getConfiguration() {
+    public PerceptionConfiguration getConfiguration() {
         return this.configuration;
     }
 
@@ -116,10 +115,8 @@ public abstract class AbstractPerceptionModule implements PerceptionModule<Simpl
         //noinspection unchecked
         filteredList.replaceAll(object -> (T) object.copy());
         for (PerceptionModifier perceptionModifier : configuration.getPerceptionModifiers()) {
-            filteredList = perceptionModifier.apply(owner, filteredList); // apply filters in sequence
+            filteredList = perceptionModifier.apply(ego, filteredList); // apply filters in sequence
         }
         return filteredList;
     }
-
-    abstract public Collection<Edge<Vector3d>> getSurroundingWalls();
 }

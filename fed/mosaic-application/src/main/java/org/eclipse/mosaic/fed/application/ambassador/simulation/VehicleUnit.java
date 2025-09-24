@@ -24,7 +24,6 @@ import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.Defau
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.EnvironmentBasicSensorModule;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.NopPerceptionModule;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.PerceptionModuleOwner;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.SimplePerceptionConfiguration;
 import org.eclipse.mosaic.fed.application.app.api.CommunicationApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.navigation.NavigationModule;
@@ -59,13 +58,13 @@ import javax.annotation.Nonnull;
 /**
  * This class represents a vehicle in the application simulator.
  */
-public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperatingSystem, PerceptionModuleOwner {
+public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperatingSystem {
 
     @Nonnull
     private final RoutingNavigationModule navigationModule;
 
     @Nonnull
-    private final PerceptionModule<SimplePerceptionConfiguration> perceptionModule;
+    private final PerceptionModule perceptionModule;
 
     @Nonnull
     private final BasicSensorModule basicSensorModule;
@@ -95,11 +94,12 @@ public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperat
             database = dbRouting.getScenarioDatabase();
         }
 
-        if (SimulationKernel.SimulationKernel.getCentralPerceptionComponent().getTrafficObjectIndex() != null) {
+        final PerceptionModuleOwner owner = new PerceptionModuleOwner.VehicleUnitAdapter(this);
+        if (SimulationKernel.SimulationKernel.getCentralPerceptionComponent() != null) {
             perceptionModule = SimulationKernel.SimulationKernel.getCentralPerceptionComponent()
-                    .getTrafficObjectIndex().createPerceptionModule(this, database, getOsLog());
+                    .createPerceptionModule(owner, database, getOsLog());
         } else {
-            perceptionModule = new NopPerceptionModule(this, database, getOsLog());
+            perceptionModule = new NopPerceptionModule(owner, database, getOsLog());
         }
 
         basicSensorModule = new EnvironmentBasicSensorModule();
@@ -377,7 +377,7 @@ public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperat
 
     @Nonnull
     @Override
-    public PerceptionModule<SimplePerceptionConfiguration> getPerceptionModule() {
+    public PerceptionModule getPerceptionModule() {
         return perceptionModule;
     }
 
@@ -390,4 +390,5 @@ public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperat
     public LidarSensorModule getLidarSensorModule() {
         return lidarSensorModule;
     }
+
 }
