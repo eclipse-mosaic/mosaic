@@ -43,10 +43,10 @@ import org.eclipse.mosaic.lib.objects.communication.InterfaceConfiguration;
 import org.eclipse.mosaic.lib.objects.v2x.V2xReceiverInformation;
 import org.eclipse.mosaic.lib.util.objects.IdTransformer;
 
-import org.apache.commons.lang3.Validate;
+import com.google.protobuf.CodedInputStream;
 import org.slf4j.Logger;
 
-import java.io.DataInputStream;
+import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,7 +73,7 @@ public class ClientServerChannel {
     /**
      * Input stream from network federate.
      */
-    final private InputStream in;
+    private final CodedInputStream cin;
 
     /**
      * Output stream to network federate.
@@ -91,7 +91,10 @@ public class ClientServerChannel {
     public ClientServerChannel(InetAddress host, int port, Logger log) throws IOException {
         this.socket = new Socket(host, port);
         socket.setTcpNoDelay(true);
-        this.in = new DataInputStream(socket.getInputStream());
+        // Buffer the socket stream to reduce tiny reads and allocations
+        BufferedInputStream bin = new BufferedInputStream(socket.getInputStream(), 64 * 1024);
+        this.cin = CodedInputStream.newInstance(bin);
+        this.cin.setSizeLimit(1 * 1024 * 1024); // guardrail: 1MB per message, adjust as needed
         this.out = new DataOutputStream(socket.getOutputStream());
         // TODO: use logger
     }
@@ -107,6 +110,20 @@ public class ClientServerChannel {
     //                  Reading methods
     //####################################################################
 
+    /*
+     * Helper function to only use one single CodedInputStream (instead of building a CodedInputStream for every new read*Message call)
+     */
+    private <T> T parseDelimited(com.google.protobuf.Parser<T> parser) throws IOException {
+        int size = cin.readRawVarint32();
+        int oldLimit = cin.pushLimit(size);
+        try {
+            return parser.parseFrom(cin);
+        } finally {
+            cin.popLimit(oldLimit);
+            cin.resetSizeCounter(); // avoids cumulative sizeLimit hits
+        }
+    }
+
     /**
      * Reads a wifi message from the incoming channel.
      * TODO: ChannelID (and length) not yet treated
@@ -114,12 +131,12 @@ public class ClientServerChannel {
      * @return The read message.
      */
     public ReceiveWifiMessageRecord readReceiveWifiMessage(IdTransformer<Integer, String> idTransformer) throws IOException {
-        ReceiveWifiMessage receiveMessage = Validate.notNull(ReceiveWifiMessage.parseDelimitedFrom(in), "Could not read message body.");
-        V2xReceiverInformation recInfo = new V2xReceiverInformation(receiveMessage.getTime()).signalStrength(receiveMessage.getRssi());
+        ReceiveWifiMessage m = parseDelimited(ReceiveWifiMessage.parser());
+        V2xReceiverInformation recInfo = new V2xReceiverInformation(m.getTime()).signalStrength(m.getRssi());
         return new ReceiveWifiMessageRecord(
-                receiveMessage.getTime(),
-                idTransformer.fromExternalId(receiveMessage.getNodeId()),
-                receiveMessage.getMessageId(),
+                m.getTime(),
+                idTransformer.fromExternalId(m.getNodeId()),
+                m.getMessageId(),
                 recInfo
         );
     }
@@ -131,11 +148,11 @@ public class ClientServerChannel {
      * @return The read message.
      */
     public ReceiveCellMessageRecord readReceiveCellMessage(IdTransformer<Integer, String> idTransformer) throws IOException {
-        ReceiveCellMessage msg = Validate.notNull(ReceiveCellMessage.parseDelimitedFrom(in), "Could not read message body.");
+        ReceiveCellMessage m = parseDelimited(ReceiveCellMessage.parser());
         return new ReceiveCellMessageRecord(
-                msg.getTime(),
-                idTransformer.fromExternalId(msg.getNodeId()),
-                msg.getMessageId()
+                m.getTime(),
+                idTransformer.fromExternalId(m.getNodeId()),
+                m.getMessageId()
         );
     }
 
@@ -145,8 +162,8 @@ public class ClientServerChannel {
      * @return the read port as int
      */
     public int readPortBody() throws IOException {
-        PortExchange portExchange = Validate.notNull(PortExchange.parseDelimitedFrom(in), "Could not read port.");
-        return portExchange.getPortNumber();
+        PortExchange m = parseDelimited(PortExchange.parser());
+        return m.getPortNumber();
     }
 
     /**
@@ -155,8 +172,8 @@ public class ClientServerChannel {
      * @return the read time as long
      */
     public long readTimeBody() throws IOException {
-        TimeMessage timeMessage = Validate.notNull(TimeMessage.parseDelimitedFrom(in), "Could not read time.");
-        return timeMessage.getTime();
+        TimeMessage m = parseDelimited(TimeMessage.parser());
+        return m.getTime();
     }
 
     /**
@@ -165,8 +182,8 @@ public class ClientServerChannel {
      * @return the read command
      */
     public CommandType readCommand() throws IOException {
-        CommandMessage commandMessage = Validate.notNull(CommandMessage.parseDelimitedFrom(in), "Could not read command.");
-        return commandMessage.getCommandType();
+        CommandMessage m = parseDelimited(CommandMessage.parser());
+        return m.getCommandType();
     }
 
     //####################################################################
