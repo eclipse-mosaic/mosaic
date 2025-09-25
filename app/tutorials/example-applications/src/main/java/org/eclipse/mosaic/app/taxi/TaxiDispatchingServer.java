@@ -110,6 +110,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 				}
 				case TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS -> handleEmptyToPickUpTaxi(taxi);
 				case TaxiVehicleData.OCCUPIED_TAXIS -> handleOccupiedTaxi(taxi);
+				case TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS -> handleOccupiedToPickUpTaxi(taxi);
 			}
 		}
 
@@ -227,6 +228,27 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			if (latestData.getNextLegIds().isEmpty()) {
 				return;
 			}
+
+			Integer currentLegId = latestData.getNextLegIds().remove(0);
+			latestData.setCurrentLegId(currentLegId);
+			dataBaseCommunication.markLegAsStarted(currentLegId);
+		}
+	}
+
+	private void handleOccupiedToPickUpTaxi(TaxiVehicleData taxi) {
+		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
+
+		if (latestData.getLastStatus() != TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS) {
+			latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS);
+		}
+
+		if (latestData.getEdgesToVisit().get(0).equals(taxi.getVehicleData().getRoadPosition().getConnectionId())) {
+			latestData.getEdgesToVisit().remove(0);
+			Integer finishedLegId = latestData.getCurrentLegId();
+
+			//set current stop as cab location and mark legs as started/completed
+			dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
+			dataBaseCommunication.markLegAsCompleted(finishedLegId);
 
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);

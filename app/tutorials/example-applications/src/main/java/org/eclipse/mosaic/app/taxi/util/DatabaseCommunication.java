@@ -495,20 +495,19 @@ public class DatabaseCommunication {
 					.filter(o -> o.fromStand == leg.fromStand)
 					.map(o -> o.sumoId)
 					.forEach(sequence::add);
-				continue;
+			} else {
+				// Pickups
+				orders.stream()
+					.filter(o -> o.fromStand == leg.fromStand)
+					.map(o -> o.sumoId)
+					.forEach(sequence::add);
+
+				// Dropoffs at this fromStand
+				orders.stream()
+					.filter(o -> o.toStand == leg.fromStand)
+					.map(o -> o.sumoId)
+					.forEach(sequence::add);
 			}
-
-			// Pickups
-			orders.stream()
-				.filter(o -> o.fromStand == leg.fromStand)
-				.map(o -> o.sumoId)
-				.forEach(sequence::add);
-
-			// Dropoffs at this fromStand
-			orders.stream()
-				.filter(o -> o.toStand == leg.fromStand)
-				.map(o -> o.sumoId)
-				.forEach(sequence::add);
 
 			// Last leg → dropoffs at final toStand
 			if (i == legs.size() - 1) {
@@ -519,7 +518,7 @@ public class DatabaseCommunication {
 			}
 		}
 
-		if (sequence.size() % 2 != 0) {
+		if (sequence.size() % 2 != 0 || sequence.size() < 4) {
 			throw new IllegalStateException("Odd dispatch sequence: " + sequence);
 		}
 
