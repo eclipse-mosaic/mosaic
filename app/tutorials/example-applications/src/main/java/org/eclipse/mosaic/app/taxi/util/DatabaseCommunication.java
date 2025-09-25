@@ -176,7 +176,6 @@ public class DatabaseCommunication {
 	}
 
 	public void markLegAsCompleted(Integer legId) {
-		//todo: fix case when one reservation is completed during the drop-off
 		String sql = "UPDATE leg SET completed = ?, status = ? WHERE id = ?";
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
@@ -519,7 +518,7 @@ public class DatabaseCommunication {
 		}
 
 		if (sequence.size() % 2 != 0 || sequence.size() < 4) {
-			throw new IllegalStateException("Odd dispatch sequence: " + sequence);
+			throw new IllegalStateException("Wrong dispatch sequence: " + sequence);
 		}
 
 		return sequence;
