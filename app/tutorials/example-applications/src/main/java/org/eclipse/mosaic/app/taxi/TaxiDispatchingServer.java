@@ -149,7 +149,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			return;
 		}
 
-		dataBaseCommunication.setTaxiFreeStatusInDbByIds(List.of(taxiDbIndex));
+		dataBaseCommunication.setTaxiFreeStatusInDbById(taxiDbIndex);
 		lastRegisteredTaxiDbIndex++;
 
 		if (taxi.getVehicleData() == null) {
@@ -179,7 +179,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		latestData.setCurrentLegId(null);
 		latestData.getNextLegIds().clear();
 
-		dataBaseCommunication.setTaxiFreeStatusInDbByIds(List.of(parseMosaicVehicleIdToTaxiDbIndex(taxi.getId())));
+		dataBaseCommunication.setTaxiFreeStatusInDbById(parseMosaicVehicleIdToTaxiDbIndex(taxi.getId()));
 	}
 
 	private void handleEmptyToPickUpTaxi(TaxiVehicleData taxi) {
