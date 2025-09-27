@@ -20,27 +20,17 @@ import org.eclipse.mosaic.app.taxi.util.TaxiDispatchData;
 import org.eclipse.mosaic.app.taxi.util.TaxiLatestData;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.TaxiServerApplication;
-import org.eclipse.mosaic.fed.application.app.api.navigation.RoutingModule;
 import org.eclipse.mosaic.fed.application.app.api.os.ServerOperatingSystem;
 import org.eclipse.mosaic.interactions.application.TaxiDispatch;
-import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
-import org.eclipse.mosaic.lib.routing.RoutingParameters;
-import org.eclipse.mosaic.lib.routing.RoutingPosition;
-import org.eclipse.mosaic.lib.routing.RoutingResponse;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
 import static org.eclipse.mosaic.app.taxi.util.Constants.*;
-import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.executePythonScripts;
-import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.startDispatcher;
+import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.*;
 import static org.eclipse.mosaic.app.taxi.util.ParserUtil.parseMosaicVehicleIdToTaxiDbIndex;
 
 public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSystem> implements TaxiServerApplication {
@@ -51,8 +41,8 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 	private static final String PATH_TO_DISPATCHER_WINDOWS = "/PUT/YOUR/PATH/HERE";
 
     // DISPATCHER CONFIGS
-    public static final int ORDER_MAX_DETOUR_IN_PERCENTAGE_DISPATCHER_CONFIG = 70;
-    public static final int ORDER_MAX_WAIT_IN_MINUTES_DISPATCHER_CONFIG = 10;
+    public static final int TAXI_ORDER_MAX_DETOUR_IN_PERCENTAGE = 70;
+    public static final int TAXI_ORDER_MAX_WAIT_IN_MINUTES = 10;
 
     // FLAGS
 	private static final boolean EXECUTE_PYTHON_SCRIPTS_AND_TERMINATE = false;
@@ -78,12 +68,12 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			System.exit(0);
 		}
 
-        dataBaseCommunication = new DatabaseCommunication(getLog());
+        dataBaseCommunication = new DatabaseCommunication(getLog(), getOs().getRoutingModule());
         dataBaseCommunication.checkTablesState(NOT_EMPTY_TABLES, false);
         dataBaseCommunication.checkTablesState(EMPTY_TABLES, true);
 
 		if (CREATE_DISTANCES_FILE_AND_TERMINATE) {
-			createFileWithDistancesInMinutesBetweenStops();
+			createFileWithDistanceInMinutesBetweenStops(PATH_TO_DISPATCHER_WINDOWS, dataBaseCommunication.fetchAllBusStops(), getOs().getRoutingModule());
 			System.exit(0);
 		}
 
@@ -122,7 +112,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
             .toList();
 
         if (!unassignedReservations.isEmpty()) {
-            lastSavedReservationMosaicIndex += dataBaseCommunication.insertNewReservationsInDb(unassignedReservations, getOs().getRoutingModule());
+            lastSavedReservationMosaicIndex += dataBaseCommunication.insertNewReservationsInDb(unassignedReservations);
         }
 
         List<TaxiDispatchData> taxiDispatchDataList = dataBaseCommunication.fetchTaxiDispatchDataAndUpdateLatestData(cabsLatestData);
@@ -253,77 +243,6 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);
 			dataBaseCommunication.markLegAsStarted(currentLegId);
-		}
-	}
-
-    public static int calculateDistanceInMinutesBetweenTwoStops(String fromStopEdge, String toStopEdge, RoutingModule routingModule) {
-        GeoPoint startPoint = routingModule
-            .getConnection(fromStopEdge)
-            .getStartNode()
-            .getPosition();
-        GeoPoint finalPoint = routingModule
-            .getConnection(toStopEdge)
-            .getEndNode()
-            .getPosition();
-
-        RoutingResponse response = routingModule.calculateRoutes(
-            new RoutingPosition(startPoint),
-            new RoutingPosition(finalPoint),
-            new RoutingParameters());
-        double timeInMinutes = Math.ceil(response.getBestRoute().getTime() / 60);
-
-        return (int) timeInMinutes;
-    }
-
-	private void createFileWithDistancesInMinutesBetweenStops() {
-		if (PATH_TO_DISPATCHER_WINDOWS.endsWith("/PUT/YOUR/PATH/HERE")) {
-			throw new IllegalStateException("Path to dispatcher is not set");
-		}
-
-		List<String> edges = dataBaseCommunication.fetchAllBusStopEdgeIds();
-		File file = new File(PATH_TO_DISPATCHER_WINDOWS, "distances.txt");
-
-		long start = System.currentTimeMillis();
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
-			writeDistanceMatrixHeader(writer, edges.size());
-			writeDistanceMatrix(writer, edges);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		long finish = System.currentTimeMillis();
-		System.out.printf("Distances file created! Time elapsed: %s ms%n", finish - start);
-	}
-
-	private void writeDistanceMatrixHeader(BufferedWriter writer, int edgesSum) throws IOException {
-		// first element is total count of bus stops + 1
-		// because Kern is implemented to start from 0 when handling IDs and here they start from 1
-		writer.append(String.valueOf(edgesSum + 1)).append("\n");
-	}
-
-	private void writeDistanceMatrix(BufferedWriter writer, List<String> edges) throws IOException {
-		// Kern takes also stops with id=0, so we should fill the matrix here with an irrelevant value
-		for (int i = 0; i < edges.size() + 1; i++) {
-			for (int j = 0; j < edges.size() + 1; j++) {
-				if (i == 0 || j == 0) {
-					writer.append("10000");
-				}
-				else if (i == j) {
-					writer.append("0");
-				}
-				else {
-					writer.append(String.valueOf(
-						calculateDistanceInMinutesBetweenTwoStops(edges.get(i - 1), edges.get(j - 1),
-							getOs().getRoutingModule())));
-				}
-
-				if (j == edges.size()) {
-					writer.append("\n");
-					continue;
-				}
-
-				writer.append(",");
-			}
 		}
 	}
 }

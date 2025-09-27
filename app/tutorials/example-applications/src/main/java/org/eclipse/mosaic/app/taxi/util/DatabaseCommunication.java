@@ -24,17 +24,21 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.eclipse.mosaic.app.taxi.TaxiDispatchingServer.*;
+import static org.eclipse.mosaic.app.taxi.TaxiDispatchingServer.TAXI_ORDER_MAX_DETOUR_IN_PERCENTAGE;
+import static org.eclipse.mosaic.app.taxi.TaxiDispatchingServer.TAXI_ORDER_MAX_WAIT_IN_MINUTES;
 import static org.eclipse.mosaic.app.taxi.util.Constants.*;
+import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.calculateDistanceInMinutesBetweenTwoStops;
 import static org.eclipse.mosaic.app.taxi.util.ParserUtil.*;
 
 public class DatabaseCommunication {
 
 	private final UnitLogger unitLogger;
+	private final RoutingModule routingModule;
 	private Connection dbConnection;
 
-	public DatabaseCommunication(UnitLogger unitLogger) {
+	public DatabaseCommunication(UnitLogger unitLogger, RoutingModule routingModule) {
 		this.unitLogger = unitLogger;
+		this.routingModule = routingModule;
 		connectToDatabase();
 	}
 
@@ -92,7 +96,7 @@ public class DatabaseCommunication {
 			.map(id -> "?")
 			.collect(Collectors.joining(", "));
 
-		String sql = "UPDATE taxi_order SET status = ? WHERE id IN (" + placeholders + ")";
+		String sql = "UPDATE taxi_order SET status = ? WHERE id IN (%s)".formatted(placeholders);
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			ps.setInt(1, DISPATCHER_ACCEPTED_ORDER_STATUS);
@@ -191,18 +195,21 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public List<String> fetchAllBusStopEdgeIds() {
-		String sql = "SELECT sumo_edge FROM stop";
-		List<String> busStopEdgeIds = new ArrayList<>();
+	public List<BusStop> fetchAllBusStops() {
+		String sql = "SELECT id, sumo_edge, latitude, longitude FROM stop";
+		List<BusStop> busStops = new ArrayList<>();
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql);
 			ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
-				busStopEdgeIds.add(rs.getString("sumo_edge"));
+				BusStop busStop = new BusStop(rs.getLong("id"), rs.getString("sumo_edge"),
+					rs.getDouble("latitude"), rs.getDouble("longitude"));
+
+				busStops.add(busStop);
 			}
 
-			if (busStopEdgeIds.isEmpty()) {
+			if (busStops.isEmpty()) {
 				throw new IllegalStateException("No bus stops found in the DB!");
 			}
 
@@ -210,25 +217,28 @@ public class DatabaseCommunication {
 			unitLogger.error("Could not fetch bus stop edges", e);
 		}
 
-		return busStopEdgeIds;
+		return busStops;
 	}
 
-	private List<Integer> fetchBusStopsIndicesByEdge(String fromEdgeId, String toEdgeId) {
-		String sql = "SELECT id, sumo_edge FROM stop WHERE sumo_edge IN (?, ?)";
+	private List<BusStop> fetchBusStopsByEdge(String fromEdgeId, String toEdgeId) {
+		String sql = "SELECT id, sumo_edge, latitude, longitude FROM stop WHERE sumo_edge IN (?, ?)";
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			ps.setString(1, fromEdgeId);
 			ps.setString(2, toEdgeId);
 
-			Map<String, Integer> stopByEdge = new HashMap<>();
+			Map<String, BusStop> stopByEdge = new HashMap<>();
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					stopByEdge.put(rs.getString("sumo_edge"), rs.getInt("id"));
+					BusStop busStop = new BusStop(rs.getLong("id"), rs.getString("sumo_edge"),
+						rs.getDouble("latitude"), rs.getDouble("longitude"));
+
+					stopByEdge.put(busStop.sumoEdge(), busStop);
 				}
 			}
 
-			Integer fromStop = stopByEdge.get(fromEdgeId);
-			Integer toStop = stopByEdge.get(toEdgeId);
+			BusStop fromStop = stopByEdge.get(fromEdgeId);
+			BusStop toStop = stopByEdge.get(toEdgeId);
 
 			if (fromStop == null || toStop == null) {
 				throw new IllegalStateException("Did not fetch both bus stops for edges %s and %s"
@@ -300,7 +310,7 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public int insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations, RoutingModule routingModule) {
+	public int insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations) {
 		if (newTaxiReservations.isEmpty()) {
 			return 0;
 		}
@@ -308,12 +318,12 @@ public class DatabaseCommunication {
 		String sql = """
 			INSERT INTO taxi_order (
 				from_stand, to_stand, max_loss, max_wait, shared,
-				status, received, distance, customer_id, sumo_id
-			) VALUES (?, ?, ?, ?, true, ?, ?, ?, ?, ?)
+				status, received, distance, customer_id, sumo_id, distance_seconds
+			) VALUES (?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?)
 		""";
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			for (TaxiReservation reservation: newTaxiReservations) {
-				prepareInsertReservationStatement(ps, reservation, routingModule);
+				prepareInsertReservationStatement(ps, reservation);
 				ps.addBatch();
 			}
 
@@ -333,26 +343,30 @@ public class DatabaseCommunication {
 		}
 	}
 
-	private void prepareInsertReservationStatement(PreparedStatement ps, TaxiReservation reservation, RoutingModule routingModule)
+	private void prepareInsertReservationStatement(PreparedStatement ps, TaxiReservation reservation)
 		throws SQLException {
-		List<Integer> busStops = fetchBusStopsIndicesByEdge(reservation.getFromEdge(), reservation.getToEdge());
+		List<BusStop> busStops = fetchBusStopsByEdge(reservation.getFromEdge(), reservation.getToEdge());
 		if (busStops.size() != 2) {
 			throw new IllegalArgumentException("Expected 2 bus stops, got " + busStops.size());
 		}
 
-		ps.setInt(1, busStops.get(0));
-		ps.setInt(2, busStops.get(1));
-		ps.setInt(3, ORDER_MAX_DETOUR_IN_PERCENTAGE_DISPATCHER_CONFIG);
-		ps.setInt(4, ORDER_MAX_WAIT_IN_MINUTES_DISPATCHER_CONFIG);
+		ps.setInt(1, (int) busStops.get(0).id());
+		ps.setInt(2, (int) busStops.get(1).id());
+		ps.setInt(3, TAXI_ORDER_MAX_DETOUR_IN_PERCENTAGE);
+		ps.setInt(4, TAXI_ORDER_MAX_WAIT_IN_MINUTES);
 		ps.setInt(5, DISPATCHER_RECEIVED_ORDER_STATUS);
 		ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-		ps.setInt(7, calculateDistanceInMinutesBetweenTwoStops(
-			reservation.getFromEdge(),
-			reservation.getToEdge(),
+
+		DistanceBetweenStops distanceBetweenStops = calculateDistanceInMinutesBetweenTwoStops(
+			busStops.get(0),
+			busStops.get(1),
 			routingModule
-		));
+		);
+
+		ps.setInt(7, distanceBetweenStops.getDistanceInMinutes());
 		ps.setLong(8, parsePerson(reservation.getPersonList()));
 		ps.setLong(9, Long.parseLong(reservation.getId()));
+		ps.setInt(10, (int) Math.ceil(distanceBetweenStops.distanceSeconds()));
 	}
 
 	private void initializeCabLatestData(List<Long> orderIds, HashMap<String, TaxiLatestData> cabsLatestData) {
@@ -465,14 +479,8 @@ public class DatabaseCommunication {
 
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					orders.add(new TaxiOrder(
-						rs.getLong("id"),
-						-1,
-						-1,
-						rs.getLong("route_id"),
-						"",
-						rs.getLong("cab_id")
-					));
+					orders.add(
+						new TaxiOrder(rs.getLong("id"), -1, -1, rs.getLong("route_id"), "", rs.getLong("cab_id")));
 				}
 			}
 		} catch (SQLException e) {
@@ -495,20 +503,20 @@ public class DatabaseCommunication {
 					.map(o -> o.sumoId)
 					.forEach(sequence::add);
 			} else {
-				// Pickups
+				// Pick-ups
 				orders.stream()
 					.filter(o -> o.fromStand == leg.fromStand)
 					.map(o -> o.sumoId)
 					.forEach(sequence::add);
 
-				// Dropoffs at this fromStand
+				// Drop-offs at this fromStand
 				orders.stream()
 					.filter(o -> o.toStand == leg.fromStand)
 					.map(o -> o.sumoId)
 					.forEach(sequence::add);
 			}
 
-			// Last leg → dropoffs at final toStand
+			// Last leg → drop-offs at final toStand
 			if (i == legs.size() - 1) {
 				orders.stream()
 					.filter(o -> o.toStand == leg.toStand)
@@ -536,14 +544,8 @@ public class DatabaseCommunication {
 			ps.setLong(1, DISPATCHER_ASSIGNED_ORDER_STATUS);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					taxiOrders.add(new TaxiOrder(
-						rs.getLong("id"),
-						rs.getInt("from_stand"),
-						rs.getInt("to_stand"),
-						rs.getLong("route_id"),
-						rs.getString("sumo_id"),
-						rs.getLong("cab_id")
-					));
+					taxiOrders.add(new TaxiOrder(rs.getLong("id"), rs.getInt("from_stand"), rs.getInt("to_stand"),
+						rs.getLong("route_id"), rs.getString("sumo_id"), rs.getLong("cab_id")));
 				}
 			}
 		} catch(SQLException e) {

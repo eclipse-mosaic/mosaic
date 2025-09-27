@@ -16,9 +16,16 @@
 package org.eclipse.mosaic.app.taxi.util;
 
 import org.eclipse.mosaic.fed.application.ambassador.util.UnitLogger;
+import org.eclipse.mosaic.fed.application.app.api.navigation.RoutingModule;
+import org.eclipse.mosaic.lib.enums.VehicleClass;
+import org.eclipse.mosaic.lib.geo.GeoPoint;
+import org.eclipse.mosaic.lib.routing.RoutingParameters;
+import org.eclipse.mosaic.lib.routing.RoutingPosition;
+import org.eclipse.mosaic.lib.routing.RoutingResponse;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class ExternalFilesUtil {
 
@@ -127,5 +134,71 @@ public class ExternalFilesUtil {
 
 	private static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase().contains("win");
+	}
+
+	public static void createFileWithDistanceInMinutesBetweenStops(String pathToDispatcherWindows, List<BusStop> busStops, RoutingModule routingModule) {
+		if (pathToDispatcherWindows.endsWith("/PUT/YOUR/PATH/HERE")) {
+			throw new IllegalStateException("Path to dispatcher is not set");
+		}
+
+		File file = new File(pathToDispatcherWindows, "distances.txt");
+
+		long start = System.currentTimeMillis();
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
+			writeDistanceMatrixHeader(writer, busStops.size());
+			writeDistanceMatrixBody(writer, busStops, routingModule);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		long finish = System.currentTimeMillis();
+		System.out.printf("Distances file created! Time elapsed: %s ms%n", finish - start);
+	}
+
+	private static void writeDistanceMatrixHeader(BufferedWriter writer, int edgesSum) throws IOException {
+		// first element is total count of bus stops + 1
+		// because Kern is implemented to start from 0 when handling IDs and here they start from 1
+		writer.append(String.valueOf(edgesSum + 1)).append("\n");
+	}
+
+	private static void writeDistanceMatrixBody(BufferedWriter writer, List<BusStop> busStops, RoutingModule routingModule) throws IOException {
+		// Kern takes also stops with id=0, so we should fill the matrix here with an irrelevant value
+		for (int i = 0; i < busStops.size() + 1; i++) {
+			for (int j = 0; j < busStops.size() + 1; j++) {
+				if (i == 0 || j == 0) {
+					writer.append("10000");
+				}
+				else if (i == j) {
+					writer.append("0");
+				}
+				else {
+					DistanceBetweenStops distanceBetweenStops = calculateDistanceInMinutesBetweenTwoStops(
+						busStops.get(i - 1), busStops.get(j - 1),
+						routingModule
+					);
+
+					writer.append(String.valueOf(distanceBetweenStops.getDistanceInMinutes()));
+				}
+
+				if (j == busStops.size()) {
+					writer.append("\n");
+					continue;
+				}
+
+				writer.append(",");
+			}
+		}
+	}
+
+	public static DistanceBetweenStops calculateDistanceInMinutesBetweenTwoStops(BusStop fromStop, BusStop toStop, RoutingModule routingModule) {
+		GeoPoint startPoint = GeoPoint.latLon(fromStop.latitude(), fromStop.longitude());
+		GeoPoint finalPoint = GeoPoint.latLon(toStop.latitude(), toStop.longitude());
+
+		RoutingResponse response = routingModule.calculateRoutes(
+			new RoutingPosition(startPoint),
+			new RoutingPosition(finalPoint),
+			new RoutingParameters().vehicleClass(VehicleClass.Taxi));
+
+		return new DistanceBetweenStops(response.getBestRoute().getTime(), response.getBestRoute().getLength());
 	}
 }
