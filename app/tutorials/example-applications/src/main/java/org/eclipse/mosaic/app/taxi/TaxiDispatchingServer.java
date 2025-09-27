@@ -163,8 +163,9 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
 		// delivered final customer
 		// update cab's last location, route
+		dataBaseCommunication.markLegAsCompleted(latestData.getCurrentLegId());
 		dataBaseCommunication.updateRouteStatusByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-		dataBaseCommunication.updateOrdersByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ORDER_STATUS, false);
+		dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(latestData.getCurrentLegId());
 		latestData.setLastStatus(TaxiVehicleData.EMPTY_TAXIS);
 		latestData.getEdgesToVisit().clear();
 		latestData.setCurrentLegId(null);
@@ -192,7 +193,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
 		dataBaseCommunication.markLegAsStarted(currentLeg);
 		dataBaseCommunication.updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-		dataBaseCommunication.updateOrdersByLegId(currentLeg, DISPATCHER_PICKEDUP_ORDER_STATUS, true);
+		dataBaseCommunication.markOrdersAsStartedByLegId(currentLeg);
 	}
 
 	private void handleOccupiedTaxi(TaxiVehicleData taxi) {
@@ -211,13 +212,18 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			latestData.getEdgesToVisit().remove(0);
 			Integer finishedLegId = latestData.getCurrentLegId();
 
-			//set current stop as cab location and mark legs as started/completed
+			// set current stop as cab location
 			dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
-			dataBaseCommunication.markLegAsCompleted(finishedLegId);
 
+			// if this was the last leg, it will be updated in the handleAlreadyDeliveredTaxi method
 			if (latestData.getNextLegIds().isEmpty()) {
 				return;
 			}
+
+			// mark legs as started/completed;
+			// check if it is the final leg of an order and mark as completed as well
+			dataBaseCommunication.markLegAsCompleted(finishedLegId);
+			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId);
 
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);
@@ -236,9 +242,11 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			latestData.getEdgesToVisit().remove(0);
 			Integer finishedLegId = latestData.getCurrentLegId();
 
-			//set current stop as cab location and mark legs as started/completed
+			// set current stop as cab location and mark legs as started/completed;
+			// check if it is the final leg of an order and mark as completed as well
 			dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
 			dataBaseCommunication.markLegAsCompleted(finishedLegId);
+			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId);
 
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);

@@ -114,22 +114,42 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public void updateOrdersByLegId(long legId, int status, boolean isStarted) {
-		String dbField = isStarted ? "started" : "completed";
-		String sql = "UPDATE taxi_order " +
-			"SET " + dbField + " = ?, status = ? " +
-			"WHERE route_id = (SELECT route_id FROM leg WHERE leg.id = ?)";
+	public void markOrdersAsStartedByLegId(long legId) {
+		String sql = """
+			UPDATE taxi_order
+			SET started = ?, status = ?
+			WHERE route_id = (SELECT route_id FROM leg WHERE leg.id = ?)
+			""";
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-			ps.setInt(2, status);
+			ps.setInt(2, DISPATCHER_PICKEDUP_ORDER_STATUS);
 			ps.setLong(3, legId);
 
 			if (ps.executeUpdate() < 1) {
-				throw new RuntimeException("No orders updated for legId=%s with status=%s".formatted(legId, status));
+				throw new RuntimeException("No orders updated for legId=%s with status=%s".formatted(legId, DISPATCHER_PICKEDUP_ORDER_STATUS));
 			}
 		} catch (SQLException e) {
 			unitLogger.error("Error while updating orders by leg ID {}", legId, e);
+		}
+	}
+
+	public void markOrderAsCompletedForLegIdIfFinal(long legId) {
+		String sql = """
+			UPDATE taxi_order o
+			JOIN leg l ON o.route_id = l.route_id AND o.to_stand = l.to_stand
+			SET o.completed = ?, o.status = ?
+			WHERE l.id = ?;
+			""";
+
+		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
+			ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+			ps.setInt(2, DISPATCHER_COMPLETED_ORDER_STATUS);
+			ps.setLong(3, legId);
+
+			ps.executeUpdate();
+		} catch(SQLException e) {
+			unitLogger.error("Error while setting order status to COMPLETED", e);
 		}
 	}
 
@@ -262,7 +282,7 @@ public class DatabaseCommunication {
         	SELECT id, sumo_edge
         	FROM stop
         	WHERE id IN (%s)
-        """.formatted(placeholders);
+        	""".formatted(placeholders);
 
 		Map<String, String> edgesById = new HashMap<>();
 
@@ -320,7 +340,7 @@ public class DatabaseCommunication {
 				from_stand, to_stand, max_loss, max_wait, shared,
 				status, received, distance, customer_id, sumo_id, distance_seconds
 			) VALUES (?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?)
-		""";
+			""";
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			for (TaxiReservation reservation: newTaxiReservations) {
 				prepareInsertReservationStatement(ps, reservation);
@@ -467,7 +487,7 @@ public class DatabaseCommunication {
         	SELECT id, route_id, cab_id
         	FROM taxi_order
         	WHERE id IN (%s)
-        """.formatted(placeholders);
+        	""".formatted(placeholders);
 
 		List<TaxiOrder> orders = new ArrayList<>();
 
@@ -537,7 +557,7 @@ public class DatabaseCommunication {
 			SELECT id, from_stand, to_stand, route_id, sumo_id, cab_id
 			FROM taxi_order
 			WHERE status = ?
-		""";
+			""";
 
 		List<TaxiOrder> taxiOrders = new ArrayList<>();
 		try (PreparedStatement ps = dbConnection.prepareStatement(sqlOrders)) {
@@ -568,7 +588,7 @@ public class DatabaseCommunication {
 			FROM leg
 			WHERE route_id IN (%s)
 			ORDER BY route_id, id
-		""".formatted(placeholders);
+			""".formatted(placeholders);
 
 		Map<Long, List<Leg>> legsByRoute = new HashMap<>();
 
