@@ -15,7 +15,7 @@ def main(scenario_name: str):
     global my_db_connection
 
     # === Parse the rou.xml file ===
-    rou_file = "../{0}/sumo/{0}.rou.xml".format(scenario_name)
+    rou_file = "../{0}/sumo/{0}.persons.rou.xml".format(scenario_name)
     rou_tree = etree.parse(rou_file)
 
     setupTables.setup_db_connection()

@@ -17,7 +17,7 @@ def main(scenario_name: str):
     print("Executing script:", os.path.basename(__file__))
     global my_db_connection, TAXI_CAPACITY
     # === Parse the rou.xml file ===
-    rou_file = "../{0}/sumo/{0}.rou.xml".format(scenario_name)
+    rou_file = "../{0}/sumo/{0}.pt.rou.xml".format(scenario_name)
     rou_tree = etree.parse(rou_file)
 
     setupTables.setup_db_connection()
@@ -28,7 +28,7 @@ def main(scenario_name: str):
             TAXI_CAPACITY = vehicleType.attrib["personCapacity"]
             break
 
-    # === Parse persons and add them to the DB ===
+    # === Parse cabs and add them to the DB ===
     for cab in rou_tree.findall(".//vehicle"):
         cab_sumo_id = cab.attrib["id"]
         add_cab_to_db(cab_sumo_id)
