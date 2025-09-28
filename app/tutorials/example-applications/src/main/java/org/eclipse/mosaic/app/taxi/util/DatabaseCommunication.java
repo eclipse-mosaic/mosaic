@@ -518,10 +518,12 @@ public class DatabaseCommunication {
 
 			// First leg-> only pick-ups
 			if (i == 0) {
-				orders.stream()
-					.filter(o -> o.fromStand == leg.fromStand)
-					.map(o -> o.sumoId)
-					.forEach(sequence::add);
+				if (leg.passengers > 0) {
+					orders.stream()
+						.filter(o -> o.fromStand == leg.fromStand)
+						.map(o -> o.sumoId)
+						.forEach(sequence::add);
+				}
 			} else {
 				// Pick-ups
 				orders.stream()
@@ -604,6 +606,7 @@ public class DatabaseCommunication {
 						rs.getLong("id"),
 						rs.getInt("from_stand"),
 						rs.getInt("to_stand"),
+						rs.getInt("passengers"),
 						rs.getLong("route_id")
 					);
 
@@ -641,12 +644,14 @@ public class DatabaseCommunication {
 		long id;
 		int fromStand;
 		int toStand;
+		int passengers;
 		long routeId;
 
-		public Leg(long id, int fromStand, int toStand, long routeId) {
+		public Leg(long id, int fromStand, int toStand, int passengers, long routeId) {
 			this.id = id;
 			this.fromStand = fromStand;
 			this.toStand = toStand;
+			this.passengers = passengers;
 			this.routeId = routeId;
 		}
 	}

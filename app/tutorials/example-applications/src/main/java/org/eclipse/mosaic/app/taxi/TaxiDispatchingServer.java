@@ -57,6 +57,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
     // GLOBAL VARIABLES
     private final HashMap<String, TaxiLatestData> cabsLatestData = new HashMap<>();
+	private final HashMap<String, String> pendingDispatches = new HashMap<>();
     private int lastRegisteredTaxiDbIndex = 0;
     private int lastSavedReservationMosaicIndex = -1;
     private DatabaseCommunication dataBaseCommunication;
@@ -93,6 +94,18 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
     public void onTaxiDataUpdate(List<TaxiVehicleData> taxis, List<TaxiReservation> taxiReservations) {
 
 		for (TaxiVehicleData taxi : taxis) {
+
+			// make sure that SUMO has executed the dispatch command
+			if (pendingDispatches.containsKey(taxi.getId())) {
+				if (taxi.getState() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS ||
+					taxi.getState() == TaxiVehicleData.OCCUPIED_TAXIS) {
+					getLog().info("Dispatch confirmed for vehicle '{}'", taxi.getId());
+					pendingDispatches.remove(taxi.getId());
+				} else {
+					getLog().warn("Still no dispatch for vehicle '{}'", taxi.getId());
+				}
+			}
+
 			switch (taxi.getState()) {
 				case TaxiVehicleData.EMPTY_TAXIS -> {
 					handleNotRegisteredTaxiInDb(taxi);
@@ -124,6 +137,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
                 getOs().sendInteractionToRti(
                     new TaxiDispatch(getOs().getSimulationTime(), taxiDispatchData.taxiId(), taxiDispatchData.reservationIds())
                 );
+				pendingDispatches.put(taxiDispatchData.taxiId(), "PENDING");
             }
         }
     }
