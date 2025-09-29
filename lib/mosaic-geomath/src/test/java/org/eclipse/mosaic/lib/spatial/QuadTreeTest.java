@@ -49,6 +49,7 @@ public class QuadTreeTest {
     public void addObject_Success() {
         assertTrue(tree.addItem(new Vector3d(5, 0, 5)));
         assertEquals(1, tree.getSize());
+        assertEquals(1, tree.getAllObjects().size());
     }
 
     @Test
@@ -56,14 +57,17 @@ public class QuadTreeTest {
         Vector3d element = new Vector3d(5, 0, 5);
         assertTrue(tree.addItem(element));
         assertEquals(1, tree.getSize());
+        assertEquals(1, tree.getAllObjects().size());
         tree.removeObject(element);
         assertEquals(0, tree.getSize());
+        assertEquals(0, tree.getAllObjects().size());
     }
 
     @Test
     public void addObject_Failure() {
         assertFalse(tree.addItem(new Vector3d(-10, 0, -10)));
         assertEquals(0, tree.getSize());
+        assertEquals(0, tree.getAllObjects().size());
     }
 
     @Test
