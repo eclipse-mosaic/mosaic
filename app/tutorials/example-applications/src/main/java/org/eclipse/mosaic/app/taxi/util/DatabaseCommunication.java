@@ -400,7 +400,7 @@ public class DatabaseCommunication {
 		}
 
 		Map<Long, List<TaxiOrder>> ordersByRoute =
-			orders.stream().collect(Collectors.groupingBy(o -> o.routeId));
+			orders.stream().collect(Collectors.groupingBy(TaxiOrder::routeId));
 
 		Map<Long, List<Leg>> legsByRoute = fetchLegsByRoute(ordersByRoute.keySet());
 
@@ -409,17 +409,17 @@ public class DatabaseCommunication {
 			List<TaxiOrder> routeOrders = entry.getValue();
 
 			// All orders on a route should have same cabId
-			long cabId = routeOrders.get(0).cabId;
+			long cabId = routeOrders.get(0).cabId();
 			String cabKey = parseTaxiDbIndexToMosaicVehicleId(cabId);
 
 			List<Leg> legs = legsByRoute.getOrDefault(routeId, List.of());
 
 			List<Integer> legsToVisit = legs.stream()
-				.map(leg -> (int) leg.id)
+				.map(leg -> (int) leg.id())
 				.toList();
 
 			List<String> busStopIds = legs.stream()
-				.map(leg -> String.valueOf(leg.toStand))
+				.map(leg -> String.valueOf(leg.toStand()))
 				.toList();
 
 			TaxiLatestData data = new TaxiLatestData(
@@ -440,7 +440,7 @@ public class DatabaseCommunication {
 		}
 
 		Map<Long, List<TaxiOrder>> ordersGroupedByRoute = orders.stream()
-			.collect(Collectors.groupingBy(o -> o.routeId));
+			.collect(Collectors.groupingBy(TaxiOrder::routeId));
 
 		Map<Long, List<Leg>> legsGroupedByRoute = fetchLegsByRoute(ordersGroupedByRoute.keySet());
 
@@ -452,7 +452,7 @@ public class DatabaseCommunication {
 			List<TaxiOrder> routeOrders = entry.getValue();
 
 			TaxiOrder firstOrder = routeOrders.get(0);
-			String cabId = parseTaxiDbIndexToMosaicVehicleId(firstOrder.cabId);
+			String cabId = parseTaxiDbIndexToMosaicVehicleId(firstOrder.cabId());
 
 			// Skip if cab is busy
 			if (cabsLatestData.get(cabId).getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
@@ -462,13 +462,13 @@ public class DatabaseCommunication {
 			List<Leg> legs = legsGroupedByRoute.getOrDefault(routeId, List.of());
 
 			List<String> dispatchSequence = (routeOrders.size() == 1)
-				? List.of(firstOrder.sumoId)
+				? List.of(firstOrder.sumoId())
 				: buildDispatchSequence(legs, routeOrders);
 
 			taxiDispatchData.add(new TaxiDispatchData(cabId, dispatchSequence));
 
 			acceptedOrderIds.addAll(routeOrders.stream()
-				.map(o -> o.id)
+				.map(TaxiOrder::id)
 				.toList());
 		}
 
@@ -518,31 +518,31 @@ public class DatabaseCommunication {
 
 			// First leg-> only pick-ups
 			if (i == 0) {
-				if (leg.passengers > 0) {
+				if (leg.passengers() > 0) {
 					orders.stream()
-						.filter(o -> o.fromStand == leg.fromStand)
-						.map(o -> o.sumoId)
+						.filter(o -> o.fromStand() == leg.fromStand())
+						.map(TaxiOrder::sumoId)
 						.forEach(sequence::add);
 				}
 			} else {
 				// Pick-ups
 				orders.stream()
-					.filter(o -> o.fromStand == leg.fromStand)
-					.map(o -> o.sumoId)
+					.filter(o -> o.fromStand() == leg.fromStand())
+					.map(TaxiOrder::sumoId)
 					.forEach(sequence::add);
 
 				// Drop-offs at this fromStand
 				orders.stream()
-					.filter(o -> o.toStand == leg.fromStand)
-					.map(o -> o.sumoId)
+					.filter(o -> o.toStand() == leg.fromStand())
+					.map(TaxiOrder::sumoId)
 					.forEach(sequence::add);
 			}
 
 			// Last leg → drop-offs at final toStand
 			if (i == legs.size() - 1) {
 				orders.stream()
-					.filter(o -> o.toStand == leg.toStand)
-					.map(o -> o.sumoId)
+					.filter(o -> o.toStand() == leg.toStand())
+					.map(TaxiOrder::sumoId)
 					.forEach(sequence::add);
 			}
 		}
@@ -622,37 +622,7 @@ public class DatabaseCommunication {
 		return legsByRoute;
 	}
 
-	private static class TaxiOrder {
-		long id;
-		int fromStand;
-		int toStand;
-		long routeId;
-		String sumoId;
-		long cabId;
+	private record TaxiOrder(long id, int fromStand, int toStand, long routeId, String sumoId, long cabId) { }
 
-		public TaxiOrder(long id, int fromStand, int toStand, long routeId, String sumoId, long cabId) {
-			this.id = id;
-			this.fromStand = fromStand;
-			this.toStand = toStand;
-			this.routeId = routeId;
-			this.sumoId = sumoId;
-			this.cabId = cabId;
-		}
-	}
-
-	private static class Leg {
-		long id;
-		int fromStand;
-		int toStand;
-		int passengers;
-		long routeId;
-
-		public Leg(long id, int fromStand, int toStand, int passengers, long routeId) {
-			this.id = id;
-			this.fromStand = fromStand;
-			this.toStand = toStand;
-			this.passengers = passengers;
-			this.routeId = routeId;
-		}
-	}
+	private record Leg(long id, int fromStand, int toStand, int passengers, long routeId) {	}
 }
