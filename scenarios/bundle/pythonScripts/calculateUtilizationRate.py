@@ -1,5 +1,4 @@
 import csv, setupTables
-from datetime import datetime
 from mysql.connector.pooling import PooledMySQLConnection
 
 my_db_connection: PooledMySQLConnection
@@ -13,7 +12,7 @@ def calculate_operating_ratios(total_simulation_time_seconds, output_file):
 
     # 2. Fetch legs grouped by route_id
     cursor.execute("""
-                   SELECT route_id, MIN(started) AS start_time, MAX(completed) AS end_time
+                   SELECT route_id, MIN(started_seconds) AS start_time, MAX(completed_seconds) AS end_time
                    FROM leg
                    GROUP BY route_id
                    """)
@@ -33,13 +32,7 @@ def calculate_operating_ratios(total_simulation_time_seconds, output_file):
         start_time = row["start_time"]
         end_time = row["end_time"]
 
-        # Ensure datetime objects (mysql.connector usually does this automatically)
-        if isinstance(start_time, str):
-            start_time = datetime.fromisoformat(start_time)
-        if isinstance(end_time, str):
-            end_time = datetime.fromisoformat(end_time)
-
-        operating_time = (end_time - start_time).total_seconds()
+        operating_time = end_time - start_time
 
         if cab_id not in cab_stats:
             cab_stats[cab_id] = 0
@@ -63,6 +56,6 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    total_simulation_time_seconds = 1384 # take it from the console output (ended - started)
+    total_simulation_time_seconds = 3600
     output_file = 'csv/utilizationRate.csv'
     calculate_operating_ratios(total_simulation_time_seconds, output_file)

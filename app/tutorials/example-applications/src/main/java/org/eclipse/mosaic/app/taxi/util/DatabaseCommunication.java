@@ -114,17 +114,18 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public void markOrdersAsStartedByLegId(long legId) {
+	public void markOrdersAsStartedByLegId(long legId, long simulationTimeInSeconds) {
 		String sql = """
 			UPDATE taxi_order
-			SET started = ?, status = ?
+			SET started = ?, status = ?, started_seconds = ?
 			WHERE route_id = (SELECT route_id FROM leg WHERE leg.id = ?)
 			""";
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 			ps.setInt(2, DISPATCHER_PICKEDUP_ORDER_STATUS);
-			ps.setLong(3, legId);
+			ps.setLong(3, simulationTimeInSeconds);
+			ps.setLong(4, legId);
 
 			if (ps.executeUpdate() < 1) {
 				throw new RuntimeException("No orders updated for legId=%s with status=%s".formatted(legId, DISPATCHER_PICKEDUP_ORDER_STATUS));
@@ -134,18 +135,19 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public void markOrderAsCompletedForLegIdIfFinal(long legId) {
+	public void markOrderAsCompletedForLegIdIfFinal(long legId, long simulationTimeInSeconds) {
 		String sql = """
 			UPDATE taxi_order o
 			JOIN leg l ON o.route_id = l.route_id AND o.to_stand = l.to_stand
-			SET o.completed = ?, o.status = ?
+			SET o.completed = ?, o.status = ?, o.completed_seconds = ?
 			WHERE l.id = ?;
 			""";
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 			ps.setInt(2, DISPATCHER_COMPLETED_ORDER_STATUS);
-			ps.setLong(3, legId);
+			ps.setLong(3, simulationTimeInSeconds);
+			ps.setLong(4, legId);
 
 			ps.executeUpdate();
 		} catch(SQLException e) {
@@ -183,13 +185,14 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public void markLegAsStarted(Integer legId) {
-		String sql = "UPDATE leg SET started = ?, status = ? WHERE id = ?";
+	public void markLegAsStarted(Integer legId, long simulationTimeSeconds) {
+		String sql = "UPDATE leg SET started = ?, status = ?, started_seconds = ? WHERE id = ?";
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 			ps.setInt(2, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-			ps.setLong(3, legId);
+			ps.setLong(3, simulationTimeSeconds);
+			ps.setLong(4, legId);
 
 			if (ps.executeUpdate() != 1) {
 				throw new RuntimeException("Leg was not correctly marked as started!");
@@ -199,13 +202,14 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public void markLegAsCompleted(Integer legId) {
-		String sql = "UPDATE leg SET completed = ?, status = ? WHERE id = ?";
+	public void markLegAsCompleted(Integer legId, long simulationTimeInSeconds) {
+		String sql = "UPDATE leg SET completed = ?, status = ?, completed_seconds = ? WHERE id = ?";
 
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 			ps.setInt(2, DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-			ps.setLong(3, legId);
+			ps.setLong(3, simulationTimeInSeconds);
+			ps.setLong(4, legId);
 
 			if (ps.executeUpdate() != 1) {
 				throw new RuntimeException("Leg was not properly marked as completed!");
@@ -330,7 +334,7 @@ public class DatabaseCommunication {
 		}
 	}
 
-	public int insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations) {
+	public int insertNewReservationsInDb(List<TaxiReservation> newTaxiReservations, long simulationTimeInSeconds) {
 		if (newTaxiReservations.isEmpty()) {
 			return 0;
 		}
@@ -338,12 +342,12 @@ public class DatabaseCommunication {
 		String sql = """
 			INSERT INTO taxi_order (
 				from_stand, to_stand, max_loss, max_wait, shared,
-				status, received, distance, customer_id, sumo_id, distance_seconds
-			) VALUES (?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?)
+				status, received, distance, customer_id, sumo_id, distance_seconds, received_seconds
+			) VALUES (?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?, ?)
 			""";
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			for (TaxiReservation reservation: newTaxiReservations) {
-				prepareInsertReservationStatement(ps, reservation);
+				prepareInsertReservationStatement(ps, reservation, simulationTimeInSeconds);
 				ps.addBatch();
 			}
 
@@ -363,7 +367,7 @@ public class DatabaseCommunication {
 		}
 	}
 
-	private void prepareInsertReservationStatement(PreparedStatement ps, TaxiReservation reservation)
+	private void prepareInsertReservationStatement(PreparedStatement ps, TaxiReservation reservation, long simulationTimeInSeconds)
 		throws SQLException {
 		List<BusStop> busStops = fetchBusStopsByEdge(reservation.getFromEdge(), reservation.getToEdge());
 		if (busStops.size() != 2) {
@@ -387,6 +391,7 @@ public class DatabaseCommunication {
 		ps.setLong(8, parsePerson(reservation.getPersonList()));
 		ps.setLong(9, Long.parseLong(reservation.getId()));
 		ps.setInt(10, (int) Math.ceil(distanceBetweenStops.distanceSeconds()));
+		ps.setLong(11, simulationTimeInSeconds);
 	}
 
 	private void initializeCabLatestData(List<Long> orderIds, HashMap<String, TaxiLatestData> cabsLatestData) {

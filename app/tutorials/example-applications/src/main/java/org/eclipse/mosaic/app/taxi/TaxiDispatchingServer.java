@@ -25,6 +25,7 @@ import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
+import org.eclipse.mosaic.rti.TIME;
 
 import java.util.HashMap;
 import java.util.List;
@@ -125,7 +126,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
             .toList();
 
         if (!unassignedReservations.isEmpty()) {
-            lastSavedReservationMosaicIndex += dataBaseCommunication.insertNewReservationsInDb(unassignedReservations);
+            lastSavedReservationMosaicIndex += dataBaseCommunication.insertNewReservationsInDb(unassignedReservations, getSimulationTimeInSeconds());
         }
 
         List<TaxiDispatchData> taxiDispatchDataList = dataBaseCommunication.fetchTaxiDispatchDataAndUpdateLatestData(cabsLatestData);
@@ -177,9 +178,9 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
 		// delivered final customer
 		// update cab's last location, route
-		dataBaseCommunication.markLegAsCompleted(latestData.getCurrentLegId());
+		dataBaseCommunication.markLegAsCompleted(latestData.getCurrentLegId(), getSimulationTimeInSeconds());
 		dataBaseCommunication.updateRouteStatusByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-		dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(latestData.getCurrentLegId());
+		dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(latestData.getCurrentLegId(), getSimulationTimeInSeconds());
 		latestData.setLastStatus(TaxiVehicleData.EMPTY_TAXIS);
 		latestData.getEdgesToVisit().clear();
 		latestData.setCurrentLegId(null);
@@ -205,9 +206,9 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		Integer currentLeg = latestData.getNextLegIds().remove(0);
 		latestData.setCurrentLegId(currentLeg);
 
-		dataBaseCommunication.markLegAsStarted(currentLeg);
+		dataBaseCommunication.markLegAsStarted(currentLeg, getSimulationTimeInSeconds());
 		dataBaseCommunication.updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-		dataBaseCommunication.markOrdersAsStartedByLegId(currentLeg);
+		dataBaseCommunication.markOrdersAsStartedByLegId(currentLeg, getSimulationTimeInSeconds());
 	}
 
 	private void handleOccupiedTaxi(TaxiVehicleData taxi) {
@@ -236,12 +237,12 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
 			// mark legs as started/completed;
 			// check if it is the final leg of an order and mark as completed as well
-			dataBaseCommunication.markLegAsCompleted(finishedLegId);
-			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId);
+			dataBaseCommunication.markLegAsCompleted(finishedLegId, getSimulationTimeInSeconds());
+			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId, getSimulationTimeInSeconds());
 
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);
-			dataBaseCommunication.markLegAsStarted(currentLegId);
+			dataBaseCommunication.markLegAsStarted(currentLegId, getSimulationTimeInSeconds());
 		}
 	}
 
@@ -259,12 +260,16 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			// set current stop as cab location and mark legs as started/completed;
 			// check if it is the final leg of an order and mark as completed as well
 			dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
-			dataBaseCommunication.markLegAsCompleted(finishedLegId);
-			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId);
+			dataBaseCommunication.markLegAsCompleted(finishedLegId, getSimulationTimeInSeconds());
+			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId, getSimulationTimeInSeconds());
 
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);
-			dataBaseCommunication.markLegAsStarted(currentLegId);
+			dataBaseCommunication.markLegAsStarted(currentLegId, getSimulationTimeInSeconds());
 		}
+	}
+
+	private long getSimulationTimeInSeconds() {
+		return getOs().getSimulationTime() / TIME.SECOND;
 	}
 }

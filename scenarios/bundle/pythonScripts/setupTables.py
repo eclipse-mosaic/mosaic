@@ -107,14 +107,15 @@ def main(should_reset):
     create_leg_table_query = ("CREATE TABLE leg (id bigint PRIMARY KEY, completed timestamp, distance integer NOT NULL, "
                               "from_stand integer NOT NULL, place integer NOT NULL, started timestamp, status integer NOT NULL, "
                               "reserve integer NOT NULL, passengers integer NOT NULL, to_stand integer NOT NULL, route_id bigint NOT NULL, "
-                              "FOREIGN KEY (route_id) REFERENCES route(id))")
+                              "started_seconds bigint, completed_seconds bigint, FOREIGN KEY (route_id) REFERENCES route(id))")
     create_table_by_query(create_leg_table_query, 'leg')
 
     # TAXI_ORDER_TABLE
     create_taxi_order_table_query = ("CREATE TABLE taxi_order (id bigint PRIMARY KEY AUTO_INCREMENT, sumo_id bigint NOT NULL, at_time timestamp, completed timestamp, "
                                      "distance integer NOT NULL, eta integer, from_stand integer NOT NULL, in_pool boolean, max_loss integer NOT NULL, "
                                      "max_wait integer NOT NULL, received timestamp, shared boolean NOT NULL, started timestamp, status integer, "
-                                     "to_stand integer NOT NULL, cab_id bigint, customer_id bigint, leg_id bigint, route_id bigint, distance_seconds integer NOT NULL, "
+                                     "to_stand integer NOT NULL, cab_id bigint, customer_id bigint, leg_id bigint, route_id bigint, "
+                                     "distance_seconds integer NOT NULL, received_seconds bigint, started_seconds bigint, completed_seconds bigint, "
                                      "FOREIGN KEY (cab_id) REFERENCES cab(id), FOREIGN KEY (customer_id) REFERENCES customer(id), "
                                      "FOREIGN KEY (leg_id) REFERENCES leg(id), FOREIGN KEY (route_id) REFERENCES route(id))")
     create_table_by_query(create_taxi_order_table_query, 'taxi_order')

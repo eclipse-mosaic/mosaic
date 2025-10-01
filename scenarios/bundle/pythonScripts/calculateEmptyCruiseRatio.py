@@ -1,5 +1,4 @@
 import csv, setupTables
-from datetime import datetime
 from mysql.connector.pooling import PooledMySQLConnection
 
 my_db_connection: PooledMySQLConnection
@@ -13,7 +12,7 @@ def calculate_empty_cruise_ratio(output_file):
 
     # Fetch all legs with times and passenger counts
     cursor.execute("""
-                   SELECT id, route_id, passengers, started, completed
+                   SELECT id, route_id, passengers, started_seconds, completed_seconds
                    FROM leg
                    """)
     legs = cursor.fetchall()
@@ -24,19 +23,13 @@ def calculate_empty_cruise_ratio(output_file):
         route_id = leg["route_id"]
         cab_id = route_to_cab.get(route_id)
 
-        if not cab_id or not leg["started"] or not leg["completed"]:
+        if not cab_id or not leg["started_seconds"] or not leg["completed_seconds"]:
             continue
 
-        start_time = leg["started"]
-        end_time = leg["completed"]
+        start_time = leg["started_seconds"]
+        end_time = leg["completed_seconds"]
 
-        # Ensure datetime
-        if isinstance(start_time, str):
-            start_time = datetime.fromisoformat(start_time)
-        if isinstance(end_time, str):
-            end_time = datetime.fromisoformat(end_time)
-
-        duration = (end_time - start_time).total_seconds()
+        duration = end_time - start_time
 
         if cab_id not in cab_stats:
             cab_stats[cab_id] = {"empty_time": 0, "total_time": 0}
