@@ -39,6 +39,7 @@ Changes in the documentation required?
 
 - [ ] New functionality is covered by unit tests or integration tests. Code coverage must not decrease.
 - [ ] If a bug has been fixed, a new unit test has been written (beforehand) to prove misbehavior
+- [ ] There is no API break in `mosaic-geomath`.
 - [ ] There are no new SpotBugs warnings.
 
 ## Special notes to reviewer

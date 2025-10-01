@@ -18,10 +18,12 @@ package org.eclipse.mosaic.lib.spatial;
 import org.eclipse.mosaic.lib.math.Vector3d;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Implements a spatial index for 2-dimensional objects (on the X,Z plane) based on Quad-Tree implementation. Each leaf can store multiple objects, allowing
@@ -65,6 +67,15 @@ public class QuadTree<T> {
     public QuadTree(final SpatialItemAdapter<T> adapter, double minX, double maxX, double minZ, double maxZ) {
         root = new TreeNode(0, minX, maxX, minZ, maxZ);
         this.adapter = adapter;
+    }
+
+    /**
+     * Collects and returns all objects stored in this spatial index.
+     *
+     * @return all objects stored in this spatial index.
+     */
+    public Collection<T> getAllObjects() {
+        return objects.values().stream().map(o -> o.object).collect(Collectors.toList());
     }
 
     /**
@@ -187,6 +198,7 @@ public class QuadTree<T> {
     }
 
     public void clear() {
+        objects.clear();
         root.clear();
     }
 
