@@ -647,7 +647,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
                             log.trace("UpdateNode : ID: [int={}, ext={}] Pos: x({}) y({}) Geo: {}", vi.getName(), id,
                                     projectedPosition.getX(), projectedPosition.getY(), geoPosition);
                         }
-                        nodesToUpdate.add(new NodeDataContainer(id, projectedPosition));
+                        nodesToUpdate.add(new NodeDataContainer(id, projectedPosition, List.of("Road1", "Road2", "Road3")));
                     } else if (registeredNodes.containsKey(vi.getName())) {
                         // Node was not yet added to simulation, so update its entry in the registered node list
                         registeredNodes.get(vi.getName()).position = projectedPosition;
@@ -858,7 +858,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
                 log.warn("Node with id (internal={}) couldn't be added: name already exists", nodeId);
             } else {
                 int id = simulatedNodes.toExternalId(nodeId);
-                if (CommandType.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(time, registeredNode.type, new NodeDataContainer(id, registeredNode.position))) {
+                if (CommandType.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(time, registeredNode.type, new NodeDataContainer(id, registeredNode.position, null))) {
                     log.error("Could not add new node.");
                     throw new InternalFederateException("Error in " + federateName + ": Could not add new node");
                 }
@@ -881,7 +881,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
 
     protected synchronized void addNodeBToSimulation(CartesianPoint position) throws InternalFederateException {
         try {
-            if (CommandType.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(0L, NodeType.NODE_B, new NodeDataContainer(0, position))) {
+            if (CommandType.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(0L, NodeType.NODE_B, new NodeDataContainer(0, position, null))) {
                 log.error("Could not add new eNodeB.");
                 throw new InternalFederateException("Error in " + federateName + ": Could not add new node");
             }

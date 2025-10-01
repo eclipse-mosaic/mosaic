@@ -245,6 +245,7 @@ public class ClientServerChannel {
             tmpBuilder.setX(node.pos.getX());
             tmpBuilder.setY(node.pos.getY());
             tmpBuilder.setZ(node.pos.getZ());
+            tmpBuilder.addAllRoads(node.roads);
             msg.addProperties(tmpBuilder.build());
         }
         msg.build().writeDelimitedTo(out);
@@ -511,7 +512,7 @@ public class ClientServerChannel {
         };
     }
 
-    record NodeDataContainer(int id, CartesianPoint pos) {}
+    record NodeDataContainer(int id, CartesianPoint pos, List<String> roads) {}
 
     record ReceiveWifiMessageRecord(long time, String receiverName, int msgId, V2xReceiverInformation receiverInformation) {}
 
