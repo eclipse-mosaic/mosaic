@@ -15,9 +15,11 @@
 
 package org.eclipse.mosaic.fed.application.ambassador.simulation.perception;
 
+import org.eclipse.mosaic.fed.application.ambassador.simulation.VehicleUnit;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSightDistanceConfiguration;
 import org.eclipse.mosaic.lib.database.Database;
 import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.PerceptionEgo;
 import org.eclipse.mosaic.lib.perception.objects.BuildingWall;
 import org.eclipse.mosaic.lib.perception.objects.SpatialObject;
 import org.eclipse.mosaic.lib.perception.objects.TrafficLightObject;
@@ -31,19 +33,19 @@ import java.util.List;
 
 public class SumoPerceptionModule extends AbstractPerceptionModule {
 
-    private final PerceptionModuleOwner owner;
+    private final VehicleUnit unit;
 
-    public SumoPerceptionModule(PerceptionModuleOwner owner, Database database, Logger log) {
-        super(owner, database, log);
-        this.owner = owner;
+    public SumoPerceptionModule(VehicleUnit unit, PerceptionEgo ego, Database database, Logger log) {
+        super(ego, database, log);
+        this.unit = unit;
     }
 
     @Override
     public void enable(PerceptionConfiguration configuration) {
         super.enable(configuration);
-        owner.sendInteractionToRti(new VehicleSightDistanceConfiguration(
-                owner.getSimulationTime(),
-                owner.getId(),
+        unit.sendInteractionToRti(new VehicleSightDistanceConfiguration(
+                unit.getSimulationTime(),
+                unit.getId(),
                 configuration.getViewingRange(),
                 configuration.getViewingAngle()
         ));
@@ -51,7 +53,7 @@ public class SumoPerceptionModule extends AbstractPerceptionModule {
 
     @Override
     List<VehicleObject> getVehiclesInRange() {
-        return owner.getVehicleData().getVehiclesInSight().stream()
+        return unit.getVehicleData().getVehiclesInSight().stream()
                 .map(v -> new VehicleObject(v.getId())
                         .setPosition(v.getProjectedPosition())
                         .setEdgeAndLane(v.getEdgeId(), v.getLaneIndex())

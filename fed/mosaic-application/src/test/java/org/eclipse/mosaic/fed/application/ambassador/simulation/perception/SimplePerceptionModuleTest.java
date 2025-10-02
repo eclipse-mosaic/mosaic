@@ -40,6 +40,7 @@ import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightState;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
 import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
+import org.eclipse.mosaic.lib.perception.PerceptionEgo;
 import org.eclipse.mosaic.lib.perception.PerceptionIndex;
 import org.eclipse.mosaic.lib.perception.index.TrafficLightIndex;
 import org.eclipse.mosaic.lib.perception.index.VehicleGrid;
@@ -122,8 +123,8 @@ public class SimplePerceptionModuleTest {
         // setup perception module
         VehicleUnit egoVehicleUnit = spy(new VehicleUnit("veh_0", mock(VehicleType.class), null));
         doReturn(egoVehicleData).when(egoVehicleUnit).getVehicleData();
-        PerceptionModuleOwner owner = new PerceptionModuleOwner.VehicleUnitAdapter(egoVehicleUnit);
-        simplePerceptionModule = spy(new SimplePerceptionModule(owner, null, mock(Logger.class)));
+        PerceptionEgo ego = new VehicleUnit.PerceptionEgoVehicleAdapter(egoVehicleUnit);
+        simplePerceptionModule = spy(new SimplePerceptionModule(ego, null, mock(Logger.class)));
         simplePerceptionModule.enable(new PerceptionConfiguration.Builder(90d, 200d).build());
 
         // setup ego vehicle

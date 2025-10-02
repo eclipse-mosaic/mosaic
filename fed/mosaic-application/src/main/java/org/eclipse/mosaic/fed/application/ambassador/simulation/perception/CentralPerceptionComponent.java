@@ -111,13 +111,6 @@ public class CentralPerceptionComponent {
         }
     }
 
-    public AbstractPerceptionModule createPerceptionModule(PerceptionModuleOwner owner, Database database, Logger log) {
-        if (configuration.useSumoPerception) {
-            return new SumoPerceptionModule(owner, database, log);
-        }
-        return new SimplePerceptionModule(owner, database, log);
-    }
-
     /**
      * Returns the {@link PerceptionIndex} storing all perception relevant objects, such
      * as vehicles, traffic lights, or buildings.

@@ -23,7 +23,8 @@ import org.eclipse.mosaic.fed.application.ambassador.simulation.navigation.Routi
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.DefaultLidarSensorModule;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.EnvironmentBasicSensorModule;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.NopPerceptionModule;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.PerceptionModuleOwner;
+import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.SimplePerceptionModule;
+import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.SumoPerceptionModule;
 import org.eclipse.mosaic.fed.application.app.api.CommunicationApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.navigation.NavigationModule;
@@ -42,6 +43,7 @@ import org.eclipse.mosaic.interactions.vehicle.VehicleSpeedChange.VehicleSpeedCh
 import org.eclipse.mosaic.interactions.vehicle.VehicleStop;
 import org.eclipse.mosaic.lib.database.Database;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
+import org.eclipse.mosaic.lib.geo.CartesianPoint;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.v2x.etsi.cam.VehicleAwarenessData;
@@ -49,16 +51,22 @@ import org.eclipse.mosaic.lib.objects.vehicle.BatteryData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleRoute;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
+import org.eclipse.mosaic.lib.perception.PerceptionEgo;
+import org.eclipse.mosaic.lib.perception.objects.BuildingWall;
 import org.eclipse.mosaic.lib.routing.database.DatabaseRouting;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.Collection;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
  * This class represents a vehicle in the application simulator.
  */
-public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperatingSystem {
+public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperatingSystem
+{
 
     @Nonnull
     private final RoutingNavigationModule navigationModule;
@@ -94,12 +102,15 @@ public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperat
             database = dbRouting.getScenarioDatabase();
         }
 
-        final PerceptionModuleOwner owner = new PerceptionModuleOwner.VehicleUnitAdapter(this);
+        final PerceptionEgo ego = new PerceptionEgoVehicleAdapter(this);
         if (SimulationKernel.SimulationKernel.getCentralPerceptionComponent() != null) {
-            perceptionModule = SimulationKernel.SimulationKernel.getCentralPerceptionComponent()
-                    .createPerceptionModule(owner, database, getOsLog());
+            if (SimulationKernel.SimulationKernel.getConfiguration().perceptionConfiguration.useSumoPerception) {
+                perceptionModule = new SumoPerceptionModule(this, ego, database, getOsLog());
+            } else {
+                perceptionModule = new SimplePerceptionModule(ego, database, getOsLog());
+            }
         } else {
-            perceptionModule = new NopPerceptionModule(owner, database, getOsLog());
+            perceptionModule = new NopPerceptionModule(ego, database, getOsLog());
         }
 
         basicSensorModule = new EnvironmentBasicSensorModule();
@@ -389,6 +400,47 @@ public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperat
     @Override
     public LidarSensorModule getLidarSensorModule() {
         return lidarSensorModule;
+    }
+
+    /**
+     * Adapter for Vehicle Units to provide access to necessary data and functions for the {@link SimplePerceptionModule}.<br><br>
+     *
+     * We don't let {@link VehicleUnit} implement the {@link PerceptionEgo} interface directly to avoid exposing methods which are
+     * relevant for perception only.
+     */
+    @VisibleForTesting
+    public static class PerceptionEgoVehicleAdapter implements PerceptionEgo {
+
+        private final VehicleUnit unit;
+
+        public PerceptionEgoVehicleAdapter(VehicleUnit unit) {
+            this.unit = unit;
+        }
+
+        @Override
+        public String getId() {
+            return unit.getId();
+        }
+
+        @Override
+        public CartesianPoint getProjectedPosition() {
+            return unit.getVehicleData() != null ? unit.getVehicleData().getProjectedPosition() : null;
+        }
+
+        @Override
+        public double getHeading() {
+            return unit.getVehicleData() != null ? unit.getVehicleData().getHeading() : 0d;
+        }
+
+        @Override
+        public double getViewingRange() {
+            return unit.getPerceptionModule().getConfiguration().getViewingRange();
+        }
+
+        @Override
+        public Collection<BuildingWall> getSurroundingWalls() {
+            return unit.getPerceptionModule().getSurroundingWalls();
+        }
     }
 
 }
