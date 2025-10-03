@@ -517,39 +517,28 @@ public class DatabaseCommunication {
 
 	private List<String> buildDispatchSequence(List<Leg> legs, List<TaxiOrder> orders) {
 		List<String> sequence = new ArrayList<>();
+		Set<String> pickedUp = new HashSet<>();
+		Set<String> droppedOff = new HashSet<>();
 
-		for (int i = 0; i < legs.size(); i++) {
-			Leg leg = legs.get(i);
+		for (Leg leg : legs) {
+			// Pick-ups at this leg's fromStand
+			orders.stream()
+				.filter(o -> o.fromStand() == leg.fromStand())
+				.filter(o -> !pickedUp.contains(o.sumoId())) // skip if already picked
+				.forEach(o -> {
+					sequence.add(o.sumoId());
+					pickedUp.add(o.sumoId());
+				});
 
-			// First leg-> only pick-ups
-			if (i == 0) {
-				if (leg.passengers() > 0) {
-					orders.stream()
-						.filter(o -> o.fromStand() == leg.fromStand())
-						.map(TaxiOrder::sumoId)
-						.forEach(sequence::add);
-				}
-			} else {
-				// Pick-ups
-				orders.stream()
-					.filter(o -> o.fromStand() == leg.fromStand())
-					.map(TaxiOrder::sumoId)
-					.forEach(sequence::add);
-
-				// Drop-offs at this fromStand
-				orders.stream()
-					.filter(o -> o.toStand() == leg.fromStand())
-					.map(TaxiOrder::sumoId)
-					.forEach(sequence::add);
-			}
-
-			// Last leg → drop-offs at final toStand
-			if (i == legs.size() - 1) {
-				orders.stream()
-					.filter(o -> o.toStand() == leg.toStand())
-					.map(TaxiOrder::sumoId)
-					.forEach(sequence::add);
-			}
+			// Drop-offs at this leg's toStand
+			orders.stream()
+				.filter(o -> o.toStand() == leg.toStand())
+				.filter(o -> pickedUp.contains(o.sumoId())) // only drop if picked up
+				.filter(o -> !droppedOff.contains(o.sumoId())) // skip if already dropped
+				.forEach(o -> {
+					sequence.add(o.sumoId());
+					droppedOff.add(o.sumoId());
+				});
 		}
 
 		if (sequence.size() % 2 != 0 || sequence.size() < 4) {

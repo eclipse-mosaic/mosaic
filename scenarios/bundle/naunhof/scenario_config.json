@@ -1,7 +1,7 @@
 {
     "simulation": {
         "id": "naunhof",
-        "duration": "3600s",
+        "duration": "7200s",
         "randomSeed": 268965854,
         "projection": {
             "centerCoordinates": {

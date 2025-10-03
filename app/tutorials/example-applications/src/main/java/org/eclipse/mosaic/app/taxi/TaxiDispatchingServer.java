@@ -43,7 +43,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
     // DISPATCHER CONFIGS
     public static final int TAXI_ORDER_MAX_DETOUR_IN_PERCENTAGE = 70;
-    public static final int TAXI_ORDER_MAX_WAIT_IN_MINUTES = 10;
+    public static final int TAXI_ORDER_MAX_WAIT_IN_MINUTES = 5;
 
     // FLAGS
 	private static final boolean EXECUTE_PYTHON_SCRIPTS_AND_TERMINATE = false;
@@ -192,12 +192,16 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 	private void handleEmptyToPickUpTaxi(TaxiVehicleData taxi) {
 		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
 
-		if (latestData.getLastStatus() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS) {
+		// 1. case: taxi has already entered this method and its new data is set
+		// 2. case: taxi is en route and was occupied, but there is a short transition between
+		// the drop-off of the previous customers and the pick-up of the new ones
+		if (latestData.getLastStatus() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS
+			|| latestData.getLastStatus() == TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS) {
 			return;
 		}
 
 		if (latestData.getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
-			throw new RuntimeException("Status should have been set to empty before");
+			throw new RuntimeException("Expected status EMPTY, but got: %s for vehicle: %s".formatted(latestData.getLastStatus(), taxi.getId()));
 		}
 
 		latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);

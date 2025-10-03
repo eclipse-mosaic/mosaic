@@ -6,10 +6,10 @@
       "ipv4AnycastAddress": false
     },
     "routingType": {
-      "AD_HOC_GEOCAST": false,
-      "CELL_GEOCAST": false,
-      "CELL_GEOCAST_MBMS": false,
       "AD_HOC_TOPOCAST": true,
+      "CELL_GEOCAST_MBMS": false,
+      "CELL_GEOCAST": false,
+      "AD_HOC_GEOCAST": false,
       "CELL_TOPOCAST": false
     },
     "protocolType": {

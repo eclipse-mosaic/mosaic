@@ -53,6 +53,5 @@
     <busStop id="bs_49" lane="-122259339#5_0" startPos="54.20" endPos="64.20" personCapacity="10"/>
     <busStop id="bs_50" lane="-253010733#1_0" startPos="36.85" endPos="46.85" personCapacity="10"/>
     <busStop id="bs_51" lane="268504689#2_0" startPos="41.28" endPos="51.28" personCapacity="10"/>
-    <trainStop id="ts_1" name="train_stop1" lane="374359231_0" startPos="258.80" endPos="268.80" personCapacity="100"/>
-    <trainStop id="ts_2" name="train_stop2" lane="374605591#0_0" startPos="178.46" endPos="188.46" personCapacity="100"/>
+    <trainStop id="ts_1" name="train_stop1" lane="374359231_0" startPos="230.00" endPos="300.00" personCapacity="100"/>
 </additional>

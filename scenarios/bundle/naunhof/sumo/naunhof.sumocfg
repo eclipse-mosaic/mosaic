@@ -8,7 +8,7 @@
         <device.taxi.dispatch-algorithm.output value="taxiTripInfo.xml"/>
 	</input>
 	<time>
-		<begin value="0" />
-		<end value="3600" />
+		<begin value="0"/>
+		<end value="7200"/>
 	</time>
 </configuration>

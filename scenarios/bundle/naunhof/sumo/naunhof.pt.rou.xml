@@ -85,13 +85,8 @@
         <route edges="-25335407#2"/>
     </vehicle>
 
-    <flow id="train1" type="TrainSumo" begin="50" end="3600" period="100">
+    <flow id="train1" type="TrainSumo" begin="250" end="3600" period="200">
         <route edges="374359231"/>
         <stop busStop="ts_1" duration="50"/>
-    </flow>
-
-    <flow id="train2" type="TrainSumo" begin="100" end="3600" period="100">
-        <route edges="374605591#0"/>
-        <stop busStop="ts_2" duration="50"/>
     </flow>
 </routes>
