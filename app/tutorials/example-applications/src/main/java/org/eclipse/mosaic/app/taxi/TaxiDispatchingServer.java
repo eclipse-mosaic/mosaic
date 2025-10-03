@@ -133,6 +133,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
         if (!taxiDispatchDataList.isEmpty()) {
             for (TaxiDispatchData taxiDispatchData : taxiDispatchDataList) {
+				getLog().info("Sending dispatch vehicle: '{}', reservations: [{}]", taxiDispatchData.taxiId(), String.join(",", taxiDispatchData.reservationIds()));
 				System.out.printf("Taxi ID: %s, Reservations: %s%n",
 					taxiDispatchData.taxiId(), String.join(",", taxiDispatchData.reservationIds()));
                 getOs().sendInteractionToRti(
