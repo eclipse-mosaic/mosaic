@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- common version from 12.08.2025 -->
+<!-- common version from 19.09.2025 -->
 <ns3>
     <LogLevel>
         <!-- for field "name" refer to corresponding ns3 model -->
@@ -37,12 +37,9 @@
         <component name="A3RsrpHandoverAlgorithm"   value="error|warn|prefix_node|logic"/>
         <component name="A2A4RsrqHandoverAlgorithm" value="error|warn|prefix_node"/>
 
-        <component name="OcbWifiMac"           value="error|warn"/>
-
         <component name="PropagationLossModel" value="error"/>
         <component name="WifiPhy"              value="error|warn"/>
         <component name="YansWifiPhy"          value="error|warn"/>
-        <component name="WaveNetDevice"        value="error|warn"/>
         <component name="WifiNetDevice"        value="error|warn"/>
         <component name="YansWifiChannel"      value="error|warn"/>
         <component name="InterferenceHelper"   value="error|warn"/>
