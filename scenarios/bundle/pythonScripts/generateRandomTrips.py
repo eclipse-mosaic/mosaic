@@ -4,8 +4,7 @@ import xml.dom.minidom as minidom
 
 def generate_random_person_trips(
     bus_add_file,
-    output_file,
-    num_trips=100,
+    num_trips,
     fixed_stop_id=None,
     fixed_stop_percentage=0.3,
     depart_time_range=(0, 3600)
@@ -17,8 +16,6 @@ def generate_random_person_trips(
     ----------
     bus_add_file : str
         Path to the SUMO .add.xml containing <busStop> elements.
-    output_file : str
-        Path to write the generated trips XML.
     num_trips : int
         Total number of person trips to generate.
     fixed_stop_id : str
@@ -28,6 +25,7 @@ def generate_random_person_trips(
     depart_time_range : tuple(int, int)
         Min and max departure time (seconds).
     """
+    output_file = f'generatedFiles/person_trips_{num_trips}.xml'
 
     # Parse bus stops from SUMO .add.xml file
     tree = ET.parse(bus_add_file)
@@ -130,9 +128,8 @@ if __name__ == "__main__":
     except ValueError:
         generate_random_person_trips(
             bus_add_file="../{0}/sumo/{0}.bus.add.xml".format(sys.argv[1]),
-            output_file="person_trips.xml",
-            num_trips=50,
+            num_trips=500,
             fixed_stop_id="bs_23",   # must exist in bus.add.xml
-            fixed_stop_percentage=0.5,
-            depart_time_range=(0, 3600)  # departures between 0–1h
+            fixed_stop_percentage=1,
+            depart_time_range=(0, 3000)
         )

@@ -1,4 +1,5 @@
-import csv, setupTables
+import csv
+import setupTables
 from mysql.connector.pooling import PooledMySQLConnection
 
 my_db_connection: PooledMySQLConnection
@@ -7,18 +8,32 @@ def calculate_detour_ratios(output_file):
     results = []
 
     with my_db_connection.cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT id, route_id, from_stand, to_stand, received_seconds, distance_seconds FROM taxi_order")
+        # fetch orders only from grouped routes
+        cursor.execute("""
+                       SELECT id, route_id, from_stand, to_stand, distance_seconds
+                       FROM taxi_order
+                       WHERE route_id IN (
+                           SELECT route_id
+                           FROM leg
+                           WHERE passengers > 1
+                           GROUP BY route_id
+                       )
+                       """)
         orders = cursor.fetchall()
 
+        if not orders:
+            print("No grouped orders found.")
+            return
+
+        # compute detour ratio
         for order in orders:
             order_id = order["id"]
             route_id = order["route_id"]
             from_stand = order["from_stand"]
             to_stand = order["to_stand"]
-            received_seconds = order["received_seconds"]
             distance_seconds = order["distance_seconds"]
 
-            # First leg (from_stand)
+            # first leg (from_stand)
             cursor.execute("""
                            SELECT started_seconds
                            FROM leg
@@ -27,7 +42,7 @@ def calculate_detour_ratios(output_file):
                            """, (route_id, from_stand))
             first = cursor.fetchone()
 
-            # Last leg (to_stand)
+            # last leg (to_stand)
             cursor.execute("""
                            SELECT completed_seconds
                            FROM leg
@@ -43,26 +58,28 @@ def calculate_detour_ratios(output_file):
             start_time = first["started_seconds"]
             end_time = last["completed_seconds"]
 
-            # Compute travel time (seconds)
-            travel_time = end_time - start_time
-            wait_time = start_time - received_seconds if received_seconds and start_time else None
+            # account for fixed pickup/drop-off durations
+            pick_up_duration = 20
+            drop_off_duration = 60
 
-            detour_ratio = travel_time / distance_seconds
-            results.append((order_id, detour_ratio, wait_time))
+            travel_time = end_time - start_time - pick_up_duration - drop_off_duration
+
+            detour_ratio = travel_time / distance_seconds if distance_seconds else None
+            results.append((order_id, detour_ratio))
 
     my_db_connection.close()
 
-    # Write results to file
+    # write results
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["order_id", "detour_ratio", "wait_time_seconds"])  # header
+        writer.writerow(["order_id", "detour_ratio"])
         writer.writerows(results)
 
-    print(f"Detour ratios written to {output_file}")
+    print(f"Detour ratios (only grouped orders) written to {output_file}")
 
 if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/detourWaitingTime.csv'
+    output_file = 'csv/detourRatio.csv'
     calculate_detour_ratios(output_file)

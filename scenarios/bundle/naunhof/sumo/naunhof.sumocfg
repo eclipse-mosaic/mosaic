@@ -9,6 +9,6 @@
 	</input>
 	<time>
 		<begin value="0"/>
-		<end value="7200"/>
+		<end value="3600"/>
 	</time>
 </configuration>
