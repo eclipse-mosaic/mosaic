@@ -4,7 +4,7 @@
     <!-- StoppingPlaces -->
     <busStop id="bs_1" lane="28124696#0_0" startPos="288.84" endPos="298.84" personCapacity="10"/>
     <busStop id="bs_2" lane="28124693#0_0" startPos="233.22" endPos="243.22" personCapacity="10"/>
-    <busStop id="bs_3" lane="28747054#0_0" startPos="40.44" endPos="50.44" personCapacity="10"/>
+    <busStop id="bs_3" lane="268504689#2_0" startPos="41.28" endPos="51.28" personCapacity="10"/>
     <busStop id="bs_4" lane="-238136477_0" startPos="9.23" endPos="19.23" personCapacity="10"/>
     <busStop id="bs_5" lane="-28132131_0" startPos="193.84" endPos="203.84" personCapacity="10"/>
     <busStop id="bs_6" lane="289937319_0" startPos="42.59" endPos="52.59" personCapacity="10"/>
@@ -52,6 +52,5 @@
     <busStop id="bs_48" lane="-28132132#0_0" startPos="179.92" endPos="189.92" personCapacity="10"/>
     <busStop id="bs_49" lane="-122259339#5_0" startPos="54.20" endPos="64.20" personCapacity="10"/>
     <busStop id="bs_50" lane="-253010733#1_0" startPos="36.85" endPos="46.85" personCapacity="10"/>
-    <busStop id="bs_51" lane="268504689#2_0" startPos="41.28" endPos="51.28" personCapacity="10"/>
     <trainStop id="ts_1" name="train_stop1" lane="374359231_0" startPos="230.00" endPos="300.00" personCapacity="100"/>
 </additional>

@@ -43,7 +43,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
     // DISPATCHER CONFIGS
     public static final int TAXI_ORDER_MAX_DETOUR_IN_PERCENTAGE = 70;
-    public static final int TAXI_ORDER_MAX_WAIT_IN_MINUTES = 5;
+    public static final int TAXI_ORDER_MAX_WAIT_IN_MINUTES = 10;
 
     // FLAGS
 	private static final boolean EXECUTE_PYTHON_SCRIPTS_AND_TERMINATE = false;

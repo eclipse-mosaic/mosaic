@@ -5,10 +5,10 @@
 		<additional-files value="naunhof.bus.add.xml"/>
 		<device.taxi.dispatch-algorithm value="traci"/>
         <device.taxi.idle-algorithm value="stop"/>
-        <device.taxi.dispatch-algorithm.output value="taxiTripInfo.xml"/>
+        <device.taxi.dispatch-algorithm.output value="dispatchinfos.xml"/>
 	</input>
 	<time>
 		<begin value="0"/>
-		<end value="3600"/>
+		<end value="4200"/>
 	</time>
 </configuration>

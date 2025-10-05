@@ -1,5 +1,5 @@
 {
-  "updateInterval": "50ms",
+  "updateInterval": "100ms",
   "visualizer": false,
   "sumoConfigurationFile": "naunhof.sumocfg"
 }
