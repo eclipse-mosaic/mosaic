@@ -181,7 +181,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		// update cab's last location, route
 		dataBaseCommunication.markLegAsCompleted(latestData.getCurrentLegId(), getSimulationTimeInSeconds());
 		dataBaseCommunication.updateRouteStatusByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
-		dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(latestData.getCurrentLegId(), getSimulationTimeInSeconds());
+		dataBaseCommunication.updateOrdersByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ORDER_STATUS, false, getSimulationTimeInSeconds());
 		latestData.setLastStatus(TaxiVehicleData.EMPTY_TAXIS);
 		latestData.getEdgesToVisit().clear();
 		latestData.setCurrentLegId(null);
@@ -208,12 +208,12 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
 
 		//mark leg and route as started
-		Integer currentLeg = latestData.getNextLegIds().remove(0);
-		latestData.setCurrentLegId(currentLeg);
+		Integer currentLegId = latestData.getNextLegIds().remove(0);
+		latestData.setCurrentLegId(currentLegId);
 
-		dataBaseCommunication.markLegAsStarted(currentLeg, getSimulationTimeInSeconds());
-		dataBaseCommunication.updateRouteStatusByLegId(currentLeg, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
-		dataBaseCommunication.markOrdersAsStartedByLegId(currentLeg, getSimulationTimeInSeconds());
+		dataBaseCommunication.markLegAsStarted(currentLegId, getSimulationTimeInSeconds());
+		dataBaseCommunication.updateRouteStatusByLegId(currentLegId, DISPATCHER_STARTED_ROUTE_LEG_STATUS);
+		dataBaseCommunication.markOrdersAsStartedByLegId(currentLegId, getSimulationTimeInSeconds());
 	}
 
 	private void handleOccupiedTaxi(TaxiVehicleData taxi) {
@@ -243,11 +243,12 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			// mark legs as started/completed;
 			// check if it is the final leg of an order and mark as completed as well
 			dataBaseCommunication.markLegAsCompleted(finishedLegId, getSimulationTimeInSeconds());
-			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId, getSimulationTimeInSeconds());
+			dataBaseCommunication.updateOrdersByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false, getSimulationTimeInSeconds());
 
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);
 			dataBaseCommunication.markLegAsStarted(currentLegId, getSimulationTimeInSeconds());
+			dataBaseCommunication.updateOrdersByLegId(currentLegId, DISPATCHER_PICKEDUP_ORDER_STATUS, true, getSimulationTimeInSeconds());
 		}
 	}
 
@@ -266,11 +267,12 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			// check if it is the final leg of an order and mark as completed as well
 			dataBaseCommunication.updateCabLocation(taxi.getId(), finishedLegId);
 			dataBaseCommunication.markLegAsCompleted(finishedLegId, getSimulationTimeInSeconds());
-			dataBaseCommunication.markOrderAsCompletedForLegIdIfFinal(finishedLegId, getSimulationTimeInSeconds());
+			dataBaseCommunication.updateOrdersByLegId(finishedLegId, DISPATCHER_COMPLETED_ORDER_STATUS, false, getSimulationTimeInSeconds());
 
 			Integer currentLegId = latestData.getNextLegIds().remove(0);
 			latestData.setCurrentLegId(currentLegId);
 			dataBaseCommunication.markLegAsStarted(currentLegId, getSimulationTimeInSeconds());
+			dataBaseCommunication.updateOrdersByLegId(currentLegId, DISPATCHER_PICKEDUP_ORDER_STATUS, true, getSimulationTimeInSeconds());
 		}
 	}
 

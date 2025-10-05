@@ -114,6 +114,36 @@ public class DatabaseCommunication {
 		}
 	}
 
+	public void updateOrdersByLegId(long legId, int status, boolean isStarted, long simulationTimeInSeconds) {
+		try {
+			String dbField = isStarted ? "started" : "completed";
+			String secondsField = isStarted ? "started_seconds" : "completed_seconds";
+			String standField = isStarted ? "from_stand" : "to_stand";
+
+			String sql = """
+				UPDATE taxi_order o
+				JOIN leg l ON o.route_id = l.route_id
+				SET o.%s = ?, o.status = ?, o.%s = ?
+				WHERE l.id = ? AND l.passengers > 0 AND o.%s = (SELECT %s FROM leg WHERE id = ?)
+				""".formatted(dbField, secondsField, standField, standField);
+
+			try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
+				ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+				ps.setInt(2, status);
+				ps.setLong(3, simulationTimeInSeconds);
+				ps.setLong(4, legId);
+				ps.setLong(5, legId);
+				int updated = ps.executeUpdate();
+
+				if (updated > 0) {
+					unitLogger.debug("{} orders updated for leg {}", updated, legId);
+				}
+			}
+		} catch (SQLException e) {
+			unitLogger.error("Error while updating orders by leg ID", e);
+		}
+	}
+
 	public void markOrdersAsStartedByLegId(long legId, long simulationTimeInSeconds) {
 		String sql = """
 			UPDATE taxi_order
@@ -132,26 +162,6 @@ public class DatabaseCommunication {
 			}
 		} catch (SQLException e) {
 			unitLogger.error("Error while updating orders by leg ID {}", legId, e);
-		}
-	}
-
-	public void markOrderAsCompletedForLegIdIfFinal(long legId, long simulationTimeInSeconds) {
-		String sql = """
-			UPDATE taxi_order o
-			JOIN leg l ON o.route_id = l.route_id AND o.to_stand = l.to_stand
-			SET o.completed = ?, o.status = ?, o.completed_seconds = ?
-			WHERE l.id = ?;
-			""";
-
-		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
-			ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-			ps.setInt(2, DISPATCHER_COMPLETED_ORDER_STATUS);
-			ps.setLong(3, simulationTimeInSeconds);
-			ps.setLong(4, legId);
-
-			ps.executeUpdate();
-		} catch(SQLException e) {
-			unitLogger.error("Error while setting order status to COMPLETED", e);
 		}
 	}
 
