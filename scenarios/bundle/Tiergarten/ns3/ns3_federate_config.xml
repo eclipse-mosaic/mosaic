@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- common version from 19.09.2025 -->
+<!-- extended tiergarten version from 02.10.2025 -->
 <ns3>
     <LogLevel>
         <!-- for field "name" refer to corresponding ns3 model -->
@@ -45,46 +45,71 @@
         <component name="InterferenceHelper"   value="error|warn"/>
     </LogLevel>
 
-    <!-- Global settings -->
+    <!-- GLOBAL SETTINGS -->
     <global name="RngSeed" value="1"/>
 
-    <!-- Federate settings -->
+    <!-- FEDERATE SETTINGS -->
     <default name="ns3::MosaicProxyApp::Port" value="8010"/>
     <default name="ns3::MosaicNodeManager::numExtraRadioNodes" value="5"/>
 
-    <!-- LTE settings -->
-    <default name="ns3::LteHelper::HandoverAlgorithm" value="ns3::NoOpHandoverAlgorithm"/>
-    <default name="ns3::LteEnbRrc::AdmitHandoverRequest" value="true"/>
-    <default name="ns3::LteEnbRrc::AdmitRrcConnectionRequest" value="true"/>
+    <!-- LTE SETTINGS -->
+    <!-- <default name="ns3::LteEnbRrc::AdmitHandoverRequest" value="true"/> -->
+    <!-- <default name="ns3::LteEnbRrc::AdmitRrcConnectionRequest" value="true"/> -->
+    <!--
+    <default name="ns3::LteHelper::HandoverAlgorithm" value="ns3::A3RsrpHandoverAlgorithm"/>
+    <default name="ns3::A3RsrpHandoverAlgorithm::Hysteresis" value="3"/>
+    <default name="ns3::A3RsrpHandoverAlgorithm::TimeToTrigger" value="+256ms"/>
+    -->
     <default name="ns3::LteUeRrc::N310" value="20"/>
     <default name="ns3::LteUeRrc::T310" value="+2000.0ms"/>
+
+    <!-- <default name="ns3::LteEnbPhy::TxPower" value="30"/> -->
 
     <default name="ns3::LteRlcUm::MaxTxBufferSize" value="100000"/>
     <!-- increase from 5MHz to 20MHz -->
     <!-- <default name="ns3::LteEnbNetDevice::UlBandwidth" value="100"/> -->
     <!-- <default name="ns3::LteEnbNetDevice::DlBandwidth" value="100"/> -->
 
-    <!-- Network settings -->
+    <!-- NETWORK SETTINGS -->
     <default name="ns3::ArpCache::PendingQueueSize" value="100"/>
 
-    <!-- Propagation settings -->
+    <!-- PROPAGATION SETTINGS -->
     <!-- YansWifiChannelHelper / yans-wifi-helper.cc : can not set the values in this config, this is done in NodeManager costructor -->
+    <!-- Pathloss and Fading for more realistic "shaky" reception quality -->
+    <!-- <default name="ns3::LteHelper::PathlossModel" value="ns3::NakagamiPropagationLossModel"/> -->
+    <!-- <default name="ns3::LteHelper::FadingModel" value="ns3::FriisSpectrumPropagationLossModel"/> -->
 
     <default name="ns3::FriisPropagationLossModel::Frequency" value="5900000000"/>
+    <!-- <default name="ns3::FriisPropagationLossModel::SystemLoss" value="1"/> -->
+    <!-- <default name="ns3::FriisPropagationLossModel::MinLoss" value="0"/> -->
+    <!-- <default name="ns3::ConstantSpeedPropagationDelayModel::Speed" value="2.99792e+08"/> -->
 
-    <!-- Wifi settings -->
+    <!-- WIFI SETTINGS -->
     <default name="ns3::WifiPhy::Frequency" value="5900"/>
     <default name="ns3::WifiPhy::ChannelNumber" value="180"/>
     <default name="ns3::WifiPhy::ChannelWidth" value="10"/>
     <default name="ns3::WifiPhy::RxSensitivity" value="-81.02"/>
     <default name="ns3::WifiPhy::CcaEdThreshold" value="-99.0"/>
+    <!-- <default name="ns3::WifiPhy::TxGain" value="0.0"/> -->
+    <!-- <default name="ns3::WifiPhy::RxGain" value="0.0"/> -->
+    <!-- <default name="ns3::WifiPhy::TxPowerLevels" value="1"/> -->
     <default name="ns3::WifiPhy::TxPowerEnd" value="17"/>
     <default name="ns3::WifiPhy::TxPowerStart" value="17"/>
     <default name="ns3::WifiPhy::RxNoiseFigure" value="0"/>
-    <default name="ns3::WifiPhy::Sifs" value="+16000.0ns"/>
-    <default name="ns3::WifiPhy::Slot" value="+9000.0ns"/>
-    <default name="ns3::WifiPhy::Pifs" value="+25000.0ns"/>
+    <!-- <default name="ns3::WifiPhy::ChannelSwitchDelay" value="+250000.0ns"/> -->
+    <!-- <default name="ns3::WifiPhy::Antennas" value="1"/> -->
 
-    <default name="ns3::WifiNetDevice::Mtu" value="2296"/>
+    <!-- NOTE the default value is overwritten by the value defined by the standard; if you want to set this attribute, you have to do it after that the PHY object is initialized. -->
+    <!-- <default name="ns3::WifiPhy::Slot" value="+9000.0ns"/> -->
+    <!-- <default name="ns3::WifiPhy::Sifs" value="+16000.0ns"/> -->
+    <!-- <default name="ns3::WifiPhy::Pifs" value="+25000.0ns"/> -->
+    <!-- NOTE This parameter is only valuable for 802.11b STAs and APs. -->
+    <!-- <default name="ns3::WifiPhy::ShortPlcpPreambleSupported" value="false"/> -->
 
+    <!-- <default name="ns3::ConstantRateWifiManager::DataMode" value="OfdmRate6Mbps"/> -->
+    <!-- <default name="ns3::ConstantRateWifiManager::ControlMode" value="OfdmRate6Mbps"/> -->
+
+    <!-- <default name="ns3::WifiMacQueue::MaxDelay" value="+500000000.0ns"/> -->
+    <!-- <default name="ns3::WifiNetDevice::Mtu" value="2296"/> -->
+    <!-- <default name="ns3::WifiMac::Ssid" value="default"/> -->
 </ns3>
