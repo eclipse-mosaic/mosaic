@@ -124,8 +124,8 @@ public class DatabaseCommunication {
 				UPDATE taxi_order o
 				JOIN leg l ON o.route_id = l.route_id
 				SET o.%s = ?, o.status = ?, o.%s = ?
-				WHERE l.id = ? AND l.passengers > 0 AND o.%s = (SELECT %s FROM leg WHERE id = ?)
-				""".formatted(dbField, secondsField, standField, standField);
+				WHERE o.%s IS NULL AND l.id = ? AND l.passengers > 0 AND o.%s = (SELECT %s FROM leg WHERE id = ?)
+				""".formatted(dbField, secondsField, secondsField, standField, standField);
 
 			try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 				ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
