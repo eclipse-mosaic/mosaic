@@ -43,8 +43,10 @@ def calculate_empty_cruise_ratio(output_file):
     for cab_id, stats in cab_stats.items():
         total = stats["total_time"]
         empty = stats["empty_time"]
-        ratio = (empty / total) * 100 if total > 0 else 0
+        ratio = round((empty / total) * 100, 2) if total > 0 else 0
         results.append((cab_id, ratio))
+
+    results.sort(key=lambda x: x[0])
 
     # Write results to CSV
     with open(output_file, "w", newline="") as f:

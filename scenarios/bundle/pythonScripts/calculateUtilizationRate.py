@@ -7,7 +7,7 @@ def calculate_operating_ratios(total_simulation_time_seconds, output_file):
     cursor = my_db_connection.cursor(dictionary=True)
 
     # 1. Fetch route_id -> cab_id mapping
-    cursor.execute("SELECT DISTINCT route_id, cab_id FROM taxi_order")
+    cursor.execute("SELECT DISTINCT route_id, cab_id FROM taxi_order WHERE route_id IS NOT NULL AND cab_id IS NOT NULL")
     route_to_cab = {row["route_id"]: row["cab_id"] for row in cursor.fetchall()}
 
     # 2. Fetch legs grouped by route_id
@@ -41,8 +41,10 @@ def calculate_operating_ratios(total_simulation_time_seconds, output_file):
     # 4. Compute ratios
     results = []
     for cab_id, total_operating_time in cab_stats.items():
-        ratio = (total_operating_time / total_simulation_time_seconds) * 100 if total_simulation_time_seconds > 0 else 0
+        ratio = round((total_operating_time / total_simulation_time_seconds) * 100, 2) if total_simulation_time_seconds > 0 else 0
         results.append((cab_id, ratio))
+
+    results.sort(key=lambda x: x[0])
 
     # 5. Write results to CSV
     with open(output_file, "w", newline="") as f:
@@ -56,6 +58,6 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    total_simulation_time_seconds = 3600
+    total_simulation_time_seconds = 4200
     output_file = 'csv/utilizationRate.csv'
     calculate_operating_ratios(total_simulation_time_seconds, output_file)

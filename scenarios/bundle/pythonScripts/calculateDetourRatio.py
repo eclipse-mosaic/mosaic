@@ -65,7 +65,7 @@ def calculate_detour_ratios(output_file):
             travel_time = end_time - start_time - pick_up_duration - drop_off_duration
 
             detour_ratio = travel_time / distance_seconds if distance_seconds else None
-            results.append((order_id, detour_ratio))
+            results.append((order_id, round(detour_ratio, 2)))
 
     my_db_connection.close()
 

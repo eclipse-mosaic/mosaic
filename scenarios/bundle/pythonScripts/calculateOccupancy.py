@@ -10,6 +10,7 @@ def calculate_avg_passengers(output_file):
         cursor.execute("""
                        SELECT route_id, cab_id, COUNT(*) AS passenger_count
                        FROM taxi_order
+                       WHERE route_id IS NOT NULL 
                        GROUP BY route_id, cab_id
                        """)
         route_groups = cursor.fetchall()
@@ -31,8 +32,10 @@ def calculate_avg_passengers(output_file):
     # Compute averages
     results = []
     for cab_id, stats in cab_stats.items():
-        avg_passengers = stats["total_passengers"] / stats["num_groups"] if stats["num_groups"] > 0 else 0
+        avg_passengers = round(stats["total_passengers"] / stats["num_groups"], 2) if stats["num_groups"] > 0 else 0
         results.append((cab_id, avg_passengers))
+
+    results.sort(key=lambda x: x[0])
 
     # Write results to CSV
     with open(output_file, "w", newline="") as f:

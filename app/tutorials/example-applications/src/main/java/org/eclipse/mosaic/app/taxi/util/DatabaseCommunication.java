@@ -531,6 +531,10 @@ public class DatabaseCommunication {
 		Set<String> droppedOff = new HashSet<>();
 
 		for (Leg leg : legs) {
+			if (leg.passengers() == 0) {
+				continue;
+			}
+
 			// Pick-ups at this leg's fromStand
 			orders.stream()
 				.filter(o -> o.fromStand() == leg.fromStand())

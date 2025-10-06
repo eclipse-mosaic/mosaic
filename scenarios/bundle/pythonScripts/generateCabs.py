@@ -5,7 +5,7 @@ import xml.dom.minidom as minidom
 def generate_taxi_vehicles(
         bus_add_file,
         output_file,
-        num_vehicles=10
+        num_vehicles
 ):
     """
     Generate a SUMO vehicle XML file with taxis placed at random bus stops.
@@ -79,6 +79,6 @@ if __name__ == "__main__":
     except ValueError:
         generate_taxi_vehicles(
             bus_add_file="../{0}/sumo/{0}.bus.add.xml".format(sys.argv[1]),
-            output_file="generated_taxis.xml",
-            num_vehicles=25
+            output_file="generatedFiles/generated_taxis.xml",
+            num_vehicles=30
         )

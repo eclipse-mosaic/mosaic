@@ -7,7 +7,7 @@ def calculate_waiting_times(output_file):
     results = []
 
     with my_db_connection.cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT id, route_id, from_stand, received_seconds FROM taxi_order")
+        cursor.execute("SELECT id, route_id, from_stand, received_seconds FROM taxi_order WHERE status!=6")
         orders = cursor.fetchall()
 
         for order in orders:
