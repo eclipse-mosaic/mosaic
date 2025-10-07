@@ -28,10 +28,12 @@ import static org.eclipse.mosaic.app.taxi.TaxiDispatchingServer.TAXI_ORDER_MAX_D
 import static org.eclipse.mosaic.app.taxi.TaxiDispatchingServer.TAXI_ORDER_MAX_WAIT_IN_MINUTES;
 import static org.eclipse.mosaic.app.taxi.util.Constants.*;
 import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.calculateDistanceInMinutesBetweenTwoStops;
+import static org.eclipse.mosaic.app.taxi.util.ExternalFilesUtil.getDirectRoutesFromBusStopsToTrainStation;
 import static org.eclipse.mosaic.app.taxi.util.ParserUtil.*;
 
 public class DatabaseCommunication {
 
+	private final HashMap<String, Integer> directRoutes = new HashMap<>();
 	private final UnitLogger unitLogger;
 	private final RoutingModule routingModule;
 	private Connection dbConnection;
@@ -39,6 +41,7 @@ public class DatabaseCommunication {
 	public DatabaseCommunication(UnitLogger unitLogger, RoutingModule routingModule) {
 		this.unitLogger = unitLogger;
 		this.routingModule = routingModule;
+		getDirectRoutesFromBusStopsToTrainStation(directRoutes);
 		connectToDatabase();
 	}
 
@@ -352,8 +355,8 @@ public class DatabaseCommunication {
 		String sql = """
 			INSERT INTO taxi_order (
 				from_stand, to_stand, max_loss, max_wait, shared,
-				status, received, distance, customer_id, sumo_id, distance_seconds, received_seconds
-			) VALUES (?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?, ?)
+				status, received, distance, customer_id, sumo_id, distance_seconds, received_seconds, train_to_catch
+			) VALUES (?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?, ?, ?)
 			""";
 		try (PreparedStatement ps = dbConnection.prepareStatement(sql)) {
 			for (TaxiReservation reservation: newTaxiReservations) {
@@ -402,6 +405,28 @@ public class DatabaseCommunication {
 		ps.setLong(9, Long.parseLong(reservation.getId()));
 		ps.setInt(10, (int) Math.ceil(distanceBetweenStops.distanceSeconds()));
 		ps.setLong(11, simulationTimeInSeconds);
+		ps.setInt(12, getNextPossibleTrain(busStops.get(0).id(), simulationTimeInSeconds));
+	}
+
+	/**
+	 * Calculates approximately when the next train arrives, which the person will try to catch.
+	 * The variables in the method can be set according to the scenario.
+	 *
+	 * @param busStopId the id of the bus stop from which the person makes the reservation
+	 * @param simulationTimeInSeconds current simulation time in seconds
+	 * @return the time when the next possible train arrives
+	 */
+	private int getNextPossibleTrain(long busStopId, long simulationTimeInSeconds) {
+		int bufferForSharedRide = 150;
+		int timeTravelling = directRoutes.get(String.valueOf(busStopId)) + bufferForSharedRide;
+		int firstTrainArrival = 500;
+		int periodUntilNextTrain = 900;
+
+		while (simulationTimeInSeconds + timeTravelling > firstTrainArrival) {
+			firstTrainArrival += periodUntilNextTrain;
+		}
+
+		return firstTrainArrival;
 	}
 
 	private void initializeCabLatestData(List<Long> orderIds, HashMap<String, TaxiLatestData> cabsLatestData) {

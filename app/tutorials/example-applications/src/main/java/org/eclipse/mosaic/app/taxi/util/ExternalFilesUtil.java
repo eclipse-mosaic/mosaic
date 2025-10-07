@@ -24,7 +24,9 @@ import org.eclipse.mosaic.lib.routing.RoutingPosition;
 import org.eclipse.mosaic.lib.routing.RoutingResponse;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 
 public class ExternalFilesUtil {
@@ -32,9 +34,7 @@ public class ExternalFilesUtil {
 	public static void executePythonScripts(UnitLogger unitLogger, boolean shouldIncludeScriptLogs, String scenarioName) {
 		try {
 			// Path to the script directory
-			File scriptDir = Paths.get(System.getProperty("user.dir")) // -> root/rti/mosaic-starter
-				.getParent()  // -> root/rti
-				.getParent()  // -> root
+			File scriptDir = getRootFolder()
 				.resolve("scenarios/bundle/pythonScripts")
 				.toFile();
 
@@ -123,11 +123,9 @@ public class ExternalFilesUtil {
 	}
 
 	private static File getDispatcherLogFileInScenarioDirectory(String scenarioName) {
-		return Paths.get(System.getProperty("user.dir")) // -> root/rti/mosaic-starter
-			.getParent()  // -> root/rti
-			.getParent()  // -> root
+		return getRootFolder()
 			.resolve("scenarios/bundle")
-			.resolve(scenarioName) // Change this for other scenarios
+			.resolve(scenarioName)
 			.resolve("dispatcher.log")
 			.toFile();
 	}
@@ -200,5 +198,32 @@ public class ExternalFilesUtil {
 			new RoutingParameters().vehicleClass(VehicleClass.Taxi));
 
 		return new DistanceBetweenStops(response.getBestRoute().getTime(), response.getBestRoute().getLength());
+	}
+
+	public static void getDirectRoutesFromBusStopsToTrainStation(HashMap<String, Integer> directRoutes) {
+		File directRoutesCsv = getRootFolder()
+			.resolve("scenarios/bundle/pythonScripts/csv/directRoutes.csv")
+			.toFile();
+
+		try (BufferedReader br = new BufferedReader(new FileReader(directRoutesCsv))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] values = line.split(",");
+				if (values[0].equals("stop_id")) {
+					continue;
+				}
+
+				directRoutes.put((values[0]), Integer.parseInt(values[1]));
+			}
+		}
+		catch(IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static Path getRootFolder() {
+		return Paths.get(System.getProperty("user.dir")) // -> root/rti/mosaic-starter
+			.getParent()  // -> root/rti
+			.getParent(); // -> root
 	}
 }

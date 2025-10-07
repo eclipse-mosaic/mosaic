@@ -7,6 +7,13 @@
         <device.taxi.idle-algorithm value="stop"/>
         <device.taxi.dispatch-algorithm.output value="dispatchinfos.xml"/>
 	</input>
+    <!--
+        <output>
+            <write-license value="true"/>
+            <tripinfo-output value="tripinfos.xml"/>
+            <tripinfo-output.write-unfinished value="true"/>
+        </output>
+    -->
 	<time>
 		<begin value="0"/>
 		<end value="4200"/>

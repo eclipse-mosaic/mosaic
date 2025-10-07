@@ -100,7 +100,7 @@
         <route edges="-238136477"/>
     </vehicle>
 
-    <flow id="train1" type="TrainSumo" line="trainLine" begin="500" end="3500" period="500">
+    <flow id="train1" type="TrainSumo" line="trainLine" begin="500" end="4200" period="900">
         <route edges="374359231 374605592#0"/>
         <stop trainStop="ts_1" duration="60"/>
     </flow>

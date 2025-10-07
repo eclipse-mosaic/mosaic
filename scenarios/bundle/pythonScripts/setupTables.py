@@ -132,6 +132,7 @@ def create_tables():
                 received_seconds BIGINT,
                 started_seconds BIGINT,
                 completed_seconds BIGINT,
+                train_to_catch INT,
                 FOREIGN KEY (cab_id) REFERENCES cab(id),
                 FOREIGN KEY (customer_id) REFERENCES customer(id),
                 FOREIGN KEY (leg_id) REFERENCES leg(id),
