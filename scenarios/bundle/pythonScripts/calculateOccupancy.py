@@ -49,5 +49,5 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/passengers_300/averageOccupancy.csv'
+    output_file = 'csv/passengers_700/averageOccupancy.csv'
     calculate_avg_passengers(output_file)
