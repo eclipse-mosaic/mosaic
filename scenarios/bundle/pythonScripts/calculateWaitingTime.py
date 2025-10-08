@@ -32,7 +32,7 @@ def calculate_waiting_times(output_file):
             start_time = first["started_seconds"]
 
             # Compute wait time
-            wait_time = start_time - received_seconds if received_seconds and start_time else None
+            wait_time = start_time - received_seconds
 
             results.append((order_id, wait_time))
 
@@ -50,5 +50,5 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/passengers_500/waitingTime.csv'
+    output_file = 'csv/passengers_300/waitingTime.csv'
     calculate_waiting_times(output_file)
