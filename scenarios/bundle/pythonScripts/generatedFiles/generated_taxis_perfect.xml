@@ -1,0 +1,150 @@
+<?xml version="1.0" ?>
+<routes>
+  <vehicle id="t1" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-38128299#1"/>
+  </vehicle>
+  <vehicle id="t2" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="1059785584#0"/>
+  </vehicle>
+  <vehicle id="t3" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-75902756#1"/>
+  </vehicle>
+  <vehicle id="t4" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-25593394#0"/>
+  </vehicle>
+  <vehicle id="t5" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="1021479206#5"/>
+  </vehicle>
+  <vehicle id="t6" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="289937319"/>
+  </vehicle>
+  <vehicle id="t7" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-25807021#2"/>
+  </vehicle>
+  <vehicle id="t8" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-1022042157#2"/>
+  </vehicle>
+  <vehicle id="t9" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="28725589"/>
+  </vehicle>
+  <vehicle id="t10" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-252947536#1"/>
+  </vehicle>
+  <vehicle id="t11" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="28727437#1"/>
+  </vehicle>
+  <vehicle id="t12" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-238136477"/>
+  </vehicle>
+  <vehicle id="t13" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="26668849#2"/>
+  </vehicle>
+  <vehicle id="t14" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-28004236"/>
+  </vehicle>
+  <vehicle id="t15" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-674298787#0"/>
+  </vehicle>
+  <vehicle id="t16" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="1361425836#1"/>
+  </vehicle>
+  <vehicle id="t17" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="37996159#1"/>
+  </vehicle>
+  <vehicle id="t18" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="28124696#0"/>
+  </vehicle>
+  <vehicle id="t19" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="1215949438"/>
+  </vehicle>
+  <vehicle id="t20" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-28132131"/>
+  </vehicle>
+  <vehicle id="t21" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-661814892"/>
+  </vehicle>
+  <vehicle id="t22" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="103093870#1"/>
+  </vehicle>
+  <vehicle id="t23" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-193164108#1"/>
+  </vehicle>
+  <vehicle id="t24" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="67624333"/>
+  </vehicle>
+  <vehicle id="t25" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-122259339#5"/>
+  </vehicle>
+  <vehicle id="t26" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="28140027#0"/>
+  </vehicle>
+  <vehicle id="t27" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="44642805#0"/>
+  </vehicle>
+  <vehicle id="t28" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-25727611#1"/>
+  </vehicle>
+  <vehicle id="t29" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-742449277#0"/>
+  </vehicle>
+  <vehicle id="t30" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-38128295#0"/>
+  </vehicle>
+  <vehicle id="t31" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="268504689#2"/>
+  </vehicle>
+  <vehicle id="t32" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-253010733#1"/>
+  </vehicle>
+  <vehicle id="t33" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="132619396#0"/>
+  </vehicle>
+  <vehicle id="t34" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="238136480#1"/>
+  </vehicle>
+  <vehicle id="t35" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-18784601#1"/>
+  </vehicle>
+  <vehicle id="t36" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-25335407#2"/>
+  </vehicle>
+  <vehicle id="t37" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-25790384"/>
+  </vehicle>
+  <vehicle id="t38" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="25593376#3"/>
+  </vehicle>
+  <vehicle id="t39" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-37996558#1"/>
+  </vehicle>
+  <vehicle id="t40" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-25415038#4"/>
+  </vehicle>
+  <vehicle id="t41" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="28124693#0"/>
+  </vehicle>
+  <vehicle id="t42" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-60702646"/>
+  </vehicle>
+  <vehicle id="t43" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="24996585#0"/>
+  </vehicle>
+  <vehicle id="t44" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-32091203#2"/>
+  </vehicle>
+  <vehicle id="t45" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="44443593#2"/>
+  </vehicle>
+  <vehicle id="t46" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="1189365209"/>
+  </vehicle>
+  <vehicle id="t47" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="25790390"/>
+  </vehicle>
+  <vehicle id="t48" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="-28132132#0"/>
+  </vehicle>
+  <vehicle id="t49" type="TaxiSumo" depart="0" departPos="free" line="taxi">
+    <route edges="25939498#3"/>
+  </vehicle>
+</routes>

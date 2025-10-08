@@ -4,13 +4,25 @@ from mysql.connector.pooling import PooledMySQLConnection
 
 my_db_connection: PooledMySQLConnection
 
-def calculate_detour_ratios(output_file):
+def load_direct_routes(csv_path):
+    """Load mapping of bus stop IDs to direct route distances."""
+    routes = {}
+    with open(csv_path, mode='r', newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            bus_stop_id = row.get("stop_id")
+            distance = float(row["direct_distance_seconds"])
+            routes[str(bus_stop_id)] = distance
+    return routes
+
+def calculate_detour_ratios(output_file, direct_routes_csv):
     results = []
+    direct_routes = load_direct_routes(direct_routes_csv)
 
     with my_db_connection.cursor(dictionary=True) as cursor:
         # fetch orders only from grouped routes
         cursor.execute("""
-                       SELECT id, route_id, from_stand, to_stand, distance_seconds
+                       SELECT id, route_id, from_stand, to_stand
                        FROM taxi_order
                        WHERE route_id IN (
                            SELECT route_id
@@ -31,22 +43,27 @@ def calculate_detour_ratios(output_file):
             route_id = order["route_id"]
             from_stand = order["from_stand"]
             to_stand = order["to_stand"]
-            distance_seconds = order["distance_seconds"]
+
+            distance_seconds = direct_routes.get(str(from_stand))
+
+            if distance_seconds is None:
+                print(f"Skipping order {order_id}: no distance found for bus stop {from_stand}")
+                continue
 
             # first leg (from_stand)
             cursor.execute("""
-                           SELECT started_seconds
+                           SELECT started_seconds, id, passengers
                            FROM leg
-                           WHERE route_id = %s AND from_stand = %s
+                           WHERE route_id = %s AND from_stand = %s AND passengers > 0
                            ORDER BY id LIMIT 1
                            """, (route_id, from_stand))
             first = cursor.fetchone()
 
             # last leg (to_stand)
             cursor.execute("""
-                           SELECT completed_seconds
+                           SELECT completed_seconds, id, passengers
                            FROM leg
-                           WHERE route_id = %s AND to_stand = %s
+                           WHERE route_id = %s AND to_stand = %s AND passengers > 0
                            ORDER BY id DESC LIMIT 1
                            """, (route_id, to_stand))
             last = cursor.fetchone()
@@ -55,14 +72,14 @@ def calculate_detour_ratios(output_file):
                 print(f"Skipping order {order_id}: missing leg times")
                 continue
 
+            if last["id"] == first["id"]:
+                print(f"Skipping order {order_id}: uses its direct route")
+                continue
+
             start_time = first["started_seconds"]
             end_time = last["completed_seconds"]
 
-            # account for fixed pickup/drop-off durations
-            pick_up_duration = 20
-            drop_off_duration = 60
-
-            travel_time = end_time - start_time - pick_up_duration - drop_off_duration
+            travel_time = end_time - start_time
 
             detour_ratio = travel_time / distance_seconds if distance_seconds else None
             results.append((order_id, round(detour_ratio, 2)))
@@ -81,5 +98,6 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/detourRatio.csv'
-    calculate_detour_ratios(output_file)
+    output_file = 'csv/passengers_500/detourRatio.csv'
+    direct_routes_csv = 'csv/directRoutes.csv'
+    calculate_detour_ratios(output_file, direct_routes_csv)
