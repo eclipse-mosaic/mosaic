@@ -51,7 +51,7 @@ def calculate_empty_cruise_ratio(output_file):
     # Write results to CSV
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["cab_id", "empty_cruise_ratio"])
+        writer.writerow(["cab_id", "empty_cruise_ratio_percentage"])
         writer.writerows(results)
 
     print(f"Empty cruise ratios written to {output_file}")
@@ -60,5 +60,5 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/emptyCruiseRatio.csv'
+    output_file = 'csv/passengers_300/emptyCruiseRatio.csv'
     calculate_empty_cruise_ratio(output_file)

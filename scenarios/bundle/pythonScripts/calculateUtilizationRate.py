@@ -49,7 +49,7 @@ def calculate_operating_ratios(total_simulation_time_seconds, output_file):
     # 5. Write results to CSV
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["cab_id", "operating_time_ratio"])
+        writer.writerow(["cab_id", "operating_time_ratio_percentage"])
         writer.writerows(results)
 
     print(f"Utilization rates written to {output_file}")
@@ -59,5 +59,5 @@ if __name__ == "__main__":
     my_db_connection = setupTables.my_db_connection
 
     total_simulation_time_seconds = 4200
-    output_file = 'csv/utilizationRate.csv'
+    output_file = 'csv/passengers_500/utilizationRate.csv'
     calculate_operating_ratios(total_simulation_time_seconds, output_file)

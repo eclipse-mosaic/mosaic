@@ -26,7 +26,7 @@ def calculate_pooling_efficiency(output_file):
     # 4. Write result to CSV
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["total_trips", "pooled_trips", "pooling_efficiency"])
+        writer.writerow(["total_trips", "pooled_trips", "pooling_efficiency_percentage"])
         writer.writerow([total_trips, pooled_trips, efficiency])
 
     print(f"Pooling efficiency written to {output_file}")
@@ -35,5 +35,5 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/poolingEfficiency.csv'
+    output_file = 'csv/passengers_500/poolingEfficiency.csv'
     calculate_pooling_efficiency(output_file)
