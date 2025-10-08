@@ -81,15 +81,15 @@ def calculate_detour_ratios(output_file, direct_routes_csv):
 
             travel_time = end_time - start_time
 
-            detour_ratio = travel_time / distance_seconds if distance_seconds else None
-            results.append((order_id, round(detour_ratio, 2)))
+            detour_ratio = (round(travel_time * 100 / distance_seconds, 0)) % 100 if distance_seconds else None
+            results.append((order_id, detour_ratio))
 
     my_db_connection.close()
 
     # write results
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["order_id", "detour_ratio"])
+        writer.writerow(["order_id", "detour_ratio_percents"])
         writer.writerows(results)
 
     print(f"Detour ratios (only grouped orders) written to {output_file}")
@@ -98,6 +98,6 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/passengers_500/detourRatio.csv'
+    output_file = 'csv/passengers_300/detourRatio.csv'
     direct_routes_csv = 'csv/directRoutes.csv'
     calculate_detour_ratios(output_file, direct_routes_csv)
