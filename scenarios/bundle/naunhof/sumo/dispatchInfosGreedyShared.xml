@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2025-10-08 18:30:07 by Eclipse SUMO sumo Version 1.24.0
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+This file may also be made available under the following Secondary
+Licenses when the conditions for such availability set forth in the Eclipse
+Public License 2.0 are satisfied: GNU General Public License, version 2
+or later which is available at
+https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value=".\naunhof.net.xml"/>
+        <route-files value=".\naunhof.pt.rou.xml,.\ naunhof.persons.rou.xml"/>
+        <additional-files value=".\naunhof.bus.add.xml"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <tripinfo-output value=".\tripInfosGreedyShared.xml"/>
+        <tripinfo-output.write-unfinished value="true"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+        <end value="4200"/>
+    </time>
+
+    <taxi_device>
+        <device.taxi.dispatch-algorithm value="greedyShared"/>
+        <device.taxi.dispatch-algorithm.output value=".\dispatchInfosGreedyShared.xml"/>
+        <device.taxi.idle-algorithm value="stop"/>
+    </taxi_device>
+
+</sumoConfiguration>
+-->
+
+<DispatchInfo>
+    <dispatchShared time="60.00" id="t13" persons="p3" sharingPersons="p6" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="60.00" id="t22" persons="p4" sharingPersons="p8" type="2" absLoss="32.51" relLoss="0.10" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="120.00" id="t30" persons="p10" sharingPersons="p19" type="2" absLoss="45.76" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="120.00" id="t28" persons="p9" sharingPersons="p17" type="2" absLoss="9.82" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="120.00" id="t10" persons="p11" sharingPersons="p18" type="2" absLoss="43.06" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="120.00" id="t4" persons="p12" sharingPersons="p15" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="180.00" id="t9" persons="p21" sharingPersons="p22" type="2" absLoss="31.29" relLoss="0.12" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="180.00" id="t5" persons="p24" sharingPersons="p34" type="2" absLoss="30.76" relLoss="0.14" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="240.00" id="t21" persons="p35" sharingPersons="p41" type="2" absLoss="33.85" relLoss="0.13" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="300.00" id="t11" persons="p39" sharingPersons="p52" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="300.00" id="t7" persons="p40" sharingPersons="p44" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="360.00" id="t8" persons="p43" sharingPersons="p54" type="2" absLoss="31.74" relLoss="0.12" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="420.00" id="t4" persons="p46" sharingPersons="p49" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="420.00" id="t28" persons="p47" sharingPersons="p60" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="420.00" id="t19" persons="p48" sharingPersons="p55" type="2" absLoss="36.41" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="480.00" id="t13" persons="p50" sharingPersons="p68" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="480.00" id="t27" persons="p51" sharingPersons="p76" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="540.00" id="t29" persons="p53" sharingPersons="p56" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="600.00" id="t14" persons="p58" sharingPersons="p93" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="600.00" id="t7" persons="p59" sharingPersons="p69" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="600.00" id="t15" persons="p61" sharingPersons="p71" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="600.00" id="t26" persons="p63" sharingPersons="p65" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="600.00" id="t10" persons="p64" sharingPersons="p83" type="2" absLoss="31.63" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="660.00" id="t11" persons="p66" sharingPersons="p73" type="2" absLoss="19.08" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="660.00" id="t5" persons="p67" sharingPersons="p84" type="2" absLoss="9.89" relLoss="0.03" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="660.00" id="t3" persons="p70" sharingPersons="p81" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="660.00" id="t18" persons="p72" sharingPersons="p87" type="1" absLoss="-0.00" relLoss="-0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="660.00" id="t17" persons="p78" sharingPersons="p95" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="720.00" id="t22" persons="p80" sharingPersons="p91" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="720.00" id="t23" persons="p82" sharingPersons="p100" type="2" absLoss="63.55" relLoss="0.16" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="720.00" id="t28" persons="p85" sharingPersons="p112" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="780.00" id="t1" persons="p89" sharingPersons="p97" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="840.00" id="t2" persons="p90" sharingPersons="p98" type="2" absLoss="45.61" relLoss="0.17" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="900.00" id="t13" persons="p92" sharingPersons="p94" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="960.00" id="t14" persons="p96" sharingPersons="p101" type="2" absLoss="63.07" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="960.00" id="t9" persons="p99" sharingPersons="p128" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1020.00" id="t21" persons="p102" sharingPersons="p113" type="2" absLoss="55.62" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1020.00" id="t15" persons="p103" sharingPersons="p149" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1020.00" id="t30" persons="p104" sharingPersons="p122" type="2" absLoss="31.19" relLoss="0.17" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1020.00" id="t27" persons="p105" sharingPersons="p110" type="2" absLoss="20.20" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1020.00" id="t24" persons="p106" sharingPersons="p116" type="1" absLoss="-0.00" relLoss="-0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1020.00" id="t25" persons="p107" sharingPersons="p123" type="2" absLoss="50.60" relLoss="0.14" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1080.00" id="t20" persons="p108" sharingPersons="p150" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1080.00" id="t1" persons="p109" sharingPersons="p147" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1080.00" id="t7" persons="p111" sharingPersons="p141" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1080.00" id="t12" persons="p114" sharingPersons="p170" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1080.00" id="t8" persons="p115" sharingPersons="p156" type="2" absLoss="37.16" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1080.00" id="t10" persons="p117" sharingPersons="p125" type="2" absLoss="42.46" relLoss="0.10" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1140.00" id="t13" persons="p118" sharingPersons="p152" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1140.00" id="t18" persons="p119" sharingPersons="p126" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1200.00" id="t11" persons="p120" sharingPersons="p135" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1200.00" id="t16" persons="p121" sharingPersons="p161" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1200.00" id="t26" persons="p124" sharingPersons="p139" type="2" absLoss="52.01" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1260.00" id="t4" persons="p127" sharingPersons="p133" type="2" absLoss="10.38" relLoss="0.04" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1260.00" id="t22" persons="p129" sharingPersons="p131" type="2" absLoss="34.97" relLoss="0.16" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1260.00" id="t28" persons="p130" sharingPersons="p181" type="2" absLoss="9.89" relLoss="0.08" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1260.00" id="t17" persons="p132" sharingPersons="p177" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1320.00" id="t1" persons="p136" sharingPersons="p137" type="2" absLoss="47.01" relLoss="0.13" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1380.00" id="t20" persons="p138" sharingPersons="p142" type="2" absLoss="34.81" relLoss="0.12" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1380.00" id="t12" persons="p140" sharingPersons="p144" type="2" absLoss="20.43" relLoss="0.05" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1380.00" id="t3" persons="p143" sharingPersons="p153" type="2" absLoss="9.93" relLoss="0.04" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1380.00" id="t9" persons="p145" sharingPersons="p167" type="2" absLoss="31.15" relLoss="0.13" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1440.00" id="t13" persons="p146" sharingPersons="p201" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1440.00" id="t5" persons="p148" sharingPersons="p160" type="2" absLoss="46.66" relLoss="0.17" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1500.00" id="t7" persons="p154" sharingPersons="p157" type="2" absLoss="20.42" relLoss="0.05" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1500.00" id="t15" persons="p155" sharingPersons="p197" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1560.00" id="t29" persons="p158" sharingPersons="p163" type="2" absLoss="46.54" relLoss="0.14" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1560.00" id="t28" persons="p159" sharingPersons="p217" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1560.00" id="t2" persons="p162" sharingPersons="p166" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1620.00" id="t11" persons="p165" sharingPersons="p178" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1680.00" id="t27" persons="p169" sharingPersons="p174" type="2" absLoss="31.27" relLoss="0.11" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1680.00" id="t8" persons="p171" sharingPersons="p176" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1680.00" id="t17" persons="p172" sharingPersons="p186" type="2" absLoss="20.65" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1680.00" id="t6" persons="p173" sharingPersons="p179" type="2" absLoss="67.65" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1800.00" id="t21" persons="p180" sharingPersons="p200" type="2" absLoss="35.57" relLoss="0.20" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1800.00" id="t23" persons="p182" sharingPersons="p221" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1800.00" id="t24" persons="p183" sharingPersons="p188" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1800.00" id="t26" persons="p184" sharingPersons="p207" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1860.00" id="t14" persons="p185" sharingPersons="p252" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1860.00" id="t22" persons="p187" sharingPersons="p194" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1860.00" id="t19" persons="p189" sharingPersons="p209" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1920.00" id="t28" persons="p190" sharingPersons="p193" type="2" absLoss="64.32" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1980.00" id="t4" persons="p191" sharingPersons="p195" type="2" absLoss="61.69" relLoss="0.16" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1980.00" id="t16" persons="p192" sharingPersons="p196" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="1980.00" id="t8" persons="p198" sharingPersons="p199" type="2" absLoss="49.34" relLoss="0.20" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2040.00" id="t3" persons="p202" sharingPersons="p268" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2040.00" id="t15" persons="p203" sharingPersons="p210" type="2" absLoss="35.32" relLoss="0.20" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2040.00" id="t18" persons="p204" sharingPersons="p205" type="2" absLoss="33.31" relLoss="0.10" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2040.00" id="t9" persons="p206" sharingPersons="p247" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2040.00" id="t25" persons="p208" sharingPersons="p227" type="2" absLoss="38.03" relLoss="0.20" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2100.00" id="t20" persons="p211" sharingPersons="p226" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2100.00" id="t13" persons="p212" sharingPersons="p215" type="2" absLoss="49.09" relLoss="0.14" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2100.00" id="t23" persons="p213" sharingPersons="p232" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2100.00" id="t2" persons="p214" sharingPersons="p261" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2160.00" id="t30" persons="p216" sharingPersons="p330" type="2" absLoss="31.34" relLoss="0.13" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2160.00" id="t10" persons="p218" sharingPersons="p239" type="2" absLoss="49.93" relLoss="0.16" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2220.00" id="t14" persons="p219" sharingPersons="p237" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2220.00" id="t11" persons="p220" sharingPersons="p236" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2220.00" id="t1" persons="p222" sharingPersons="p224" type="2" absLoss="33.80" relLoss="0.13" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2220.00" id="t5" persons="p223" sharingPersons="p289" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2280.00" id="t22" persons="p225" sharingPersons="p240" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2280.00" id="t19" persons="p228" sharingPersons="p235" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2280.00" id="t16" persons="p229" sharingPersons="p283" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2340.00" id="t21" persons="p230" sharingPersons="p244" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2340.00" id="t9" persons="p231" sharingPersons="p246" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2340.00" id="t24" persons="p233" sharingPersons="p308" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2340.00" id="t17" persons="p234" sharingPersons="p273" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2340.00" id="t26" persons="p238" sharingPersons="p258" type="1" absLoss="-0.00" relLoss="-0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2400.00" id="t12" persons="p241" sharingPersons="p243" type="2" absLoss="39.51" relLoss="0.10" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2460.00" id="t29" persons="p242" sharingPersons="p259" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2460.00" id="t7" persons="p245" sharingPersons="p253" type="1" absLoss="-0.00" relLoss="-0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2460.00" id="t3" persons="p248" sharingPersons="p250" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2460.00" id="t27" persons="p249" sharingPersons="p257" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2580.00" id="t15" persons="p251" sharingPersons="p294" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2580.00" id="t2" persons="p254" sharingPersons="p264" type="2" absLoss="10.22" relLoss="0.03" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2640.00" id="t11" persons="p255" sharingPersons="p256" type="2" absLoss="62.11" relLoss="0.16" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2640.00" id="t23" persons="p260" sharingPersons="p263" type="2" absLoss="19.00" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2640.00" id="t25" persons="p262" sharingPersons="p291" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2700.00" id="t20" persons="p265" sharingPersons="p269" type="2" absLoss="39.59" relLoss="0.14" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2700.00" id="t29" persons="p266" sharingPersons="p270" type="2" absLoss="39.60" relLoss="0.11" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2700.00" id="t5" persons="p267" sharingPersons="p287" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2700.00" id="t22" persons="p271" sharingPersons="p285" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2700.00" id="t24" persons="p272" sharingPersons="p277" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2700.00" id="t8" persons="p274" sharingPersons="p337" type="2" absLoss="10.14" relLoss="0.08" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2700.00" id="t6" persons="p275" sharingPersons="p276" type="2" absLoss="20.43" relLoss="0.07" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2760.00" id="t30" persons="p278" sharingPersons="p281" type="2" absLoss="50.64" relLoss="0.17" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2760.00" id="t27" persons="p279" sharingPersons="p304" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2760.00" id="t17" persons="p280" sharingPersons="p286" type="1" absLoss="-0.00" relLoss="-0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2820.00" id="t3" persons="p282" sharingPersons="p301" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2820.00" id="t19" persons="p284" sharingPersons="p335" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2880.00" id="t1" persons="p288" sharingPersons="p327" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2880.00" id="t28" persons="p290" sharingPersons="p334" type="2" absLoss="36.32" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2880.00" id="t16" persons="p292" sharingPersons="p314" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2940.00" id="t5" persons="p293" sharingPersons="p346" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2940.00" id="t18" persons="p295" sharingPersons="p315" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2940.00" id="t9" persons="p296" sharingPersons="p310" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="2940.00" id="t10" persons="p297" sharingPersons="p319" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3000.00" id="t14" persons="p298" sharingPersons="p305" type="2" absLoss="49.23" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3000.00" id="t4" persons="p299" sharingPersons="p326" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3000.00" id="t13" persons="p300" sharingPersons="p307" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3000.00" id="t15" persons="p302" sharingPersons="p322" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3000.00" id="t8" persons="p303" sharingPersons="p341" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3000.00" id="t26" persons="p306" sharingPersons="p381" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3060.00" id="t21" persons="p309" sharingPersons="p370" type="2" absLoss="30.79" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3060.00" id="t22" persons="p311" sharingPersons="p336" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3180.00" id="t25" persons="p312" sharingPersons="p354" type="2" absLoss="32.29" relLoss="0.10" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3240.00" id="t3" persons="p313" sharingPersons="p358" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3240.00" id="t23" persons="p316" sharingPersons="p328" type="2" absLoss="35.45" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3240.00" id="t18" persons="p317" sharingPersons="p338" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3240.00" id="t19" persons="p318" sharingPersons="p325" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3240.00" id="t24" persons="p320" sharingPersons="p321" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3300.00" id="t1" persons="p323" sharingPersons="p329" type="2" absLoss="32.45" relLoss="0.12" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3300.00" id="t13" persons="p324" sharingPersons="p367" type="2" absLoss="49.21" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3300.00" id="t7" persons="p331" sharingPersons="p417" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3300.00" id="t15" persons="p332" sharingPersons="p339" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3300.00" id="t16" persons="p333" sharingPersons="p344" type="2" absLoss="43.09" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3360.00" id="t4" persons="p340" sharingPersons="p363" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3360.00" id="t22" persons="p342" sharingPersons="p343" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3360.00" id="t27" persons="p345" sharingPersons="p395" type="2" absLoss="19.66" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3420.00" id="t20" persons="p347" sharingPersons="p401" type="2" absLoss="41.35" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3420.00" id="t5" persons="p348" sharingPersons="p375" type="2" absLoss="31.01" relLoss="0.17" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3420.00" id="t12" persons="p349" sharingPersons="p351" type="2" absLoss="32.49" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3420.00" id="t2" persons="p350" sharingPersons="p364" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3420.00" id="t8" persons="p352" sharingPersons="p389" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3420.00" id="t26" persons="p353" sharingPersons="p390" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3420.00" id="t6" persons="p355" sharingPersons="p362" type="2" absLoss="65.53" relLoss="0.17" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3480.00" id="t21" persons="p356" sharingPersons="p371" type="2" absLoss="49.85" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3480.00" id="t28" persons="p357" sharingPersons="p359" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3480.00" id="t9" persons="p360" sharingPersons="p368" type="2" absLoss="36.58" relLoss="0.10" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3480.00" id="t10" persons="p361" sharingPersons="p372" type="2" absLoss="20.91" relLoss="0.09" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3540.00" id="t14" persons="p365" sharingPersons="p374" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3540.00" id="t3" persons="p366" sharingPersons="p393" type="1" absLoss="-0.00" relLoss="-0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3600.00" id="t29" persons="p369" sharingPersons="p378" type="2" absLoss="35.34" relLoss="0.19" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3600.00" id="t7" persons="p373" sharingPersons="p416" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3600.00" id="t30" persons="p376" sharingPersons="p396" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3660.00" id="t11" persons="p377" sharingPersons="p383" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3660.00" id="t18" persons="p379" sharingPersons="p429" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3780.00" id="t2" persons="p380" sharingPersons="p384" type="2" absLoss="9.87" relLoss="0.04" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3780.00" id="t27" persons="p382" sharingPersons="p387" type="2" absLoss="63.48" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3780.00" id="t17" persons="p385" sharingPersons="p419" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3840.00" id="t14" persons="p386" sharingPersons="p406" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3840.00" id="t4" persons="p388" sharingPersons="p391" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3840.00" id="t23" persons="p392" sharingPersons="p413" type="2" absLoss="9.69" relLoss="0.07" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3840.00" id="t19" persons="p394" sharingPersons="p438" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3840.00" id="t30" persons="p397" sharingPersons="p400" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3840.00" id="t8" persons="p398" sharingPersons="p404" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3840.00" id="t26" persons="p399" sharingPersons="p415" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3960.00" id="t5" persons="p402" sharingPersons="p424" type="2" absLoss="9.58" relLoss="0.04" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3960.00" id="t18" persons="p403" sharingPersons="p425" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="3960.00" id="t16" persons="p405" sharingPersons="p420" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4020.00" id="t20" persons="p407" sharingPersons="p408" type="2" absLoss="39.91" relLoss="0.12" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4020.00" id="t1" persons="p409" sharingPersons="p418" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4020.00" id="t15" persons="p410" sharingPersons="p457" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4020.00" id="t24" persons="p411" sharingPersons="p443" type="2" absLoss="31.43" relLoss="0.18" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4020.00" id="t25" persons="p412" sharingPersons="p428" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4080.00" id="t13" persons="p414" sharingPersons="p448" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4080.00" id="t7" persons="p421" sharingPersons="p446" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4080.00" id="t17" persons="p422" sharingPersons="p426" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4140.00" id="t29" persons="p423" sharingPersons="p435" type="2" absLoss="41.96" relLoss="0.15" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4140.00" id="t21" persons="p427" sharingPersons="p454" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4140.00" id="t3" persons="p430" sharingPersons="p463" type="2" absLoss="0.00" relLoss="0.00" absLoss2="0.00" relLoss2="0.00"/>
+    <dispatchShared time="4140.00" id="t10" persons="p431" sharingPersons="p433" type="2" absLoss="36.14" relLoss="0.13" absLoss2="0.00" relLoss2="0.00"/>
+</DispatchInfo>

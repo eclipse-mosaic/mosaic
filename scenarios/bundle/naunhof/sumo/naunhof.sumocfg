@@ -5,12 +5,14 @@
 		<additional-files value="naunhof.bus.add.xml"/>
 		<device.taxi.dispatch-algorithm value="traci"/>
         <device.taxi.idle-algorithm value="stop"/>
-        <device.taxi.dispatch-algorithm.output value="dispatchinfos.xml"/>
+        <!-- Works only when executed with SUMO directly
+            <device.taxi.dispatch-algorithm.output value="dispatchInfos.xml"/>
+        -->
 	</input>
-    <!--
+	<!-- Works only when executed with SUMO directly
         <output>
             <write-license value="true"/>
-            <tripinfo-output value="tripinfos.xml"/>
+            <tripinfo-output value="tripInfos.xml"/>
             <tripinfo-output.write-unfinished value="true"/>
         </output>
     -->

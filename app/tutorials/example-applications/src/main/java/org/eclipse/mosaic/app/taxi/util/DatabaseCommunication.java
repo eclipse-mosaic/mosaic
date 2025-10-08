@@ -417,7 +417,9 @@ public class DatabaseCommunication {
 	 * @return the time when the next possible train arrives
 	 */
 	private int getNextPossibleTrain(long busStopId, long simulationTimeInSeconds) {
-		int bufferForSharedRide = 150;
+		int dispatcherSolvingDelay = 10;
+		int arithmeticMeanDirectRoutes = 270;
+		int bufferForSharedRide = dispatcherSolvingDelay + arithmeticMeanDirectRoutes;
 		int timeTravelling = directRoutes.get(String.valueOf(busStopId)) + bufferForSharedRide;
 		int firstTrainArrival = 500;
 		int periodUntilNextTrain = 900;

@@ -2,7 +2,6 @@
 <routes>
     <person id="p1" depart="3">
         <ride from="25939498#3" to="-25415039#3" lines="taxi"/>
-        <ride to="374605592#0" lines="trainLine"/>
     </person>
     <person id="p2" depart="4">
         <ride from="-1022042157#2" to="-25415039#3" lines="taxi"/>
