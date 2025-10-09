@@ -647,7 +647,11 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
                             log.trace("UpdateNode : ID: [int={}, ext={}] Pos: x({}) y({}) Geo: {}", vi.getName(), id,
                                     projectedPosition.getX(), projectedPosition.getY(), geoPosition);
                         }
-                        nodesToUpdate.add(new NodeDataContainer(id, projectedPosition, List.of("Road1", "Road2", "Road3")));
+                        ArrayList<String> roadList = null;
+                        if (vi.getAdditionalData() instanceof ArrayList<?>) {
+                            roadList = (ArrayList<String>) vi.getAdditionalData();
+                        }
+                        nodesToUpdate.add(new NodeDataContainer(id, projectedPosition, roadList));
                     } else if (registeredNodes.containsKey(vi.getName())) {
                         // Node was not yet added to simulation, so update its entry in the registered node list
                         registeredNodes.get(vi.getName()).position = projectedPosition;
