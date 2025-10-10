@@ -103,14 +103,10 @@ public class VehicleUnit extends AbstractSimulationUnit implements VehicleOperat
         }
 
         final PerceptionEgo ego = new PerceptionEgoVehicleAdapter(this);
-        if (SimulationKernel.SimulationKernel.getCentralPerceptionComponent() != null) {
-            if (SimulationKernel.SimulationKernel.getConfiguration().perceptionConfiguration.useSumoPerception) {
-                perceptionModule = new SumoPerceptionModule(this, ego, database, getOsLog());
-            } else {
-                perceptionModule = new SimplePerceptionModule(ego, database, getOsLog());
-            }
+        if (SimulationKernel.SimulationKernel.getConfiguration().perceptionConfiguration.useSumoPerception) {
+            perceptionModule = new SumoPerceptionModule(this, ego, database, getOsLog());
         } else {
-            perceptionModule = new NopPerceptionModule(ego, database, getOsLog());
+            perceptionModule = new SimplePerceptionModule(ego, database, getOsLog());
         }
 
         basicSensorModule = new EnvironmentBasicSensorModule();
