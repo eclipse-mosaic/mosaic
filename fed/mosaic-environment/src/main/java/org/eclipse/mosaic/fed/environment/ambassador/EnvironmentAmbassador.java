@@ -94,7 +94,7 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
      *             time.
      */
     @Override
-    protected void processTimeAdvanceGrant(long time) throws InternalFederateException {
+    protected boolean processTimeAdvanceGrant(long time) throws InternalFederateException {
         super.processTimeAdvanceGrant(time);
 
         long nextTimeAdvanceGrant = Long.MAX_VALUE;
@@ -131,6 +131,8 @@ public class EnvironmentAmbassador extends AbstractFederateAmbassador {
         } catch (IllegalValueException e) {
             log.error("Could not send message about current events");
         }
+
+        return true;
     }
 
     @Override

@@ -207,9 +207,10 @@ public class CellAmbassador extends AbstractFederateAmbassador {
     }
 
     @Override
-    protected void processTimeAdvanceGrant(long time) {
+    protected boolean processTimeAdvanceGrant(long time) {
         log.trace("ProcessTimeAdvanceGrant at t={}", TIME.format(time));
         chainManager.advanceTime(time);
+        return true;
     }
 
     @Override

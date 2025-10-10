@@ -23,6 +23,8 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 import org.eclipse.mosaic.rti.api.TimeManagement;
 import org.eclipse.mosaic.rti.api.time.FederateEvent;
 
+import java.util.Objects;
+
 /**
  * This class is a sequential implementation of the <code>TimeManagement</code>
  * interface.
@@ -60,8 +62,13 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
         final RealtimeSynchronisation realtimeSync = new RealtimeSynchronisation(realtimeBrake);
 
         long currentRealtimeNs;
+        boolean success = false;
         FederateEvent event;
         FederateAmbassador ambassador;
+
+        long lastNs3Timestamp = 0;
+        boolean lastRunDidAbort = false;
+        FederateAmbassador ns3Ambassador = federation.getFederationManagement().getAmbassador("ns3");
 
         while (this.time <= getEndTime()) {
             // the end time is inclusive, in order to schedule events in the last simulation time step
@@ -71,15 +78,25 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
                 realtimeSync.sync(this.time);
             }
 
-            // remove all events at the head of the queue that are created by the same federate
+            // read the next event
             synchronized (this.events) {
+                if (this.events.isEmpty()) break;
                 event = this.events.poll();
-                // advance global time
-                if (event == null || event.getRequestedTime() > getEndTime()) {
-                    this.time = getEndTime();
-                    break;
+            }
+
+            // always let run ns3 first, then all others (yea, double execution for new-time ns3 events)
+            if (event.getRequestedTime() > lastNs3Timestamp) {
+                success = ns3Ambassador.advanceTime(event.getRequestedTime());
+                if (success) {
+                    lastNs3Timestamp = event.getRequestedTime();
+                    lastRunDidAbort = false;
                 } else {
-                    this.time = event.getRequestedTime();
+                    if (lastRunDidAbort) {
+                        throw new InternalFederateException("Discovered dead-lock: ns3 preempts without scheduling a new event");
+                    }
+                    lastRunDidAbort = true;
+                    this.events.add(event);
+                    continue;
                 }
             }
 
@@ -90,23 +107,14 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
                 long startTime = System.currentTimeMillis();
                 ambassador.advanceTime(event.getRequestedTime());
                 federation.getMonitor().onEndActivity(event, System.currentTimeMillis() - startTime);
-
-                // check, if event queue is empty after the last time advance.
-                // If no more events are in the list, the simulation can be skipped to the endTime.
-                if (this.events.isEmpty()) {
-                    logger.debug("No events anymore, skipping to end time: {}", getEndTime());
-
-                    federation.getMonitor().onBeginActivity(event);
-                    startTime = System.currentTimeMillis();
-                    ambassador.advanceTime(getEndTime());
-                    federation.getMonitor().onEndActivity(event, System.currentTimeMillis() - startTime);
-                }
             }
-            currentRealtimeNs = System.nanoTime();
 
+            // advance global time
+            this.time = event.getRequestedTime();
+
+            currentRealtimeNs = System.nanoTime();
             final PerformanceInformation performanceInformation =
                     performanceCalculator.update(time, getEndTime(), currentRealtimeNs);
-
             printProgress(currentRealtimeNs, performanceInformation);
             updateWatchDog();
         }

@@ -246,7 +246,7 @@ public class ApplicationAmbassador extends AbstractFederateAmbassador implements
     }
 
     @Override
-    protected void processTimeAdvanceGrant(final long time) throws InternalFederateException {
+    protected boolean processTimeAdvanceGrant(final long time) throws InternalFederateException {
         try {
             if (log.isDebugEnabled()) {
                 log.debug("processTimeAdvanceGrant({})", TIME.format(time));
@@ -260,6 +260,7 @@ public class ApplicationAmbassador extends AbstractFederateAmbassador implements
         } catch (RuntimeException e) {
             throw new InternalFederateException(ErrorRegister.AMBASSADOR_ErrorAdvanceTime.toString(), e);
         }
+        return true;
     }
 
     @Override
