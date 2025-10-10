@@ -1,3 +1,15 @@
+# Changelog Eclipse MOSAIC 25.1 (October 2025)
+ 
+* [C+] Introduced simulation of cellular communication using ns-3 federate (LTE stack).
+* [C+] Upgraded OMNeT++ federate to OMNeT++ 6.1
+* [C+] Exchange cellular messages among persons by using agent applications and mosaic-cell simulator. 
+* [A+] Added possibility to map agent applications to SUMO persons via mapping configuration.
+* [A+] Major overhaul of environment event API.
+* [M+] Perception models are now available as separate library.
+* [M-] Startup procedure and logging of docker-based federates is now more robust. 
+* [S+] Completely new command line interface for scenario-convert tool (see `--help` or website).
+* [T+] Now supports SUMO 1.24.0
+
 # Changelog Eclipse MOSAIC 25.0 (April 2025)
 
 * [M+] MOSAIC now requires at least Java 17 Runtime Environment to be executed.
