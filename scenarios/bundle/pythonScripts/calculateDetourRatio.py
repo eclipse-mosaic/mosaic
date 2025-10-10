@@ -98,6 +98,6 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/passengers_700/detourRatio.csv'
+    output_file = 'csv/passengers_100_2_15_70_10/detourRatio.csv'
     direct_routes_csv = 'csv/directRoutes.csv'
     calculate_detour_ratios(output_file, direct_routes_csv)

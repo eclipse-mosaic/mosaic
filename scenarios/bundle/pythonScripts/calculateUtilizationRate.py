@@ -58,6 +58,6 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    total_simulation_time_seconds = 4200
-    output_file = 'csv/passengers_700/utilizationRate.csv'
+    total_simulation_time_seconds = 1500
+    output_file = 'csv/passengers_100_2_15_70_10/utilizationRate.csv'
     calculate_operating_ratios(total_simulation_time_seconds, output_file)

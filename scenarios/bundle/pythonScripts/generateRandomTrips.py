@@ -128,8 +128,8 @@ if __name__ == "__main__":
     except ValueError:
         generate_random_person_trips(
             bus_add_file="../{0}/sumo/{0}.bus.add.xml".format(sys.argv[1]),
-            num_trips=700,
+            num_trips=100,
             fixed_stop_id="bs_23",   # must exist in bus.add.xml
             fixed_stop_percentage=1,
-            depart_time_range=(0, 3000)
+            depart_time_range=(0, 600)
         )
