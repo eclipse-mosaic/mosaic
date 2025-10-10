@@ -108,6 +108,12 @@ public class CSumo implements Serializable {
     public int simulationClientOrder = 1;
 
     /**
+     * If set to a value greater than 0, a list of upcoming edges within the given range will be set in the additionalData field of each
+     * VehicleData object (default: 0).
+     */
+    public double upcomingEdgesRange = 0;
+
+    /**
      * A optional list of subscriptions for each vehicle in the simulation. The less subscriptions given,
      * the faster the simulation. Per default (if this list is set to null), all subscriptions are activated.
      * Please note, that some components expect specific information, such as the road position. If those information
