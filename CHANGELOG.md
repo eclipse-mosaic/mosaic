@@ -1,6 +1,6 @@
 # Changelog Eclipse MOSAIC 25.1 (October 2025)
  
-* [C+] Introduced simulation of cellular communication using ns-3 federate (LTE stack).
+* [C+] Introduced support for cellular communication in ns-3 (LTE stack).
 * [C+] Upgraded OMNeT++ federate to OMNeT++ 6.1
 * [C+] Exchange cellular messages among persons by using agent applications and mosaic-cell simulator. 
 * [A+] Added possibility to map agent applications to SUMO persons via mapping configuration.
