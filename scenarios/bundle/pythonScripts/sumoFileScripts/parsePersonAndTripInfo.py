@@ -76,7 +76,6 @@ def parse_xml_file():
          number_of_shared_orders += len(set(dispatch_node.get("sharingPersons").split()))
 
     number_of_passengers_greedy_shared = len(dispatch_nodes) * 2
-
     mult = number_of_passengers_greedy_shared if dispatch_algorithm == "GreedyShared" else number_of_shared_orders
     percentage_shared_orders = mult * 100 / (500 - not_started_orders)
     print(f"Percentage of shared orders: {percentage_shared_orders}")
