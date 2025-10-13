@@ -13,7 +13,7 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.interactions.vehicle;
+package org.eclipse.mosaic.interactions.trafficsigns;
 
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
@@ -23,29 +23,28 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-/**
- * This extension of {@link Interaction}  informs about a vehicles' sight distance.
- */
-public final class VehicleSightDistanceConfiguration extends Interaction {
+import java.io.Serial;
 
+/**
+ * Informs about a vehicles' sight distance and opening angle to detect traffic signs
+ * with the help of mosaic-traffic-signs (Extended feature).
+ */
+public final class VehicleSignVisibilityConfiguration extends Interaction {
+
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    public final static String TYPE_ID = createTypeIdentifier(VehicleSightDistanceConfiguration.class);
+    public final static String TYPE_ID = createTypeIdentifier(VehicleSignVisibilityConfiguration.class);
 
     /**
      * The vehicles name that has sent the interaction.
      */
-    private String vehicleId;
+    private final String vehicleId;
 
     /**
      * The sender vehicles current sight distance.
      */
-    private double sightDistance;
-
-    /**
-     * The opening angle of the sight area of the vehicle.
-     */
-    private double openingAngle;
+    private final double sightDistance;
 
     /**
      * Creates an interaction that includes the sender name (vehicle) and its sight distance (in m).
@@ -54,31 +53,14 @@ public final class VehicleSightDistanceConfiguration extends Interaction {
      * @param vehicleId     vehicle identifier
      * @param sightDistance sight distance of the vehicle, unit: [m]
      */
-    public VehicleSightDistanceConfiguration(long time, String vehicleId, double sightDistance) {
-        this(time, vehicleId, sightDistance, 360);
-    }
-
-    /**
-     * Creates an interaction that includes the sender name (vehicle) and its sight distance (in m).
-     *
-     * @param time          Timestamp of this interaction, unit: [ns]
-     * @param vehicleId     vehicle identifier
-     * @param sightDistance sight distance of the vehicle, unit: [m]
-     * @param openingAngle  opening angle of the sight area of the vehicle in degrees, unit: [deg]
-     */
-    public VehicleSightDistanceConfiguration(long time, String vehicleId, double sightDistance, double openingAngle) {
+    public VehicleSignVisibilityConfiguration(long time, String vehicleId, double sightDistance) {
         super(time);
         this.vehicleId = vehicleId;
         this.sightDistance = sightDistance;
-        this.openingAngle = openingAngle;
     }
 
     public double getSightDistance() {
         return sightDistance;
-    }
-
-    public double getOpeningAngle() {
-        return openingAngle;
     }
 
     public String getVehicleId() {
@@ -90,7 +72,6 @@ public final class VehicleSightDistanceConfiguration extends Interaction {
         return new HashCodeBuilder(7, 29)
                 .append(vehicleId)
                 .append(sightDistance)
-                .append(openingAngle)
                 .toHashCode();
     }
 
@@ -106,11 +87,10 @@ public final class VehicleSightDistanceConfiguration extends Interaction {
             return false;
         }
 
-        VehicleSightDistanceConfiguration other = (VehicleSightDistanceConfiguration) obj;
+        VehicleSignVisibilityConfiguration other = (VehicleSignVisibilityConfiguration) obj;
         return new EqualsBuilder()
                 .append(this.vehicleId, other.vehicleId)
                 .append(this.sightDistance, other.sightDistance)
-                .append(this.openingAngle, other.openingAngle)
                 .isEquals();
     }
 
@@ -120,7 +100,6 @@ public final class VehicleSightDistanceConfiguration extends Interaction {
                 .appendSuper(super.toString())
                 .append("vehicleId", vehicleId)
                 .append("sightDistance", sightDistance)
-                .append("openingAngle", openingAngle)
                 .toString();
     }
 }

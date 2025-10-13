@@ -25,6 +25,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.TraciClientBridge;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TraciSimulationStepResult;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.SumoVehicleTypesWriter;
+import org.eclipse.mosaic.interactions.application.SumoSurroundingObjectsSubscription;
 import org.eclipse.mosaic.interactions.application.SumoTraciRequest;
 import org.eclipse.mosaic.interactions.application.SumoTraciResponse;
 import org.eclipse.mosaic.interactions.mapping.AgentRegistration;
@@ -47,7 +48,6 @@ import org.eclipse.mosaic.interactions.vehicle.VehicleResume;
 import org.eclipse.mosaic.interactions.vehicle.VehicleRouteChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleRouteRegistration;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSensorActivation;
-import org.eclipse.mosaic.interactions.vehicle.VehicleSightDistanceConfiguration;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSlowDown;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSpeedChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleStop;
@@ -492,8 +492,8 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
             vehicleActionsHandler.handleSensorActivation((VehicleSensorActivation) interaction);
         } else if (interaction.getTypeId().equals(VehicleSpeedChange.TYPE_ID)) {
             vehicleActionsHandler.handleSpeedChange((VehicleSpeedChange) interaction);
-        } else if (interaction.getTypeId().equals(VehicleSightDistanceConfiguration.TYPE_ID)) {
-            vehicleActionsHandler.handleSightDistanceConfiguration((VehicleSightDistanceConfiguration) interaction);
+        } else if (interaction.getTypeId().equals(SumoSurroundingObjectsSubscription.TYPE_ID)) {
+            vehicleActionsHandler.handleSurroundingVehiclesSubscription((SumoSurroundingObjectsSubscription) interaction);
         } else if (interaction.getTypeId().equals(InductionLoopDetectorSubscription.TYPE_ID)) {
             infrastructureHandler.handleDetectorSubscription((InductionLoopDetectorSubscription) interaction);
         } else if (interaction.getTypeId().equals(LaneAreaDetectorSubscription.TYPE_ID)) {

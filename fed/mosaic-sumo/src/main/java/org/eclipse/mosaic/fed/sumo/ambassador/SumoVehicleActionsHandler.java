@@ -27,16 +27,17 @@ import static org.eclipse.mosaic.fed.sumo.ambassador.LogStatements.VEHICLE_STOP_
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoLaneChangeMode;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoSpeedMode;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
+import org.eclipse.mosaic.interactions.application.SumoSurroundingObjectsSubscription;
 import org.eclipse.mosaic.interactions.vehicle.VehicleLaneChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleParametersChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleResume;
 import org.eclipse.mosaic.interactions.vehicle.VehicleRouteChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSensorActivation;
-import org.eclipse.mosaic.interactions.vehicle.VehicleSightDistanceConfiguration;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSlowDown;
 import org.eclipse.mosaic.interactions.vehicle.VehicleSpeedChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleStop;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
+import org.eclipse.mosaic.lib.objects.UnitNameGenerator;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleParameter;
@@ -296,20 +297,25 @@ public class SumoVehicleActionsHandler extends AbstractHandler implements EventP
         }
     }
 
-    synchronized void handleSightDistanceConfiguration(VehicleSightDistanceConfiguration vehicleSightDistanceConfiguration) throws InternalFederateException {
-        log.info("{} at simulation time {}: vehicleId=\"{}\", range={}, angle={}",
+    synchronized void handleSurroundingVehiclesSubscription(SumoSurroundingObjectsSubscription subscription) throws InternalFederateException {
+        if (!UnitNameGenerator.isVehicle(subscription.getUnitId())) {
+            log.error("Currently supports object subscriptions for vehicles only. Ignoring.");
+            return;
+        }
+
+        log.info("{} at simulation time {}: unitId=\"{}\", range={}, fieldOfView={}",
                 VEHICLE_SIGHT_DISTANCE_REQ,
-                TIME.format(vehicleSightDistanceConfiguration.getTime()),
-                vehicleSightDistanceConfiguration.getVehicleId(),
-                vehicleSightDistanceConfiguration.getSightDistance(),
-                vehicleSightDistanceConfiguration.getOpeningAngle()
+                TIME.format(subscription.getTime()),
+                subscription.getUnitId(),
+                subscription.getRange(),
+                subscription.getFieldOfView()
         );
 
         bridge.getSimulationControl().subscribeForVehiclesWithinFieldOfVision(
-                vehicleSightDistanceConfiguration.getVehicleId(),
-                vehicleSightDistanceConfiguration.getTime(), ambassador.getEndTime(),
-                vehicleSightDistanceConfiguration.getSightDistance(),
-                vehicleSightDistanceConfiguration.getOpeningAngle()
+                subscription.getUnitId(),
+                subscription.getTime(), ambassador.getEndTime(),
+                subscription.getRange(),
+                subscription.getFieldOfView()
         );
     }
 

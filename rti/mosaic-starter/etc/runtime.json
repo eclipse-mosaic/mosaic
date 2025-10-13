@@ -188,7 +188,7 @@
                 "InductionLoopDetectorSubscription",
                 "LaneAreaDetectorSubscription",
                 "TrafficLightSubscription",
-                "VehicleSightDistanceConfiguration",
+                "SumoSurroundingObjectsSubscription",
                 "AgentRegistration"
             ],
             "javaClasspathEntries": []
