@@ -1,4 +1,4 @@
-person_id,waiting_time,vehicle_id,arrival,not_started,started_but_not_finished
+person_id,waiting_time_seconds,vehicle_id,arrival,not_started,started_but_not_finished
 p1,82.00,t11,280.00,False,False
 p16,62.00,t7,297.00,False,False
 p5,51.00,t8,304.00,False,False

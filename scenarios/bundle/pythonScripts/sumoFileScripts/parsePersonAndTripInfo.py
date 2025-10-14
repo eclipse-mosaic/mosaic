@@ -16,7 +16,7 @@ def parse_xml_file():
     # Open CSV for writing
     with open(csv_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["person_id", "waiting_time", "vehicle_id", "arrival", "not_started", "started_but_not_finished"])  # Header
+        writer.writerow(["person_id", "waiting_time_seconds", "vehicle_id", "arrival", "not_started", "started_but_not_finished"])  # Header
 
         # Iterate through each personinfo node
         for person in root.findall("personinfo"):
@@ -84,5 +84,5 @@ def parse_xml_file():
 
 if __name__ == "__main__":
     scenario_name = "naunhof"
-    dispatch_algorithm = "RouteExtension"
+    dispatch_algorithm = "GreedyShared"
     parse_xml_file()
