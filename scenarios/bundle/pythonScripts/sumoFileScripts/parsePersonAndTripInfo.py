@@ -4,7 +4,7 @@ import csv
 def parse_xml_file():
     # Input XML and output CSV filenames
     xml_file = f"./../../{scenario_name}/sumo/tripInfos{dispatch_algorithm}.xml"
-    csv_file = f"{dispatch_algorithm}_person_rides.csv"
+    csv_file = f"./../csv/{folder}/{dispatch_algorithm}_person_rides.csv"
 
     # Parse the XML file
     tree = ET.parse(xml_file)
@@ -85,4 +85,5 @@ def parse_xml_file():
 if __name__ == "__main__":
     scenario_name = "naunhof"
     dispatch_algorithm = "GreedyShared"
+    folder = "greedyShared"
     parse_xml_file()

@@ -5,9 +5,9 @@ import os
 
 def show_data():
     custom_colors = {
-        'passengers_100_normal': '#66c2a5',
-        'passengers_100_second': '#fc8d62',
-        'passengers_100_third': '#8da0cb',
+        'paramset_1': '#66c2a5',
+        'paramset_2': '#fc8d62',
+        'paramset_3': '#8da0cb',
         'passengers_300': '#e78ac3',
         'passengers_500': '#42d7f5',
         'passengers_700': '#977af5',
@@ -25,10 +25,12 @@ def show_data():
         # Add a column to label which file the data came from
         label = str.split(os.path.splitext(file_path)[0], '/')[3]
 
-        if label == 'passengers_100_2_50_5':
-            label = 'passengers_100_second'
+        if label == 'passengers_100_normal':
+            label = 'paramset_1'
+        elif label == 'passengers_100_2_50_5':
+            label = 'paramset_2'
         elif label == 'passengers_100_2_15_70_10':
-            label = 'passengers_100_third'
+            label = 'paramset_3'
 
         df['source'] = label
         dataframes.append(df)
@@ -51,9 +53,9 @@ def show_data():
     plt.show()
 
 if __name__ == "__main__":
-    plot_ylabel= 'Waiting Time For Next Train In Seconds'
-    file_name = 'onTimeArrival.csv'
-    boxplot_y_label = 'waiting_time'
+    plot_ylabel= 'Waiting Time In Seconds'
+    file_name = 'waitingTime.csv'
+    boxplot_y_label = 'wait_time_seconds'
     plot_title = f'{plot_ylabel} Across Datasets'
-    plot_ylim = 0, 1200
+    plot_ylim = 0, 1000
     show_data()

@@ -3,7 +3,7 @@ import csv
 
 def parse_xml_file():
     xml_file = f"./../../{scenario_name}/sumo/dispatchInfos{dispatch_algorithm}.xml"
-    csv_file = f"{dispatch_algorithm}_taxi_data.csv"
+    csv_file = f"./../csv/{folder}/{dispatch_algorithm}_taxi_data.csv"
 
     # Parse XML
     tree = ET.parse(xml_file)
@@ -42,4 +42,5 @@ def parse_xml_file():
 if __name__ == "__main__":
     scenario_name = "naunhof"
     dispatch_algorithm = "RouteExtension"
+    folder = "routeExtension"
     parse_xml_file()
