@@ -43,6 +43,6 @@ if __name__ == "__main__":
     my_db_connection = setupTables.my_db_connection
 
     on_time_threshold = 60
-    output_file = 'csv/passengers_100_2_15_70_10/onTimeArrival.csv'
+    output_file = 'csv/paramset_3/onTimeArrival.csv'
 
     calculate_waiting_times(on_time_threshold, output_file)

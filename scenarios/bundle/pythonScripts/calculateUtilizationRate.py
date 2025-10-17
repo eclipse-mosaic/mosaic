@@ -59,5 +59,5 @@ if __name__ == "__main__":
     my_db_connection = setupTables.my_db_connection
 
     total_simulation_time_seconds = 1500
-    output_file = 'csv/passengers_100_2_15_70_10/utilizationRate.csv'
+    output_file = 'csv/paramset_3/utilizationRate.csv'
     calculate_operating_ratios(total_simulation_time_seconds, output_file)

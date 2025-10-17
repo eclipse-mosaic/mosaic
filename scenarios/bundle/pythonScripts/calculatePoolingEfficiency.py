@@ -35,5 +35,5 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/passengers_100_2_15_70_10/poolingEfficiency.csv'
+    output_file = 'csv/paramset_3/poolingEfficiency.csv'
     calculate_pooling_efficiency(output_file)

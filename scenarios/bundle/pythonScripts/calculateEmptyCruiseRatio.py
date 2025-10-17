@@ -60,5 +60,5 @@ if __name__ == "__main__":
     setupTables.setup_db_connection()
     my_db_connection = setupTables.my_db_connection
 
-    output_file = 'csv/passengers_100_2_15_70_10/emptyCruiseRatio.csv'
+    output_file = 'csv/paramset_3/emptyCruiseRatio.csv'
     calculate_empty_cruise_ratio(output_file)

@@ -12,11 +12,11 @@ def show_data():
         'passengers_500': '#42d7f5',
         'passengers_700': '#977af5',
     }
-    folder_names= ['300', '500', '700', '100_normal', '100_2_50_5', '100_2_15_70_10']
+    folder_names= ['passengers_300', 'passengers_500', 'passengers_700', 'paramset_1', 'paramset_2', 'paramset_3']
     file_paths = []
 
     for folder_name in folder_names:
-        file_paths.append(f'./../csv/passengers_{folder_name}/{file_name}')
+        file_paths.append(f'./../csv/{folder_name}/{file_name}')
 
     dataframes = []
     for file_path in file_paths:
@@ -24,13 +24,6 @@ def show_data():
 
         # Add a column to label which file the data came from
         label = str.split(os.path.splitext(file_path)[0], '/')[3]
-
-        if label == 'passengers_100_normal':
-            label = 'paramset_1'
-        elif label == 'passengers_100_2_50_5':
-            label = 'paramset_2'
-        elif label == 'passengers_100_2_15_70_10':
-            label = 'paramset_3'
 
         df['source'] = label
         dataframes.append(df)
