@@ -16,7 +16,7 @@
 package org.eclipse.mosaic.fed.application.ambassador;
 
 import org.eclipse.mosaic.fed.application.ambassador.simulation.AbstractSimulationUnit;
-import org.eclipse.mosaic.fed.application.ambassador.simulation.electric.providers.ChargingStationIndex;
+import org.eclipse.mosaic.fed.application.ambassador.simulation.electric.ChargingStationIndex;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.navigation.CentralNavigationComponent;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.CentralPerceptionComponent;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.EnvironmentBasicSensorModule;
