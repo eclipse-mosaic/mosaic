@@ -111,7 +111,7 @@
         <version.logback>1.3.8</version.logback><!-- 1.3.8 is approved in #9459 -->
         <version.janino>3.1.11</version.janino><!-- 3.1.11 is approved in #13292 and #13293  -->
         <version.jsch>0.2.16</version.jsch><!-- 0.2.16 is approved in #8468 -->
-        <version.logback>1.5.0</version.logback><!-- 1.5.0 is approved in #13282 and 13283 -->
+        <version.logback>1.5.19</version.logback><!-- 1.5.0 is approved in #13282 and 13283 -->
         <version.mockito>5.15.2</version.mockito><!-- approval not required, we do not ship this library -->
         <version.mapdb>1.0.8</version.mapdb><!-- 1.0.8 approved in CQ8246 -->
         <version.opencsv>5.9</version.opencsv><!-- 5.9 is approved in #17586 -->
