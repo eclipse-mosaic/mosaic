@@ -47,7 +47,7 @@ trap clean_up INT
 required_programs=(unzip tar bison flex protoc gcc python)
 required_libraries=("libprotobuf-dev >= 3.7.0" "libxml2-dev" "python3-dev")
 
-omnet_federate_url="https://github.com/hoelger/omnetpp-federate/archive/refs/heads/1058-lte-in-ns3.36-performance.zip"
+omnet_federate_url="https://github.com/mosaic-addons/omnetpp-federate/archive/refs/heads/main.zip"
 omnet_src_url="https://github.com/omnetpp/omnetpp/releases/download/omnetpp-6.1.0/omnetpp-6.1.0-linux-x86_64.tgz"
 inet_src_url="https://github.com/inet-framework/inet/releases/download/v4.5.4/inet-4.5.4-src.tgz"
 
