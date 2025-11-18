@@ -75,7 +75,7 @@ public abstract class TimeConverter<N extends Number> {
             return null;
         }
 
-        long value = toNanoseconds(ObjectUtils.defaultIfNull(time, defaultValue));
+        long value = legacyDivisor * toNanoseconds(ObjectUtils.defaultIfNull(time, defaultValue));
         final String unit;
         if (value == 0) {
             unit = "s";
