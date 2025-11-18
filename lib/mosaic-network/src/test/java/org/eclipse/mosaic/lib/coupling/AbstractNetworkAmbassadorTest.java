@@ -87,7 +87,6 @@ public class AbstractNetworkAmbassadorTest {
         };
         networkAmbassador.connectToFederate(null, -1);
         FederateDescriptor descriptor = mock(FederateDescriptor.class);
-        when(descriptor.getPriority()).thenReturn((byte) 50);
         networkAmbassador.setFederateDescriptor(descriptor);
 
         when(ambassadorFederateChannelMock.writeInitBody(anyLong(), anyLong(), anyBoolean())).thenReturn(CommandType.SUCCESS);

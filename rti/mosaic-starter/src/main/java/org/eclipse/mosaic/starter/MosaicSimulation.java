@@ -31,6 +31,7 @@ import org.eclipse.mosaic.rti.api.ComponentProvider;
 import org.eclipse.mosaic.rti.api.FederateAmbassador;
 import org.eclipse.mosaic.rti.api.FederationManagement;
 import org.eclipse.mosaic.rti.api.MosaicVersion;
+import org.eclipse.mosaic.rti.api.PreemptableFederateAmbassador;
 import org.eclipse.mosaic.rti.api.TimeManagement;
 import org.eclipse.mosaic.rti.api.WatchDog;
 import org.eclipse.mosaic.rti.api.federatestarter.DockerFederateExecutor;
@@ -346,6 +347,10 @@ public class MosaicSimulation {
         }
         final FederateDescriptor descriptor = new FederateDescriptor(federate.id, ambassador, (byte) readPriority);
         ambassador.setFederateDescriptor(descriptor);
+
+        Validate.isTrue(!(federate instanceof PreemptableFederateAmbassador && federate.preemptiveExecution),
+                "Federate '{}' cannot be executed preemptively, as it does not implement the required interface.", federate.id);
+        descriptor.setPreemptiveExecution(federate.preemptiveExecution);
 
         descriptor.setJavaFederateParameters(readJavaFederateParameters(federate));
         descriptor.setInteractions(getInteractionDescriptors(federate));

@@ -15,12 +15,16 @@
 
 package org.eclipse.mosaic.rti.api;
 
-public interface PreemptableFederateAmbassador {
+public interface PreemptableFederateAmbassador extends FederateAmbassador {
 
-    /*
-     * Same as advanceTime (see {@link org.eclipse.mosaic.rti.api.FederateAmbassador}) but with the ability to signal preemption via the return value.
+    /**
+     * Same as advanceTime (see {@link FederateAmbassador}) but with the ability to signal preemption via the return value.
      * @return did complete execution successful (without preemption)
      */
     boolean advanceTimePreemptable(long time) throws InternalFederateException;
 
+    /**
+     * Return {@code true}, if preemptive execution is enabled for this ambassador.
+     */
+    boolean isPreemptiveExecutionEnabled();
 }

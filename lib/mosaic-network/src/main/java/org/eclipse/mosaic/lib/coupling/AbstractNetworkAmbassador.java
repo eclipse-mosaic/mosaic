@@ -329,7 +329,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
         super.initialize(startTime, endTime);   // Set times in the super class
         try {
             // 1st Handshake: (1) Ambassador sends INIT (2) Ambassador sends times, (3) Federate sends SUCCESS
-            if (CommandType.SUCCESS != ambassadorFederateChannel.writeInitBody(startTime, endTime, getPriority() == FederatePriority.HIGHEST)) {
+            if (CommandType.SUCCESS != ambassadorFederateChannel.writeInitBody(startTime, endTime, descriptor.isPreemptiveExecution())) {
                 log.error("Could not initialize.");
                 throw new InternalFederateException(
                         "Error in " + federateName + ": Could not initialize"
@@ -1012,5 +1012,10 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
     @Override
     public boolean isTimeRegulating() {
         return true;
+    }
+
+    @Override
+    public boolean isPreemptiveExecutionEnabled() {
+        return descriptor.isPreemptiveExecution();
     }
 }

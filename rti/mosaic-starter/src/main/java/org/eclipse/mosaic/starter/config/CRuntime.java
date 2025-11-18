@@ -47,6 +47,8 @@ public class CRuntime {
         public String configurationDeployPath;
 
         public byte priority = FederatePriority.DEFAULT;
+        
+        public boolean preemptiveExecution = false;
 
         public String dockerImage;
 

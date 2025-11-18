@@ -22,10 +22,9 @@ import org.eclipse.mosaic.rti.api.IllegalValueException;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 import org.eclipse.mosaic.rti.api.PreemptableFederateAmbassador;
 import org.eclipse.mosaic.rti.api.TimeManagement;
-import org.eclipse.mosaic.rti.api.parameters.FederatePriority;
 import org.eclipse.mosaic.rti.api.time.FederateEvent;
 
-import java.util.Optional;
+import org.apache.commons.lang3.Validate;
 
 /**
  * This class is a sequential implementation of the <code>TimeManagement</code>
@@ -64,31 +63,22 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
         final RealtimeSynchronisation realtimeSync = new RealtimeSynchronisation(realtimeBrake);
 
         long currentRealtimeNs;
-        boolean success = false;
         FederateEvent event;
         FederateAmbassador ambassador;
 
         // privileged federate w/ preemptive execution
         long lastTimestamp = 0;
         boolean lastRunDidAbort = false;
-        PreemptableFederateAmbassador privilegedAmbassador = null;
 
-        int countHighestPriority = 0;
-        for (FederateAmbassador amb : federation.getFederationManagement().getAmbassadors()) {
-            if (amb.getPriority() == FederatePriority.HIGHEST) {
-                countHighestPriority++;
-            }
-        }
-        if (countHighestPriority > 1) {
-            throw new InternalFederateException("Cannot have multiple priority-zero ambassadors. Priority-zero implicitly encodes preemptive execution.");
-        } else if (countHighestPriority == 1) {
-            Optional<FederateAmbassador> res = federation.getFederationManagement().getAmbassadors().stream().filter(amb -> amb.getPriority() == FederatePriority.HIGHEST).findFirst();
-            if (res.isPresent() && res.get() instanceof PreemptableFederateAmbassador preempt) {
-                privilegedAmbassador = preempt;
-            } else {
-                throw new InternalFederateException("The priority-zero ambassador has to implement the PreemptableFederateAmbassador interface.");
-            }
-        }
+        // grab the one ambassador which should be executed preemptively
+        final PreemptableFederateAmbassador privilegedAmbassador = federation.getFederationManagement().getAmbassadors().stream()
+                .filter(f -> f instanceof PreemptableFederateAmbassador)
+                .map(f -> (PreemptableFederateAmbassador) f)
+                .filter(PreemptableFederateAmbassador::isPreemptiveExecutionEnabled)
+                .reduce(null, (previous, current) -> {
+                    Validate.isTrue(previous == null, "Cannot have multiple preemptively executed ambassadors.");
+                    return current;
+                });
 
         while (this.time <= getEndTime()) {
             // the end time is inclusive, in order to schedule events in the last simulation time step
@@ -111,7 +101,7 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
             // always let run privileged federate first, then all others (yea, double execution for new-time privileged-federate events)
             if (privilegedAmbassador != null) {
                 if (event.getRequestedTime() > lastTimestamp) {
-                    success = privilegedAmbassador.advanceTimePreemptable(event.getRequestedTime());
+                    boolean success = privilegedAmbassador.advanceTimePreemptable(event.getRequestedTime());
                     if (success) {
                         lastTimestamp = event.getRequestedTime();
                         lastRunDidAbort = false;
@@ -139,8 +129,7 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
             this.time = event.getRequestedTime();
 
             currentRealtimeNs = System.nanoTime();
-            final PerformanceInformation performanceInformation =
-                    performanceCalculator.update(time, getEndTime(), currentRealtimeNs);
+            final PerformanceInformation performanceInformation = performanceCalculator.update(time, getEndTime(), currentRealtimeNs);
             printProgress(currentRealtimeNs, performanceInformation);
             updateWatchDog();
         }
