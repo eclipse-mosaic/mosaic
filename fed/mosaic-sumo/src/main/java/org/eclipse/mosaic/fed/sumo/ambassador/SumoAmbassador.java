@@ -310,6 +310,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
                 // disable Nagle's algorithm (TcpNoDelay Flag) to decrease latency even further
                 socket.setTcpNoDelay(true);
                 log.info("Successfully created SUMO TraCI Connection.");
+                LockSupport.parkNanos(100 * TIME.MILLI_SECOND); // FIXME try to wait before continuing, maybe the socket is not 100% ready yet
                 return;
             } catch (UnknownHostException ex) {
                 log.error("Unknown host: {}", ex.getMessage());
