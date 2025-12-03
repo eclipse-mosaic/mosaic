@@ -47,7 +47,7 @@ public class PersonGetTaxiReservations extends AbstractTraciCommand<List<TaxiRes
                 .command(CommandRetrievePersonState.COMMAND)
                 .variable(CommandRetrievePersonState.VAR_TAXI_RESERVATIONS)
                 .writeString("") // command does not refer to a specific person
-                .writeIntParamWithType();
+                .writeIntWithType(0); // 0 = All reservations
 
         read()
                 .skipBytes(2)
@@ -55,9 +55,8 @@ public class PersonGetTaxiReservations extends AbstractTraciCommand<List<TaxiRes
                 .readComplex(new ListTraciReader<>(new TaxiReservationTraciReader(), true));
     }
 
-    public List<TaxiReservation> execute(Bridge bridge, int reservationState) throws CommandException, InternalFederateException {
-        return executeAndReturn(bridge, reservationState).orElseThrow(() -> new CommandException(
-                String.format(Locale.ENGLISH, "Could not return taxi reservation for the state %d", reservationState)));
+    public List<TaxiReservation> execute(Bridge bridge) throws CommandException, InternalFederateException {
+        return executeAndReturn(bridge).orElseThrow(() -> new CommandException("Could not return taxi reservations."));
     }
 
     @Override

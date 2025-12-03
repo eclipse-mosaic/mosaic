@@ -1,0 +1,12 @@
+{
+    "updateInterval": "1s",
+    "visualizer": false,
+    "additionalVehicleTypeParameters": {
+        "TaxiVehicle": {
+            "personCapacity": "4",
+            "has.taxi.device": "true",
+            "device.taxi.pickUpDuration": "20",
+            "device.taxi.dropOffDuration": "60"
+        }
+    }
+}

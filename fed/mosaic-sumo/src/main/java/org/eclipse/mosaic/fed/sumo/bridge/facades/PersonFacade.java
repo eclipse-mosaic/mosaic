@@ -51,13 +51,13 @@ public class PersonFacade {
 	}
 
 	/**
-	 * This method gets the available taxi reservations for the requested state.
+	 * This method gets the available taxi reservations.
 	 */
-	public List<TaxiReservation> getTaxiReservations(int reservationState) throws InternalFederateException {
+	public List<TaxiReservation> getTaxiReservations() throws InternalFederateException {
 		try {
-			return personGetTaxiReservations.execute(bridge, reservationState);
+			return personGetTaxiReservations.execute(bridge);
 		} catch(CommandException e) {
-			throw new InternalFederateException(String.format("Could not retrieve taxi reservations for state %s", reservationState), e);
+			throw new InternalFederateException("Could not retrieve taxi reservations.", e);
 		}
 	}
 }

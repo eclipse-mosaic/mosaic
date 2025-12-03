@@ -781,11 +781,12 @@ public class SimulationFacade {
                 bridge.getVehicleControl().getPersonCapacity(id),
                 getLastKnownVehicleData(id),
                 numPersonsServed,
-                Arrays.stream(currentCustomers.split(",")).toList());
+                Arrays.stream(currentCustomers.split(",")).map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList()
+        );
     }
 
     private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {
-        return new ArrayList<>(bridge.getPersonControl().getTaxiReservations(TaxiReservation.STATE_ALL_RESERVATIONS));
+        return new ArrayList<>(bridge.getPersonControl().getTaxiReservations());
     }
 
     /**

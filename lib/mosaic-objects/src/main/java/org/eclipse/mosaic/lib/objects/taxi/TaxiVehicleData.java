@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,6 +24,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Holds information about taxi/drt vehicles, such as their
+ * transport capacity and service status.
+ */
 public class TaxiVehicleData implements Serializable {
 
     @Serial

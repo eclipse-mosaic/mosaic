@@ -200,7 +200,14 @@ public class SumoVehicleTypesWriter {
                 String attributeName = attributeEntry.getKey();
                 String attributeValue = attributeEntry.getValue();
 
-                currentVehicleType.setAttribute(attributeName, attributeValue);
+                if (!attributeName.contains(".")) {
+                    currentVehicleType.setAttribute(attributeName, attributeValue);
+                } else {
+                    Element paramElem =  vehicleTypesDocument.createElement("param");
+                    paramElem.setAttribute("key", attributeName);
+                    paramElem.setAttribute("value", attributeValue);
+                    currentVehicleType.appendChild(paramElem);
+                }
 
             }
             routesNode.appendChild(currentVehicleType);

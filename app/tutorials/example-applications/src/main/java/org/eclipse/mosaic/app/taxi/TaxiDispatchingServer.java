@@ -120,8 +120,8 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
         // select all unassigned reservations
         List<TaxiReservation> unassignedReservations = taxiReservations.stream()
-            .filter(taxiRes -> taxiRes.getReservationState() == TaxiReservation.ONLY_NEW_RESERVATIONS ||
-                taxiRes.getReservationState() == TaxiReservation.ALREADY_RETRIEVED_RESERVATIONS)
+            .filter(taxiRes -> taxiRes.getReservationState() == TaxiReservation.ReservationState.NEW ||
+                taxiRes.getReservationState() == TaxiReservation.ReservationState.RETRIEVED)
             .filter(taxiRes -> Integer.parseInt(taxiRes.getId()) > lastSavedReservationMosaicIndex)
             .toList();
 

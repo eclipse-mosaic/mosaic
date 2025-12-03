@@ -1,0 +1,23 @@
+{
+    "vehicles": [
+        {
+            "startingTime": "0 s",
+            "route": "t0",
+            "maxNumberVehicles": 1,
+            "lanes": [ 1, 2 ],
+            "types": [
+                {
+                    "name": "TaxiVehicle",
+                    "vehicleClass": "Taxi"
+                }
+            ]
+        }
+    ],
+    "servers": [
+        {
+            "name": "TaxiServer",
+            "group": "DefaultServer",
+            "applications": [ "org.eclipse.mosaic.test.app.taxi.TaxiDispatchTestApp" ]
+        }
+    ]
+}

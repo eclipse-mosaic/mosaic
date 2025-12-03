@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -19,10 +19,11 @@ import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiReservation> {
+
+    private final ListTraciReader<String> personListReader = new ListTraciReader<>(new PersonIdTraciReader(), true);
 
     public TaxiReservationTraciReader() {
         super(null);
@@ -33,26 +34,23 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
         readTypedInt(in); //COMPOUND type of 10 items
 
         final String reservationId = readTypedString(in);
-        final List<String> personList = readTypedStringList(in);
-        final String group = readTypedString(in);
+        final List<String> personList = personListReader.readFromStream(in);
+        numBytesRead += personListReader.getNumberOfBytesRead();
+
+        readTypedString(in); // group
         final String fromEdge = readTypedString(in);
         final String toEdge = readTypedString(in);
-        final double departPos = readTypedDouble(in);
-        final double arrivalPos = readTypedDouble(in);
-        final double depart = readTypedDouble(in);
-        final double reservationTime = readTypedDouble(in);
+        readTypedDouble(in); //departPos
+        readTypedDouble(in); //arrivalPos
+        readTypedDouble(in); //departTime
+        readTypedDouble(in); //reservationTime
         final int reservationState = readTypedInt(in);
 
         return new TaxiReservation.Builder().withId(reservationId)
-                .withReservationState(reservationState)
+                .withReservationState(TaxiReservation.ReservationState.of(reservationState))
                 .withPersonList(personList)
-                .withGroup(group)
                 .withFromEdge(fromEdge)
                 .withToEdge(toEdge)
-                .withDepartPos(departPos)
-                .withArrivalPos(arrivalPos)
-                .withDepart(depart)
-                .withReservationTime(reservationTime)
                 .build();
     }
 
@@ -69,15 +67,5 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
     private String readTypedString(DataInputStream in) throws IOException {
         readByte(in);
         return readString(in);
-    }
-
-    private List<String> readTypedStringList(DataInputStream in) throws IOException {
-        readByte(in);
-        List<String> result = new ArrayList<>();
-        int len = readInt(in);
-        for (int i = 0; i < len; i++) {
-            result.add(readString(in));
-        }
-        return result;
     }
 }

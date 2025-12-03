@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -22,51 +22,45 @@ import java.util.List;
 
 public class TaxiReservation {
 
-    public static final int STATE_ALL_RESERVATIONS = 0;
-    public static final int ONLY_NEW_RESERVATIONS = 1;
-    public static final int ALREADY_RETRIEVED_RESERVATIONS = 2;
-    public static final int ALREADY_ASSIGNED_RESERVATIONS = 4;
-    public static final int ALREADY_PICKED_UP_RESERVATIONS = 8;
+    public enum ReservationState {
+        NEW, RETRIEVED, ASSIGNED, PICKED_UP;
+
+        public static ReservationState of(int stateIdSumo) {
+            return switch (stateIdSumo) {
+                case 1 -> NEW;
+                case 2 -> RETRIEVED;
+                case 4 -> ASSIGNED;
+                case 8 -> PICKED_UP;
+                default -> throw new IllegalArgumentException("Unknown state: " + stateIdSumo);
+            };
+        }
+
+    }
 
     private final String id;
-    private final int reservationState;
+    private final ReservationState reservationState;
     private final List<String> personList;
-    private final String group;
     private final String fromEdge;
     private final String toEdge;
-    private final double departPos;
-    private final double arrivalPos;
-    private final double depart;
-    private final double reservationTime;
 
-    private TaxiReservation(String id, int reservationState, List<String> personList, String group, String fromEdge,
-                            String toEdge, double departPos, double arrivalPos, double depart, double reservationTime) {
+    private TaxiReservation(String id, ReservationState reservationState, List<String> personList, String fromEdge, String toEdge) {
         this.id = id;
         this.reservationState = reservationState;
         this.personList = personList;
-        this.group = group;
         this.fromEdge = fromEdge;
         this.toEdge = toEdge;
-        this.departPos = departPos;
-        this.arrivalPos = arrivalPos;
-        this.depart = depart;
-        this.reservationTime = reservationTime;
     }
 
     public String getId() {
         return id;
     }
 
-    public int getReservationState() {
+    public ReservationState getReservationState() {
         return reservationState;
     }
 
     public List<String> getPersonList() {
         return personList;
-    }
-
-    public String getGroup() {
-        return group;
     }
 
     public String getFromEdge() {
@@ -75,22 +69,6 @@ public class TaxiReservation {
 
     public String getToEdge() {
         return toEdge;
-    }
-
-    public double getDepartPos() {
-        return departPos;
-    }
-
-    public double getArrivalPos() {
-        return arrivalPos;
-    }
-
-    public double getDepart() {
-        return depart;
-    }
-
-    public double getReservationTime() {
-        return reservationTime;
     }
 
     @Override
@@ -111,13 +89,8 @@ public class TaxiReservation {
                 .append(this.id, other.id)
                 .append(this.reservationState, other.reservationState)
                 .append(this.personList, other.personList)
-                .append(this.group, other.group)
                 .append(this.fromEdge, other.fromEdge)
                 .append(this.toEdge, other.toEdge)
-                .append(this.departPos, other.departPos)
-                .append(this.arrivalPos, other.arrivalPos)
-                .append(this.depart, other.depart)
-                .append(this.reservationTime, other.reservationTime)
                 .isEquals();
     }
 
@@ -128,45 +101,30 @@ public class TaxiReservation {
                 .append(id)
                 .append(reservationState)
                 .append(personList)
-                .append(group)
                 .append(fromEdge)
                 .append(toEdge)
-                .append(departPos)
-                .append(arrivalPos)
-                .append(depart)
-                .append(reservationTime)
                 .toHashCode();
     }
 
     public static class Builder {
         private String id;
-        private int reservationState;
+        private ReservationState reservationState;
         private List<String> personList;
-        private String group;
         private String fromEdge;
         private String toEdge;
-        private double departPos;
-        private double arrivalPos;
-        private double depart;
-        private double reservationTime;
 
         public Builder withId(String id) {
             this.id = id;
             return this;
         }
 
-        public Builder withReservationState(int reservationState) {
+        public Builder withReservationState(ReservationState reservationState) {
             this.reservationState = reservationState;
             return this;
         }
 
         public Builder withPersonList(List<String> personList) {
             this.personList = personList;
-            return this;
-        }
-
-        public Builder withGroup(String group) {
-            this.group = group;
             return this;
         }
 
@@ -180,29 +138,8 @@ public class TaxiReservation {
             return this;
         }
 
-        public Builder withDepartPos(double departPos) {
-            this.departPos = departPos;
-            return this;
-        }
-
-        public Builder withArrivalPos(double arrivalPos) {
-            this.arrivalPos = arrivalPos;
-            return this;
-        }
-
-        public Builder withDepart(double depart) {
-            this.depart = depart;
-            return this;
-        }
-
-        public Builder withReservationTime(double reservationTime) {
-            this.reservationTime = reservationTime;
-            return this;
-        }
-
         public TaxiReservation build() {
-            return new TaxiReservation(id, reservationState, personList, group, fromEdge, toEdge, departPos,
-                    arrivalPos, depart, reservationTime);
+            return new TaxiReservation(id, reservationState, personList, fromEdge, toEdge);
         }
     }
 }
