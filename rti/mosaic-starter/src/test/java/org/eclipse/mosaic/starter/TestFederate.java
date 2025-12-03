@@ -75,7 +75,7 @@ public class TestFederate implements FederateAmbassador {
 
     @Override
     public void receiveInteraction(@Nonnull Interaction interaction) throws InternalFederateException {
-// nop
+        // nop
     }
 
     @Override

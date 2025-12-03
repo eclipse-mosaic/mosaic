@@ -465,7 +465,7 @@ public class DatabaseCommunication {
 				.toList();
 
 			TaxiLatestData data = new TaxiLatestData(
-				TaxiVehicleData.EMPTY_TAXIS,
+				TaxiVehicleData.TaxiState.EMPTY,
 				fetchBusStopEdgesByIds(new ArrayList<>(busStopIds)),
 				null,
 				new ArrayList<>(legsToVisit)
@@ -497,7 +497,7 @@ public class DatabaseCommunication {
 			String cabId = parseTaxiDbIndexToMosaicVehicleId(firstOrder.cabId());
 
 			// Skip if cab is busy
-			if (cabsLatestData.get(cabId).getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
+			if (cabsLatestData.get(cabId).getLastStatus() != TaxiVehicleData.TaxiState.EMPTY) {
 				continue;
 			}
 
@@ -541,8 +541,10 @@ public class DatabaseCommunication {
 
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					orders.add(
-						new TaxiOrder(rs.getLong("id"), -1, -1, rs.getLong("route_id"), "", rs.getLong("cab_id")));
+					orders.add(new TaxiOrder(
+                            rs.getLong("id"), -1, -1,
+                            rs.getLong("route_id"), "",
+                            rs.getLong("cab_id")));
 				}
 			}
 		} catch (SQLException e) {

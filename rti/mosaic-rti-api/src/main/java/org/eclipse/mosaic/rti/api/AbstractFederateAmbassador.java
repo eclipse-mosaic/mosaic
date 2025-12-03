@@ -126,14 +126,7 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
         try {
             // request time advance to process interaction if necessary
             if (isTimeConstrained()) {
-                final long lookahead;
-                if (isTimeRegulating()) {
-                    lookahead = this.lookahead;
-                } else {
-                    // request with MAX lookahead since federate promised not to send any time stamped interactions (!timeRegulating)
-                    lookahead = Long.MAX_VALUE;
-                }
-                rti.requestAdvanceTime(interaction.getTime(), lookahead, descriptor.getPriority());
+                this.requestAdvanceTime(interaction.getTime());
                 interactionQueue.add(interaction);
             } else {
                 // not time constrained --> doesn't care about timestamps
@@ -146,6 +139,20 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
         } catch (IllegalValueException e) {
             log.error("Error while receiving interaction.", e);
         }
+    }
+
+    /*
+     * Helper method to request time advance
+     */
+    private void requestAdvanceTime(long time) throws InternalFederateException, IllegalValueException {
+        final long lookahead;
+        if (isTimeRegulating()) {
+            lookahead = this.lookahead;
+        } else {
+            // request with MAX lookahead since federate promised not to send any time stamped interactions (!timeRegulating)
+            lookahead = Long.MAX_VALUE;
+        }
+        rti.requestAdvanceTime(time, lookahead, descriptor.getPriority());
     }
 
     @Override
@@ -289,7 +296,7 @@ public abstract class AbstractFederateAmbassador implements FederateAmbassador {
          *
          * @param time time in [ns]
          */
-        protected Interaction getNextInteraction(long time) {
+        public Interaction getNextInteraction(long time) {
             if (this.peek() != null && this.peek().getTime() <= time) {
                 return this.poll();
             }

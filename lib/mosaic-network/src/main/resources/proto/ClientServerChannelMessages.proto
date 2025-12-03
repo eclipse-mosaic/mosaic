@@ -28,6 +28,7 @@ message CommandMessage {
         NEXT_EVENT = 4;
         ADVANCE_TIME = 5;
         END = 6;                    // used as 'advance time done'
+        PREEMPTED = 7;
 
         /* Entities... */
         ADD_NODE = 10;
@@ -51,6 +52,7 @@ message InitMessage {
     required int64 simulation_start_time = 1;
     required int64 simulation_end_time = 2;
     required int32 protocol_version = 3;
+    required bool preemptive_execution = 4;
 }
 
 message PortExchange {

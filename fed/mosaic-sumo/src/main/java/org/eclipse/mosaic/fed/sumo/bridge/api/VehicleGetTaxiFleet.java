@@ -22,27 +22,16 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
 import java.util.List;
 
 /**
- * This class represents the SUMO command which allows getting all taxis for the requested state.
+ * This class represents the SUMO command which allows getting all taxis.
  */
 public interface VehicleGetTaxiFleet {
 	/**
-	 * This method executes the command with the given arguments in order to retrieve taxis based on a state.
-	 * States:
-	 * <ul>
-	 *     <li>-1: all</li>
-	 *     <li>0: empty</li>
-	 *     <li>1: pickup</li>
-	 *     <li>2: occupied</li>
-	 *     <li>3: pickup+occupied</li>
-	 * </ul>
-	 * <p>
-	 * Note: vehicles that are in state pickup+occupied (due to ride-sharing) will also be returned when requesting state 1 or 2.
-	 * </p>
-	 * @param bridge  Connection to SUMO.
-	 * @param taxiState state of the taxi vehicle.
-	 * @return a list of taxis based on the given state.
+	 * This method executes the command with the given arguments in order to retrieve all taxis .
+	 *
+     * @param bridge  Connection to SUMO.
+	 * @return a list of taxis (vehicle ids).
 	 * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
 	 * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
 	 */
-	List<String> execute(Bridge bridge, int taxiState) throws CommandException, InternalFederateException;
+	List<String> execute(Bridge bridge) throws CommandException, InternalFederateException;
 }

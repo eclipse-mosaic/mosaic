@@ -15,10 +15,6 @@
 
 package org.eclipse.mosaic.lib.objects.taxi;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -28,29 +24,69 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
-@Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
 public class TaxiVehicleData implements Serializable {
+
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public static final int ALL_TAXIS = -1;
-    public static final int EMPTY_TAXIS = 0;
-    public static final int EMPTY_TO_PICK_UP_TAXIS = 1;
-    public static final int OCCUPIED_TAXIS = 2;
-    public static final int OCCUPIED_TO_PICK_UP_TAXIS = 3;
+    public enum TaxiState {
+        EMPTY, PICKUP, OCCUPIED, OCCUPIED_AND_PICK_UP;
+
+        public static TaxiState of(int stateIdSumo) {
+            return switch (stateIdSumo) {
+                case 0 -> EMPTY;
+                case 1 -> PICKUP;
+                case 2 -> OCCUPIED;
+                case 3 -> OCCUPIED_AND_PICK_UP;
+                default -> throw new IllegalArgumentException("Unknown state: " + stateIdSumo);
+            };
+        }
+
+    }
 
     private final String id;
-    private final int state;
+    private final TaxiState state;
     private final int personCapacity;
     private final VehicleData vehicleData;
-    private final String numberOfCustomersServed;
-    private final String totalOccupiedDistanceInMeters;
-    private final String totalOccupiedTimeInSeconds;
-    private final List<String> customersToPickUpOrOnBoard;
+    private final int totalNumPersonsServed;
+    private final List<String> personsToPickUpOrOnBoard;
 
-	@Override
+    public TaxiVehicleData(
+            String id, TaxiState state, int personCapacity, VehicleData vehicleData, int totalNumPersonsServed, List<String> customersToPickUpOrOnBoard
+    ) {
+        this.id = id;
+        this.state = state;
+        this.personCapacity = personCapacity;
+        this.vehicleData = vehicleData;
+        this.totalNumPersonsServed = totalNumPersonsServed;
+        this.personsToPickUpOrOnBoard = customersToPickUpOrOnBoard;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public TaxiState getState() {
+        return state;
+    }
+
+    public VehicleData getVehicleData() {
+        return vehicleData;
+    }
+
+    public int getPersonCapacity() {
+        return personCapacity;
+    }
+
+    public int getTotalNumPersonsServed() {
+        return totalNumPersonsServed;
+    }
+
+    public List<String> getPersonsToPickUpOrOnBoard() {
+        return personsToPickUpOrOnBoard;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -68,10 +104,8 @@ public class TaxiVehicleData implements Serializable {
                 .append(this.id, other.id)
                 .append(this.state, other.state)
                 .append(this.personCapacity, other.personCapacity)
-                .append(this.numberOfCustomersServed, other.numberOfCustomersServed)
-                .append(this.totalOccupiedDistanceInMeters, other.totalOccupiedDistanceInMeters)
-                .append(this.totalOccupiedTimeInSeconds, other.totalOccupiedTimeInSeconds)
-                .append(this.customersToPickUpOrOnBoard, other.customersToPickUpOrOnBoard)
+                .append(this.totalNumPersonsServed, other.totalNumPersonsServed)
+                .append(this.personsToPickUpOrOnBoard, other.personsToPickUpOrOnBoard)
                 .isEquals();
     }
 
@@ -82,10 +116,8 @@ public class TaxiVehicleData implements Serializable {
                 .append(id)
                 .append(state)
                 .append(personCapacity)
-                .append(numberOfCustomersServed)
-                .append(totalOccupiedDistanceInMeters)
-                .append(totalOccupiedTimeInSeconds)
-                .append(customersToPickUpOrOnBoard)
+                .append(totalNumPersonsServed)
+                .append(personsToPickUpOrOnBoard)
                 .toHashCode();
     }
 }

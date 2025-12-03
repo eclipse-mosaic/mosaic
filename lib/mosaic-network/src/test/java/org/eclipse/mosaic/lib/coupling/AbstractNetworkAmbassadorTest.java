@@ -15,6 +15,7 @@
 
 package org.eclipse.mosaic.lib.coupling;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,6 +43,7 @@ import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.rti.TIME;
 import org.eclipse.mosaic.rti.api.Interaction;
 import org.eclipse.mosaic.rti.api.parameters.AmbassadorParameter;
+import org.eclipse.mosaic.rti.api.parameters.FederateDescriptor;
 
 import com.google.common.collect.Lists;
 import org.junit.Before;
@@ -84,8 +86,10 @@ public class AbstractNetworkAmbassadorTest {
 
         };
         networkAmbassador.connectToFederate(null, -1);
+        FederateDescriptor descriptor = mock(FederateDescriptor.class);
+        networkAmbassador.setFederateDescriptor(descriptor);
 
-        when(ambassadorFederateChannelMock.writeInitBody(anyLong(), anyLong())).thenReturn(CommandType.SUCCESS);
+        when(ambassadorFederateChannelMock.writeInitBody(anyLong(), anyLong(), anyBoolean())).thenReturn(CommandType.SUCCESS);
         when(ambassadorFederateChannelMock.writeAddNodeMessage(
                 anyLong(),
                 eq(NodeType.RADIO_NODE),
@@ -113,7 +117,7 @@ public class AbstractNetworkAmbassadorTest {
         networkAmbassador.initialize(0, 1000);
 
         // Assert
-        verify(ambassadorFederateChannelMock, times(1)).writeInitBody(eq(0L), eq(1000L));
+        verify(ambassadorFederateChannelMock, times(1)).writeInitBody(eq(0L), eq(1000L), eq(false));
     }
 
     @Test

@@ -55,6 +55,13 @@ public class FederateDescriptor {
     private boolean startAndStop = false;
 
     /**
+     * Activates preemptive execution for this ambassador. <br>With preemptive execution, the ambassador is time advanced
+     * not only for own events or requests, but at timestamps of other events of all other ambassadors, leaving
+     * room for federate-internal optimizations while still being able to react on events outside its own scope.
+     */
+    private boolean preemptiveExecution = false;
+
+    /**
      * Parameters describing the host on which the federate is running or is to
      * be deployed and started.
      */
@@ -192,6 +199,14 @@ public class FederateDescriptor {
 
     public void setStartAndStop(boolean startAndStop) {
         this.startAndStop = startAndStop;
+    }
+
+    public boolean isPreemptiveExecution() {
+        return preemptiveExecution;
+    }
+
+    public void setPreemptiveExecution(boolean preemptiveExecution) {
+        this.preemptiveExecution = preemptiveExecution;
     }
 
     public FederateExecutor getFederateExecutor() {

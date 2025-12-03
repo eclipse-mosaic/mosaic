@@ -20,8 +20,11 @@ import org.eclipse.mosaic.rti.api.ComponentProvider;
 import org.eclipse.mosaic.rti.api.FederateAmbassador;
 import org.eclipse.mosaic.rti.api.IllegalValueException;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
+import org.eclipse.mosaic.rti.api.PreemptableFederateAmbassador;
 import org.eclipse.mosaic.rti.api.TimeManagement;
 import org.eclipse.mosaic.rti.api.time.FederateEvent;
+
+import org.apache.commons.lang3.Validate;
 
 /**
  * This class is a sequential implementation of the <code>TimeManagement</code>
@@ -63,6 +66,20 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
         FederateEvent event;
         FederateAmbassador ambassador;
 
+        // privileged federate w/ preemptive execution
+        long lastTimestamp = 0;
+        boolean lastRunDidAbort = false;
+
+        // grab the one ambassador which should be executed preemptively
+        final PreemptableFederateAmbassador privilegedAmbassador = federation.getFederationManagement().getAmbassadors().stream()
+                .filter(f -> f instanceof PreemptableFederateAmbassador)
+                .map(f -> (PreemptableFederateAmbassador) f)
+                .filter(PreemptableFederateAmbassador::isPreemptiveExecutionEnabled)
+                .reduce(null, (previous, current) -> {
+                    Validate.isTrue(previous == null, "Cannot have multiple preemptively executed ambassadors.");
+                    return current;
+                });
+
         while (this.time <= getEndTime()) {
             // the end time is inclusive, in order to schedule events in the last simulation time step
 
@@ -71,15 +88,31 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
                 realtimeSync.sync(this.time);
             }
 
-            // remove all events at the head of the queue that are created by the same federate
+            // read the next event
             synchronized (this.events) {
+                if (this.events.isEmpty()) break;
                 event = this.events.poll();
-                // advance global time
                 if (event == null || event.getRequestedTime() > getEndTime()) {
                     this.time = getEndTime();
                     break;
-                } else {
-                    this.time = event.getRequestedTime();
+                }
+            }
+
+            // always let run privileged federate first, then all others (yea, double execution for new-time privileged-federate events)
+            if (privilegedAmbassador != null) {
+                if (event.getRequestedTime() > lastTimestamp) {
+                    boolean success = privilegedAmbassador.advanceTimePreemptable(event.getRequestedTime());
+                    if (success) {
+                        lastTimestamp = event.getRequestedTime();
+                        lastRunDidAbort = false;
+                    } else {
+                        if (lastRunDidAbort) {
+                            throw new InternalFederateException("Discovered dead-lock: privileged federate preempts without scheduling a new event");
+                        }
+                        lastRunDidAbort = true;
+                        this.events.add(event);
+                        continue;
+                    }
                 }
             }
 
@@ -90,23 +123,13 @@ public class SequentialTimeManagement extends AbstractTimeManagement {
                 long startTime = System.currentTimeMillis();
                 ambassador.advanceTime(event.getRequestedTime());
                 federation.getMonitor().onEndActivity(event, System.currentTimeMillis() - startTime);
-
-                // check, if event queue is empty after the last time advance.
-                // If no more events are in the list, the simulation can be skipped to the endTime.
-                if (this.events.isEmpty()) {
-                    logger.debug("No events anymore, skipping to end time: {}", getEndTime());
-
-                    federation.getMonitor().onBeginActivity(event);
-                    startTime = System.currentTimeMillis();
-                    ambassador.advanceTime(getEndTime());
-                    federation.getMonitor().onEndActivity(event, System.currentTimeMillis() - startTime);
-                }
             }
+
+            // advance global time
+            this.time = event.getRequestedTime();
+
             currentRealtimeNs = System.nanoTime();
-
-            final PerformanceInformation performanceInformation =
-                    performanceCalculator.update(time, getEndTime(), currentRealtimeNs);
-
+            final PerformanceInformation performanceInformation = performanceCalculator.update(time, getEndTime(), currentRealtimeNs);
             printProgress(currentRealtimeNs, performanceInformation);
             updateWatchDog();
         }

@@ -16,7 +16,7 @@
 package org.eclipse.mosaic.fed.application.ambassador.simulation.perception;
 
 import org.eclipse.mosaic.fed.application.ambassador.simulation.VehicleUnit;
-import org.eclipse.mosaic.interactions.vehicle.VehicleSightDistanceConfiguration;
+import org.eclipse.mosaic.interactions.application.SumoSurroundingObjectsSubscription;
 import org.eclipse.mosaic.lib.database.Database;
 import org.eclipse.mosaic.lib.perception.PerceptionConfiguration;
 import org.eclipse.mosaic.lib.perception.PerceptionEgo;
@@ -43,7 +43,7 @@ public class SumoPerceptionModule extends AbstractPerceptionModule {
     @Override
     public void enable(PerceptionConfiguration configuration) {
         super.enable(configuration);
-        unit.sendInteractionToRti(new VehicleSightDistanceConfiguration(
+        unit.sendInteractionToRti(new SumoSurroundingObjectsSubscription(
                 unit.getSimulationTime(),
                 unit.getId(),
                 configuration.getViewingRange(),

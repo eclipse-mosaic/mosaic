@@ -39,7 +39,9 @@ public class FederationManagementRule implements TestRule {
     public FederationManagementRule(String... ambassadorIds) {
         ambassadorMocks = new HashMap<>();
         for (String ambassadorId : ambassadorIds) {
-            ambassadorMocks.put(ambassadorId, mock(FederateAmbassador.class));
+            FederateAmbassador ambassador = mock(FederateAmbassador.class);
+            when(ambassador.getPriority()).thenReturn((byte) 50);
+            ambassadorMocks.put(ambassadorId, ambassador);
         }
     }
 

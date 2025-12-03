@@ -32,8 +32,7 @@ public class VehicleGetTaxiFleet extends AbstractTraciCommand<List<String>>
         implements org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTaxiFleet {
 
     /**
-     * Creates a new {@link VehicleGetTaxiFleet} traci command, which will return all taxis for the requested state.
-     * Access needs to be public, because command is called using Reflection.
+     * Creates a new {@link VehicleGetTaxiFleet} traci command, which will return all taxis.
      *
      * @see <a href="https://sumo.dlr.de/docs/TraCI/VehicleType_Value_Retrieval.html">VehicleType Value Retrieval</a>
      */
@@ -45,7 +44,7 @@ public class VehicleGetTaxiFleet extends AbstractTraciCommand<List<String>>
                 .command(CommandRetrieveVehicleState.COMMAND)
                 .variable(CommandRetrieveVehicleState.VAR_TAXI_FLEET)
                 .writeString("")  // command does not refer to a specific vehicle
-                .writeIntParamWithType();
+                .writeIntWithType(-1); // all taxis
 
         read()
                 .skipBytes(2)
@@ -54,9 +53,8 @@ public class VehicleGetTaxiFleet extends AbstractTraciCommand<List<String>>
                 .readComplex(new ListTraciReader<>(new VehicleIdTraciReader()));
     }
 
-    public List<String> execute(Bridge bridge, int taxiState) throws CommandException, InternalFederateException {
-        return executeAndReturn(bridge, taxiState).orElseThrow(() -> new CommandException(
-                String.format(Locale.ENGLISH, "Could not return taxi vehicles for the state %d", taxiState)));
+    public List<String> execute(Bridge bridge) throws CommandException, InternalFederateException {
+        return executeAndReturn(bridge).orElseThrow(() -> new CommandException("Could not return taxi vehicles"));
     }
 
     @Override

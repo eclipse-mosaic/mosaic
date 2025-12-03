@@ -42,9 +42,9 @@ public class SumoTaxiTraciInteractionApp extends AbstractApplication<VehicleOper
 
 		if(additionalData instanceof TaxiVehicleData taxiVehicleData) {
 			getLog().info("Taxi {} state: {}", getOs().getId(), taxiVehicleData.getState());
-			getLog().info("Customers: {}", String.join(", ", taxiVehicleData.getCustomersToPickUpOrOnBoard()));
-			getLog().info("Occupied distance: {}m", taxiVehicleData.getTotalOccupiedDistanceInMeters());
-			getLog().info("Occupied time: {}s", taxiVehicleData.getTotalOccupiedTimeInSeconds());
+			getLog().info("Customers: {}", String.join(", ", taxiVehicleData.getPersonsToPickUpOrOnBoard()));
+//			getLog().info("Occupied distance: {}m", taxiVehicleData.getTotalOccupiedDistanceInMeters());
+//			getLog().info("Occupied time: {}s", taxiVehicleData.getTotalOccupiedTimeInSeconds());
 		}
 	}
 

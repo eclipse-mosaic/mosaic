@@ -15,6 +15,9 @@
 
 package org.eclipse.mosaic.lib.coupling;
 
+import org.eclipse.mosaic.rti.api.PreemptableFederateAmbassador;
+import org.eclipse.mosaic.rti.api.parameters.FederatePriority;
+
 import org.eclipse.mosaic.interactions.communication.AdHocCommunicationConfiguration;
 import org.eclipse.mosaic.interactions.communication.CellularCommunicationConfiguration;
 import org.eclipse.mosaic.interactions.communication.CommunicationConfiguration;
@@ -81,7 +84,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * The Ambassador for coupling a network simulator to MOSAIC RTI.
  */
-public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassador {
+public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassador implements PreemptableFederateAmbassador {
 
     private final static class RegisteredNode {
 
@@ -326,7 +329,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
         super.initialize(startTime, endTime);   // Set times in the super class
         try {
             // 1st Handshake: (1) Ambassador sends INIT (2) Ambassador sends times, (3) Federate sends SUCCESS
-            if (CommandType.SUCCESS != ambassadorFederateChannel.writeInitBody(startTime, endTime)) {
+            if (CommandType.SUCCESS != ambassadorFederateChannel.writeInitBody(startTime, endTime, descriptor.isPreemptiveExecution())) {
                 log.error("Could not initialize.");
                 throw new InternalFederateException(
                         "Error in " + federateName + ": Could not initialize"
@@ -378,7 +381,29 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
     }
 
     @Override
+    public synchronized boolean advanceTimePreemptable(long time) throws InternalFederateException {
+        Interaction nextInteraction = super.interactionQueue.getNextInteraction(time);
+        while (nextInteraction != null) {
+            rti.getMonitor().onProcessInteraction(getId(), nextInteraction);
+            processInteraction(nextInteraction);
+            nextInteraction = super.interactionQueue.getNextInteraction(time);
+        }
+        return processTimeAdvanceGrantPreemptable(time);
+    }
+
+    @Override
     protected void processTimeAdvanceGrant(long time) throws InternalFederateException {
+        boolean r = processTimeAdvanceGrantPreemptable(time);
+        if (!r) {
+            throw new InternalFederateException("Did preempt when not expected to preempt");
+        }
+    }
+
+    /*
+     * This method just extends the processTimeAdvanceGrant method signature by a boolean return value,
+     * in order to be used by advanceTimePreemptable function.
+     */
+    public boolean processTimeAdvanceGrantPreemptable(long time) throws InternalFederateException {
         log.trace("ProcessTimeAdvanceGrant at time={}", TIME.format(time));
         try {
             // 3rd and last step of cycle: Allow events up to current time in network simulator scheduler
@@ -393,10 +418,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
                     case NEXT_EVENT: // The federate has scheduled an event
                         long nextTime = federateAmbassadorChannel.readTimeBody();
                         log.trace("Requested next_event at {} ", nextTime);
-                        // If the federates event is beyond our allowed time we have to request time advance from the RTI
-                        if (nextTime > time) {
-                            this.rti.requestAdvanceTime(nextTime);
-                        }
+                        this.rti.requestAdvanceTime(nextTime, 0, getPriority());
                         break;
                     case RECV_WIFI_MSG:
                         ReceiveWifiMessageRecord wifiRec = federateAmbassadorChannel.readReceiveWifiMessage(simulatedNodes);
@@ -430,6 +452,11 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
                         long termTime = federateAmbassadorChannel.readTimeBody();
                         log.trace("End ProcessTimeAdvanceGrant at: {}", termTime);
                         break command_loop; // break out of the infinite loop
+                    case PREEMPTED:
+                        // federate did not proceed all time-grant
+                        long t = federateAmbassadorChannel.readTimeBody();
+                        log.trace("Preempt ProcessTimeAdvanceGrant at: {}", t);
+                        return false;
                     default:
                         throw new InternalFederateException("Unknown command from federate at processTimeAdvanceGrant");
                 }
@@ -437,6 +464,7 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
         } catch (IOException | IllegalValueException | InternalFederateException e) {
             throw new InternalFederateException(e);
         }
+        return true;
     }
 
     @Override
@@ -984,5 +1012,10 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
     @Override
     public boolean isTimeRegulating() {
         return true;
+    }
+
+    @Override
+    public boolean isPreemptiveExecutionEnabled() {
+        return descriptor.isPreemptiveExecution();
     }
 }

@@ -98,8 +98,8 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 
 			// make sure that SUMO has executed the dispatch command
 			if (pendingDispatches.containsKey(taxi.getId())) {
-				if (taxi.getState() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS ||
-					taxi.getState() == TaxiVehicleData.OCCUPIED_TAXIS) {
+				if (taxi.getState() == TaxiVehicleData.TaxiState.EMPTY ||
+					taxi.getState() == TaxiVehicleData.TaxiState.OCCUPIED) {
 					getLog().info("Dispatch confirmed for vehicle '{}'", taxi.getId());
 					pendingDispatches.remove(taxi.getId());
 				} else {
@@ -108,13 +108,13 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 			}
 
 			switch (taxi.getState()) {
-				case TaxiVehicleData.EMPTY_TAXIS -> {
+                case EMPTY -> {
 					handleNotRegisteredTaxiInDb(taxi);
 					handleAlreadyDeliveredTaxi(taxi);
 				}
-				case TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS -> handleEmptyToPickUpTaxi(taxi);
-				case TaxiVehicleData.OCCUPIED_TAXIS -> handleOccupiedTaxi(taxi);
-				case TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS -> handleOccupiedToPickUpTaxi(taxi);
+                case PICKUP -> handleEmptyToPickUpTaxi(taxi);
+                case OCCUPIED -> handleOccupiedTaxi(taxi);
+                case OCCUPIED_AND_PICK_UP -> handleOccupiedToPickUpTaxi(taxi);
 			}
 		}
 
@@ -162,18 +162,17 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		if (taxi.getVehicleData() == null) {
 			throw new RuntimeException("On registering: Taxi with Mosaic Id %s not spawned on a free position! Vehicle data is null!".formatted(taxi.getId()));
 		}
-		cabsLatestData.put(taxi.getId(),
-			new TaxiLatestData(TaxiVehicleData.EMPTY_TAXIS, null, null, null));
+		cabsLatestData.put(taxi.getId(), new TaxiLatestData());
 	}
 
 	private void handleAlreadyDeliveredTaxi(TaxiVehicleData taxi) {
-		if (Integer.parseInt(taxi.getNumberOfCustomersServed()) == 0) {
+		if (taxi.getTotalNumPersonsServed() == 0) {
 			return;
 		}
 
 		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
 
-		if (latestData.getLastStatus() == TaxiVehicleData.EMPTY_TAXIS) {
+		if (latestData.getLastStatus() == TaxiVehicleData.TaxiState.EMPTY) {
 			return;
 		}
 
@@ -182,7 +181,7 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		dataBaseCommunication.markLegAsCompleted(latestData.getCurrentLegId(), getSimulationTimeInSeconds());
 		dataBaseCommunication.updateRouteStatusByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ROUTE_LEG_STATUS);
 		dataBaseCommunication.updateOrdersByLegId(latestData.getCurrentLegId(), DISPATCHER_COMPLETED_ORDER_STATUS, false, getSimulationTimeInSeconds());
-		latestData.setLastStatus(TaxiVehicleData.EMPTY_TAXIS);
+		latestData.setLastStatus(TaxiVehicleData.TaxiState.EMPTY);
 		latestData.getEdgesToVisit().clear();
 		latestData.setCurrentLegId(null);
 		latestData.getNextLegIds().clear();
@@ -196,16 +195,16 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 		// 1. case: taxi has already entered this method and its new data is set
 		// 2. case: taxi is en route and was occupied, but there is a short transition between
 		// the drop-off of the previous customers and the pick-up of the new ones
-		if (latestData.getLastStatus() == TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS
-			|| latestData.getLastStatus() == TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS) {
+		if (latestData.getLastStatus() == TaxiVehicleData.TaxiState.PICKUP
+			|| latestData.getLastStatus() == TaxiVehicleData.TaxiState.OCCUPIED_AND_PICK_UP) {
 			return;
 		}
 
-		if (latestData.getLastStatus() != TaxiVehicleData.EMPTY_TAXIS) {
+		if (latestData.getLastStatus() != TaxiVehicleData.TaxiState.EMPTY) {
 			throw new RuntimeException("Expected status EMPTY, but got: %s for vehicle: %s".formatted(latestData.getLastStatus(), taxi.getId()));
 		}
 
-		latestData.setLastStatus(TaxiVehicleData.EMPTY_TO_PICK_UP_TAXIS);
+		latestData.setLastStatus(TaxiVehicleData.TaxiState.PICKUP);
 
 		//mark leg and route as started
 		Integer currentLegId = latestData.getNextLegIds().remove(0);
@@ -219,8 +218,8 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 	private void handleOccupiedTaxi(TaxiVehicleData taxi) {
 		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
 
-		if (latestData.getLastStatus() != TaxiVehicleData.OCCUPIED_TAXIS) {
-			latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TAXIS);
+		if (latestData.getLastStatus() != TaxiVehicleData.TaxiState.OCCUPIED) {
+			latestData.setLastStatus(TaxiVehicleData.TaxiState.OCCUPIED);
 		}
 
 		// taxi already delivered last customer, but have to wait for TraCI to send it with EMPTY status
@@ -255,8 +254,8 @@ public class TaxiDispatchingServer extends AbstractApplication<ServerOperatingSy
 	private void handleOccupiedToPickUpTaxi(TaxiVehicleData taxi) {
 		TaxiLatestData latestData = cabsLatestData.get(taxi.getId());
 
-		if (latestData.getLastStatus() != TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS) {
-			latestData.setLastStatus(TaxiVehicleData.OCCUPIED_TO_PICK_UP_TAXIS);
+		if (latestData.getLastStatus() != TaxiVehicleData.TaxiState.OCCUPIED_AND_PICK_UP) {
+			latestData.setLastStatus(TaxiVehicleData.TaxiState.OCCUPIED_AND_PICK_UP);
 		}
 
 		if (latestData.getEdgesToVisit().get(0).equals(taxi.getVehicleData().getRoadPosition().getConnectionId())) {

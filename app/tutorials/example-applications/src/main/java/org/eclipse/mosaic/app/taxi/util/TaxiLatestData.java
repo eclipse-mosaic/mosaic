@@ -15,18 +15,51 @@
 
 package org.eclipse.mosaic.app.taxi.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 
 import java.util.ArrayList;
+import java.util.List;
 
-@Getter
-@Setter
-@AllArgsConstructor
 public class TaxiLatestData {
-	private int lastStatus;
-	private final ArrayList<String> edgesToVisit;
-	private Integer currentLegId;
-	private final ArrayList<Integer> nextLegIds;
+
+	private TaxiVehicleData.TaxiState lastStatus;
+    private final List<String> edgesToVisit = new ArrayList<>();
+    private Integer currentLegId;
+    private final List<Integer> nextLegIds = new ArrayList<>();
+
+    public TaxiLatestData() {
+        this.lastStatus = TaxiVehicleData.TaxiState.EMPTY;
+        this.currentLegId = null;
+    }
+
+    TaxiLatestData(TaxiVehicleData.TaxiState lastStatus, List<String> edgesToVisit, Integer currentLegId, List<Integer> nextLegIds) {
+        this.lastStatus = lastStatus;
+        this.edgesToVisit.addAll(edgesToVisit);
+        this.currentLegId = currentLegId;
+        this.nextLegIds.addAll(nextLegIds);
+    }
+
+    public TaxiVehicleData.TaxiState getLastStatus() {
+        return lastStatus;
+    }
+
+    public void setLastStatus(TaxiVehicleData.TaxiState lastStatus) {
+        this.lastStatus = lastStatus;
+    }
+
+    public Integer getCurrentLegId() {
+        return currentLegId;
+    }
+
+    public void setCurrentLegId(Integer currentLegId) {
+        this.currentLegId = currentLegId;
+    }
+
+    public List<String> getEdgesToVisit() {
+        return edgesToVisit;
+    }
+
+    public List<Integer> getNextLegIds() {
+        return nextLegIds;
+    }
 }

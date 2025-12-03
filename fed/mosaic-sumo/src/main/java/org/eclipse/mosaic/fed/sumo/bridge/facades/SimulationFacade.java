@@ -745,7 +745,7 @@ public class SimulationFacade {
     }
 
     private List<TaxiVehicleData> collectTaxiData() throws InternalFederateException {
-        final List<String> allTaxis = getTaxiFleet(TaxiVehicleData.ALL_TAXIS);
+        final List<String> allTaxis = getTaxiFleet();
         final List<TaxiVehicleData> taxiData = new ArrayList<>();
 
         for (String id: allTaxis) {
@@ -755,42 +755,33 @@ public class SimulationFacade {
     }
 
     /**
-     * Getter for taxis depending on the requested state.
-     * @see VehicleGetTaxiFleet#execute(Bridge, int)
+     * Return a list of all taxis (vehicle ids).
+     * @see VehicleGetTaxiFleet#execute(Bridge)
      *
-     * @param taxiState The state in which the taxi should be.
-     * @return A list with the available taxis in the given state.
+     * @return A list with the available taxis.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
      */
-    private List<String> getTaxiFleet(int taxiState) throws InternalFederateException {
-        List<String> taxiFleet = new ArrayList<>();
-
+    private List<String> getTaxiFleet() throws InternalFederateException {
         try {
-            taxiFleet = vehicleGetTaxiFleet.execute(bridge, taxiState);
+            return vehicleGetTaxiFleet.execute(bridge);
         } catch (IllegalArgumentException | CommandException e) {
-            log.warn("Could not get taxi fleet for state {}", taxiState);
+            log.warn("Could not get taxi fleet.");
+            return new ArrayList<>();
         }
-
-        return taxiFleet;
     }
 
     private TaxiVehicleData getTaxiData(String id) throws InternalFederateException {
-        int taxiState = Integer.parseInt(bridge.getVehicleControl().getParameter(id, "device.taxi.state"));
-        String numberOfServedCustomers = bridge.getVehicleControl().getParameter(id, "device.taxi.customers");
-        String occupiedDistance = bridge.getVehicleControl().getParameter(id, "device.taxi.occupiedDistance");
-        String occupiedTime = bridge.getVehicleControl().getParameter(id, "device.taxi.occupiedTime");
-        String currentCustomers = bridge.getVehicleControl().getParameter(id, "device.taxi.currentCustomers");
+        final int taxiState = Integer.parseInt(bridge.getVehicleControl().getParameter(id, "device.taxi.state"));
+        final int numPersonsServed = Integer.parseInt(bridge.getVehicleControl().getParameter(id, "device.taxi.customers"));
+        final String currentCustomers = bridge.getVehicleControl().getParameter(id, "device.taxi.currentCustomers");
 
-        return TaxiVehicleData.builder()
-            .id(id)
-            .state(taxiState)
-            .personCapacity(bridge.getVehicleControl().getPersonCapacity(id))
-            .vehicleData(getLastKnownVehicleData(id))
-            .numberOfCustomersServed(numberOfServedCustomers)
-            .totalOccupiedDistanceInMeters(occupiedDistance)
-            .totalOccupiedTimeInSeconds(occupiedTime)
-            .customersToPickUpOrOnBoard(Arrays.stream(currentCustomers.split(",")).toList())
-            .build();
+        return new TaxiVehicleData(
+                id,
+                TaxiVehicleData.TaxiState.of(taxiState),
+                bridge.getVehicleControl().getPersonCapacity(id),
+                getLastKnownVehicleData(id),
+                numPersonsServed,
+                Arrays.stream(currentCustomers.split(",")).toList());
     }
 
     private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {
