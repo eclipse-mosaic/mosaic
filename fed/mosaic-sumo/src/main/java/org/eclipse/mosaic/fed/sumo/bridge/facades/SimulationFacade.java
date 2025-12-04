@@ -33,6 +33,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetTrafficLightIds;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSimulateStep;
 import org.eclipse.mosaic.fed.sumo.bridge.api.TrafficLightSubscribe;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleAdd;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTaxiFleet;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTeleportingList;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetRemove;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetUpdateBestLanes;
@@ -52,6 +53,7 @@ import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.InductionLoop;
 import org.eclipse.mosaic.fed.sumo.util.TrafficLightStateDecoder;
 import org.eclipse.mosaic.interactions.agent.AgentUpdates;
+import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
@@ -61,6 +63,8 @@ import org.eclipse.mosaic.lib.objects.agent.AgentData;
 import org.eclipse.mosaic.lib.objects.pt.PtVehicleData;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.road.SimpleRoadPosition;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 import org.eclipse.mosaic.lib.objects.traffic.InductionLoopInfo;
 import org.eclipse.mosaic.lib.objects.traffic.LaneAreaDetectorInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroupInfo;
@@ -93,7 +97,7 @@ public class SimulationFacade {
 
     /**
      * Density of vehicle gasoline in g/m^3. Since 1.14.0 SUMO returns
-     * fuel consumptions in mg, thus we convert it back to ml for compatibility.
+     * fuel consumption in mg, thus we convert it back to ml for compatibility.
      */
     private final static double FUEL_DENSITY = 0.74; // g/m^3
 
@@ -118,6 +122,8 @@ public class SimulationFacade {
     private final InductionLoopSubscribe inductionloopSubscribe;
     private final LaneAreaSubscribe laneAreaSubscribe;
     private final TrafficLightSubscribe trafficLightSubscribe;
+
+    private final VehicleGetTaxiFleet vehicleGetTaxiFleet;
 
     private final LaneSetAllow laneSetAllow;
     private final LaneSetDisallow laneSetDisallow;
@@ -192,6 +198,9 @@ public class SimulationFacade {
         this.vehicleSubscribe = bridge.getCommandRegister().getOrCreate(VehicleSubscribe.class);
         this.personSubscribe = bridge.getCommandRegister().getOrCreate(PersonSubscribe.class);
         this.trafficLightSubscribe = bridge.getCommandRegister().getOrCreate(TrafficLightSubscribe.class);
+
+
+        this.vehicleGetTaxiFleet = bridge.getCommandRegister().getOrCreate(VehicleGetTaxiFleet.class);
 
         this.laneSetAllow = bridge.getCommandRegister().getOrCreate(LaneSetAllow.class);
         this.laneSetDisallow = bridge.getCommandRegister().getOrCreate(LaneSetDisallow.class);
@@ -544,10 +553,11 @@ public class SimulationFacade {
             final AgentUpdates personUpdates = new AgentUpdates(time, updatedPersons, removedPersons);
             final TrafficDetectorUpdates trafficDetectorUpdates = new TrafficDetectorUpdates(time, updatedLaneAreas, updatedInductionLoops);
             final TrafficLightUpdates trafficLightUpdates = new TrafficLightUpdates(time, trafficLightGroupInfos);
+            final TaxiUpdates taxiUpdates = new TaxiUpdates(time, collectTaxiData(), collectTaxiReservations());
 
             currentTeleportingList = null; // reset cached teleporting list for this time step
 
-            return new TraciSimulationStepResult(vehicleUpdates, personUpdates, trafficDetectorUpdates, trafficLightUpdates);
+            return new TraciSimulationStepResult(vehicleUpdates, personUpdates, trafficDetectorUpdates, trafficLightUpdates, taxiUpdates);
         } catch (CommandException e) {
             throw new InternalFederateException("Could not properly simulate step and read subscriptions", e);
         }
@@ -613,15 +623,18 @@ public class SimulationFacade {
                     .stopped(vehicleStopMode)
                     .sensors(createSensorData(sumoVehicle, veh.leadingVehicle, veh.followerVehicle, veh.minGap))
                     .laneArea(vehicleSegmentInfo.get(veh.id));
+
             if (sumoConfiguration.subscriptions != null && sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_TRAINS)) {
                 vehicleDataBuilder.additional(extractTrainData(veh));
             }
+
+
             if (isParking) {
                 if (!sumoVehicle.lastVehicleData.isStopped()) {
                     log.info("Vehicle {} has parked at {} (edge: {})", veh.id, veh.position, veh.edgeId);
                 }
                 vehicleDataBuilder
-                        // use the last known road position, otherwise we can not retrieve a valid one
+                        // use the last known road position, otherwise we cannot retrieve a valid one
                         .road(sumoVehicle.lastVehicleData.getRoadPosition())
                         // for parking vehicles, there are no consumptions and emissions to measure
                         .consumptions(new VehicleConsumptions(
@@ -744,6 +757,35 @@ public class SimulationFacade {
         );
     }
 
+    private List<TaxiVehicleData> collectTaxiData() throws InternalFederateException {
+        final List<String> allTaxis = getTaxiFleet();
+        final List<TaxiVehicleData> taxiData = new ArrayList<>();
+
+        for (String id: allTaxis) {
+            taxiData.add(bridge.getVehicleControl().getTaxiData(id));
+        }
+        return taxiData;
+    }
+
+    /**
+     * Return a list of all taxis (vehicle ids).
+     * @see VehicleGetTaxiFleet#execute(Bridge)
+     *
+     * @return A list with the available taxis.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
+     */
+    private List<String> getTaxiFleet() throws InternalFederateException {
+        try {
+            return vehicleGetTaxiFleet.execute(bridge);
+        } catch (IllegalArgumentException | CommandException e) {
+            log.warn("Could not get taxi fleet.");
+            return new ArrayList<>();
+        }
+    }
+
+    private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {
+        return new ArrayList<>(bridge.getPersonControl().getTaxiReservations());
+    }
 
     /**
      * Creates an immutable object holding front and rear distance sensor data based on leading vehicle information.
@@ -785,7 +827,7 @@ public class SimulationFacade {
     }
 
     /**
-     * Maps vehicles to the their current lane segments (on which a vehicle is located).
+     * Maps vehicles to their current lane segments (on which a vehicle is located).
      *
      * @param subscriptions Subscription data.
      * @return The segment of the vehicle.

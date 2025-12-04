@@ -53,7 +53,7 @@ public class DockerClient {
     }
 
     /**
-     * Close all containers which has been started by this container.
+     * Close all containers which have been started by this container.
      */
     public void close() {
         for (DockerContainer container : runningContainers) {

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="DefaultPerson" vClass="pedestrian"/>
+
+    <route id="t0" edges="-1349332095"/>
+
+    <person id="p0" type="DefaultPerson" depart="10.00">
+        <ride from="57371455#1" to="1349332095" lines="taxi"/>
+    </person>
+</routes>

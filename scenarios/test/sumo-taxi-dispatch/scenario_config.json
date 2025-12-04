@@ -1,0 +1,30 @@
+{
+    "simulation": {
+        "id": "sumo-taxi-dispatch",
+        "duration": "250s",
+        "randomSeed": 268965854,
+        "projection": {
+            "centerCoordinates": {
+                "latitude": 51.87144935192005,
+                "longitude": 13.932831764509492
+            },
+            "cartesianOffset": {
+                "x": -426485.83,
+                "y": -5746561.26
+            }
+        },
+        "network": {
+            "netMask": "255.255.0.0",
+            "vehicleNet": "10.1.0.0",
+            "rsuNet": "10.2.0.0",
+            "tlNet": "10.3.0.0",
+            "csNet": "10.4.0.0",
+            "serverNet": "10.5.0.0",
+            "tmcNet": "10.6.0.0"
+        }
+    },
+    "federates": {
+        "application": true,
+        "sumo": true
+    }
+}

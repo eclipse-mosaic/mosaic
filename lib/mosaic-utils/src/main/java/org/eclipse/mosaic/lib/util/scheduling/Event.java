@@ -207,16 +207,8 @@ public class Event implements Comparable<Event> {
      */
     int execute() {
         int processedEvents = 0;
-        /*
-         * Iterate over all event processors of the event.
-         * http://developer.android.com/training/articles/perf-tips.html#Loops
-         * With an ArrayList, a hand-written counted loop is about 3x
-         * faster (with or without JIT).
-         */
-        final List<EventProcessor> processors = getProcessors();
-        final int size = processors.size();
-        for (int i = 0; i < size; ++i) {
-            final EventProcessor processor = processors.get(i);
+
+        for (final EventProcessor processor : getProcessors()) {
             if (processor.canProcessEvent()) {
                 try {
                     processor.processEvent(this);

@@ -17,7 +17,9 @@ package org.eclipse.mosaic.fed.sumo.bridge.facades;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleDispatchTaxi;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetParameter;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetPersonCapacity;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetRouteId;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetVehicleTypeId;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetChangeLane;
@@ -56,14 +58,18 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoSpeedMode;
 import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class VehicleFacade {
@@ -75,7 +81,7 @@ public class VehicleFacade {
     private final VehicleGetRouteId getRouteId;
     private final VehicleGetVehicleTypeId getVehicleTypeId;
     private final VehicleGetParameter getParameter;
-
+    private final VehicleGetPersonCapacity getPersonCapacity;
 
     private final VehicleSetChangeLane changeLane;
     private final VehicleSetSlowDown slowDown;
@@ -99,6 +105,7 @@ public class VehicleFacade {
     private final VehicleSetLaneChangeMode setLaneChangeMode;
     private final VehicleSetSpeedMode setSpeedMode;
     private final VehicleSetParameter setParameter;
+    private final VehicleDispatchTaxi vehicleDispatchTaxi;
 
     private final VehicleTypeGetLength getVehicleTypeLength;
     private final VehicleTypeGetWidth getVehicleTypeWidth;
@@ -126,6 +133,7 @@ public class VehicleFacade {
         getRouteId = bridge.getCommandRegister().getOrCreate(VehicleGetRouteId.class);
         getVehicleTypeId = bridge.getCommandRegister().getOrCreate(VehicleGetVehicleTypeId.class);
         getParameter = bridge.getCommandRegister().getOrCreate(VehicleGetParameter.class);
+        getPersonCapacity = bridge.getCommandRegister().getOrCreate(VehicleGetPersonCapacity.class);
 
         changeLane = bridge.getCommandRegister().getOrCreate(VehicleSetChangeLane.class);
         slowDown = bridge.getCommandRegister().getOrCreate(VehicleSetSlowDown.class);
@@ -147,6 +155,7 @@ public class VehicleFacade {
         setLaneChangeMode = bridge.getCommandRegister().getOrCreate(VehicleSetLaneChangeMode.class);
         setSpeedMode = bridge.getCommandRegister().getOrCreate(VehicleSetSpeedMode.class);
         setParameter = bridge.getCommandRegister().getOrCreate(VehicleSetParameter.class);
+        vehicleDispatchTaxi = bridge.getCommandRegister().getOrCreate(VehicleDispatchTaxi.class);
 
         getVehicleTypeLength = bridge.getCommandRegister().getOrCreate(VehicleTypeGetLength.class);
         getVehicleTypeWidth = bridge.getCommandRegister().getOrCreate(VehicleTypeGetWidth.class);
@@ -569,7 +578,6 @@ public class VehicleFacade {
         }
     }
 
-
     /**
      * This method enables the vehicle to move to an explicit position.
      *
@@ -585,6 +593,53 @@ public class VehicleFacade {
             moveToXY.execute(bridge, vehicleId, "", 0, cartesianPoint, angle, mode);
         } catch (IllegalArgumentException | CommandException e) {
             throw new InternalFederateException("Could not move vehicle " + vehicleId, e);
+        }
+    }
+
+    /**
+     * Read all taxi relevant data for the given vehicle id.
+     */
+    public TaxiVehicleData getTaxiData(String vehicleId) throws InternalFederateException {
+        final int taxiState = Integer.parseInt(getParameter(vehicleId, "device.taxi.state"));
+        final int numPersonsServed = Integer.parseInt(getParameter(vehicleId, "device.taxi.customers"));
+        final String currentCustomers = getParameter(vehicleId, "device.taxi.currentCustomers");
+
+        return new TaxiVehicleData(
+                vehicleId,
+                TaxiVehicleData.TaxiState.of(taxiState),
+                getPersonCapacity(vehicleId),
+                bridge.getSimulationControl().getLastKnownVehicleData(vehicleId),
+                numPersonsServed,
+                Arrays.stream(StringUtils.split(currentCustomers, ',')).map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList()
+        );
+    }
+
+    private int getPersonCapacity(String vehicleId) throws InternalFederateException {
+        try {
+            return getPersonCapacity.execute(bridge, vehicleId);
+        } catch (IllegalArgumentException | CommandException e) {
+            throw new InternalFederateException("Could not request person capacity for vehicle " + vehicleId, e);
+        }
+    }
+
+    /**
+     * Dispatches taxi to pick up and drop off customers in a specific order.<br>
+     * Valid example for the reservation list:
+     * <ul>
+     *     <li>[a,b,c,d] - picks up and drops off in this order</li>
+     *     <li>[a, b, a, c, b, d, c, d] - picks first a and b, then drops off a,
+     *     then picks up c, drops off b, etc.</li>
+     * </ul>
+     *
+     * @param vehicleId    The id of the taxi to be dispatched.
+     * @param reservations A list of the reservations in which the customers should be picked up and dropped off.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
+     */
+    public void dispatchTaxi(String vehicleId, List<String> reservations) throws InternalFederateException {
+        try {
+            vehicleDispatchTaxi.execute(bridge, vehicleId, reservations);
+        } catch (IllegalArgumentException | CommandException e) {
+            log.warn("Could not dispatch taxi with vehicle Id {}", vehicleId);
         }
     }
 

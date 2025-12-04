@@ -36,7 +36,8 @@
                 "VehicleUpdates",
                 "VehicleRoutesInitialization",
                 "VehicleTypesInitialization",
-                "VehicleSeenTrafficSignsUpdate"
+                "VehicleSeenTrafficSignsUpdate",
+                "TaxiUpdates"
             ],
             "javaClasspathEntries": []
         },
@@ -191,7 +192,8 @@
                 "LaneAreaDetectorSubscription",
                 "TrafficLightSubscription",
                 "SumoSurroundingObjectsSubscription",
-                "AgentRegistration"
+                "AgentRegistration",
+                "TaxiDispatch"
             ],
             "javaClasspathEntries": []
         },

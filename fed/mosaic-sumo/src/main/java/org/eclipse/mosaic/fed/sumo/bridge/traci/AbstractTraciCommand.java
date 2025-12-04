@@ -53,7 +53,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
- * This class handles the whole construction of a traci command message and reads its responds. To
+ * This class handles the whole construction of a traci command message and reads its responses. To
  * achieve this, each subclass needs to define the command, the variable and all parameters which are
  * required for the specific command.
  */
@@ -169,7 +169,7 @@ public abstract class AbstractTraciCommand<T> {
      * All configured {@link AbstractTraciParameterWriter}s are sequentially called to write
      * their actual content as bytes to the {@link java.io.DataOutputStream}. If a writer
      * is variable, the next argument from the list of given arguments is used accordingly.
-     * This implies, that the length of the passed arguments array must match the length of the writers which
+     * This implies that the length of the passed arguments array must match the length of the writers which
      * are supposed to write variable content.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -272,7 +272,7 @@ public abstract class AbstractTraciCommand<T> {
                             resultObjects.add(o);
                         }
                     }
-                    if (resultObjects.size() > 0) {
+                    if (!resultObjects.isEmpty()) {
                         results.add(constructResult(status, resultObjects.toArray(new Object[0])));
                     }
 
@@ -395,7 +395,7 @@ public abstract class AbstractTraciCommand<T> {
         }
 
         /**
-         * Defines a specific String value to be written. Additionally the data type identifier is added beforehand.
+         * Defines a specific String value to be written. Additionally, the data type identifier is added beforehand.
          */
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandWriterBuilder writeStringWithType(String stringValue) {
@@ -405,7 +405,7 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a String parameter to the message construction.
-         * For this parameter, a arguments needs to be passed to
+         * For this parameter, an argument needs to be passed to
          * the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
@@ -438,8 +438,8 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a String parameter to the message construction.
-         * Additionally the data type identifier is added beforehand.  For this parameter,
-         * a arguments needs to be passed to the {@link #execute(Bridge, Object...)} methods.
+         * Additionally, the data type identifier is added beforehand.  For this parameter,
+         * an argument needs to be passed to the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandWriterBuilder writeStringParamWithType() {
@@ -449,8 +449,8 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a String list parameter to the message construction.
-         * Additionally the data type identifier is added beforehand.  For this parameter,
-         * a arguments needs to be passed to the {@link #execute(Bridge, Object...)} methods.
+         * Additionally, the data type identifier is added beforehand.  For this parameter,
+         * arguments need to be passed to the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandWriterBuilder writeStringListParamWithType() {
@@ -460,8 +460,8 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a String list parameter to the message construction.
-         * Additionally the data type identifier is added beforehand.  For this parameter,
-         * a arguments needs to be passed to the {@link #execute(Bridge, Object...)} methods.
+         * Additionally, the data type identifier is added beforehand.  For this parameter,
+         * arguments need to be passed to the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandWriterBuilder writeStringListParam() {
@@ -471,7 +471,7 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a Double parameter to the message construction.
-         * For this parameter, a arguments needs to be passed to
+         * For this parameter, an argument needs to be passed to
          * the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
@@ -482,8 +482,8 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a Double parameter to the message construction.
-         * Additionally the data type identifier is added beforehand.  For this parameter,
-         * a arguments needs to be passed to the {@link #execute(Bridge, Object...)} methods.
+         * Additionally, the data type identifier is added beforehand.  For this parameter,
+         * an argument needs to be passed to the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandWriterBuilder writeDoubleParamWithType() {
@@ -493,9 +493,9 @@ public abstract class AbstractTraciCommand<T> {
         }
 
         /**
-         * Defines a writer for adding a Integer parameter to the message construction.
-         * Additionally the data type identifier is added beforehand.  For this parameter,
-         * a arguments needs to be passed to the {@link #execute(Bridge, Object...)} methods.
+         * Defines a writer for adding an Integer parameter to the message construction.
+         * Additionally, the data type identifier is added beforehand.  For this parameter,
+         * an argument needs to be passed to the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandWriterBuilder writeIntParamWithType() {
@@ -505,8 +505,8 @@ public abstract class AbstractTraciCommand<T> {
         }
 
         /**
-         * Defines a writer for adding a Integer parameter to the message construction.
-         * For this parameter, a arguments needs to be passed to
+         * Defines a writer for adding an Integer parameter to the message construction.
+         * For this parameter, an argument needs to be passed to
          * the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
@@ -517,7 +517,7 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a Byte parameter to the message construction.
-         * For this parameter, a arguments needs to be passed to
+         * For this parameter, an argument needs to be passed to
          * the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
@@ -528,8 +528,8 @@ public abstract class AbstractTraciCommand<T> {
 
         /**
          * Defines a writer for adding a Byte parameter to the message construction.
-         * Additionally the data type identifier is added beforehand.  For this parameter,
-         * a arguments needs to be passed to the {@link #execute(Bridge, Object...)} methods.
+         * Additionally, the data type identifier is added beforehand.  For this parameter,
+         * an argument needs to be passed to the {@link #execute(Bridge, Object...)} methods.
          */
         @SuppressWarnings("UnusedReturnValue")
 
@@ -573,7 +573,7 @@ public abstract class AbstractTraciCommand<T> {
         }
 
         /**
-         * Defines a reader for skipping an Byte value. (no result will be created)
+         * Defines a reader for skipping a Byte value. (no result will be created)
          */
         @SuppressWarnings("UnusedReturnValue")
         public final TraciCommandResultReaderBuilder skipByte() {

@@ -29,5 +29,8 @@ public class CommandRetrievePersonState {
 
     public final static SumoVar VAR_TYPE_ID = SumoVar.var(0x4f);
 
+    /**
+     * Taxi reservations within the scenario.
+     */
+    public final static SumoVar VAR_TAXI_RESERVATIONS = SumoVar.var(0xc6);
 }
-

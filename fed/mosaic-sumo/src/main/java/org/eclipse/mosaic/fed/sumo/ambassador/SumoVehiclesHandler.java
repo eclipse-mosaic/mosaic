@@ -17,6 +17,7 @@ package org.eclipse.mosaic.fed.sumo.ambassador;
 
 import org.eclipse.mosaic.fed.sumo.bridge.traci.VehicleSetRemove;
 import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
+import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.interactions.mapping.VehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
 import org.eclipse.mosaic.interactions.traffic.VehicleTypesInitialization;
@@ -270,7 +271,7 @@ public class SumoVehiclesHandler extends AbstractHandler {
      *
      * @param vehicleRegistration {@link VehicleRegistration} containing the vehicle definition.
      */
-    void handleRegistration(VehicleRegistration vehicleRegistration) {
+    synchronized void handleRegistration(VehicleRegistration vehicleRegistration) {
         VehicleMapping vehicleMapping = vehicleRegistration.getMapping();
         String vehicleId = vehicleMapping.getName();
         String logMessage;
@@ -409,6 +410,13 @@ public class SumoVehiclesHandler extends AbstractHandler {
         return bridge.getSimulationControl().getDepartedVehicles().stream()
                 .filter(v -> !vehiclesAddedViaRti.contains(v)) // all vehicles not added via MOSAIC are added by SUMO
                 .toList();
+    }
+
+    /**
+     * Dispatches taxi reservation to taxi vehicles.
+     */
+    void handleTaxiDispatch(TaxiDispatch taxiDispatch) throws InternalFederateException {
+        bridge.getVehicleControl().dispatchTaxi(taxiDispatch.getTaxiId(), taxiDispatch.getReservations());
     }
 
 }
