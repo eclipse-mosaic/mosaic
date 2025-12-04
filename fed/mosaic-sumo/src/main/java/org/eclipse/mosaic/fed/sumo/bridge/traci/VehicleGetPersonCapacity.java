@@ -73,6 +73,6 @@ public class VehicleGetPersonCapacity
 
     @Override
     protected Integer constructResult(Status status, Object... objects) {
-        return (int) objects[0];
+        return (Integer) objects[0];
     }
 }

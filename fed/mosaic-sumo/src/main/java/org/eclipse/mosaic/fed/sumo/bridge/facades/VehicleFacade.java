@@ -62,6 +62,7 @@ import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -609,7 +610,7 @@ public class VehicleFacade {
                 getPersonCapacity(vehicleId),
                 bridge.getSimulationControl().getLastKnownVehicleData(vehicleId),
                 numPersonsServed,
-                Arrays.stream(currentCustomers.split(",")).map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList()
+                Arrays.stream(StringUtils.split(currentCustomers, ',')).map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList()
         );
     }
 
