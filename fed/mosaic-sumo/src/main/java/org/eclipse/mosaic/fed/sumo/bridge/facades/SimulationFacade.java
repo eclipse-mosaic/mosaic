@@ -79,6 +79,8 @@ import org.eclipse.mosaic.lib.util.objects.Position;
 import org.eclipse.mosaic.rti.TIME;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,6 +130,8 @@ public class SimulationFacade {
 
     private final Map<String, InductionLoop> inductionLoops = new HashMap<>();
     private final Map<String, SumoVehicleState> sumoVehicles = new HashMap<>();
+    private final Map<String, List<String>> routeEdgesCache = new HashMap<>();
+    private final Map<String, Double> edgeLengthsCache = new HashMap<>();
 
     /**
      * This list is used to cache teleporting vehicles. It is only filled if at least one vehicle is potentially teleporting
@@ -613,7 +617,9 @@ public class SimulationFacade {
                     .stopped(vehicleStopMode)
                     .sensors(createSensorData(sumoVehicle, veh.leadingVehicle, veh.followerVehicle, veh.minGap))
                     .laneArea(vehicleSegmentInfo.get(veh.id));
-            if (sumoConfiguration.subscriptions != null && sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_TRAINS)) {
+            if (sumoConfiguration.upcomingEdgesRange > 0) {
+                vehicleDataBuilder.additional(collectUpcomingEdges(veh, sumoConfiguration.upcomingEdgesRange));
+            } else if (sumoConfiguration.subscriptions != null && sumoConfiguration.subscriptions.contains(CSumo.SUBSCRIPTION_TRAINS)) {
                 vehicleDataBuilder.additional(extractTrainData(veh));
             }
             if (isParking) {
@@ -638,6 +644,53 @@ public class SimulationFacade {
 
         sumoVehicle.currentVehicleData = vehicleDataBuilder.create();
         return sumoVehicle;
+    }
+
+    private List<String> collectUpcomingEdges(VehicleSubscriptionResult veh, double distance) throws InternalFederateException {
+        String routeId = veh.routeId;
+        String currentEdge = veh.edgeId;
+
+        if (StringUtils.startsWith(currentEdge, ":")) {
+            // if vehicle is on a junction, we take the id of the previous passed edge
+            currentEdge = getLastKnownVehicleData(veh.id).getRoadPosition().getConnectionId();
+        }
+
+        List<String> edges = routeEdgesCache.get(routeId);
+        if (edges == null) {
+            edges = bridge.getRouteControl().getRouteEdges(routeId);
+            routeEdgesCache.put(routeId, edges);
+        }
+
+        List<String> result = Lists.newArrayList();
+
+        double totalLength = 0;
+        boolean collect = false;
+        for (String edge : edges) {
+            if (currentEdge.equals(edge)) {
+                collect = true;
+            }
+            if (collect) {
+                Double length = edgeLengthsCache.get(edge);
+                if (length == null) {
+                    try {
+                        //quick fix, there's no way to retrieve the length of an edge, so we use the length of the first lane instead
+                        length = laneGetLength.execute(bridge, edge + "_0");
+                    } catch (CommandException e) {
+                        length = 0.0;
+                    }
+                    edgeLengthsCache.put(edge, length);
+                }
+
+                result.add(edge);
+
+                totalLength += length;
+
+                if (totalLength > distance) {
+                    return result;
+                }
+            }
+        }
+        return result;
     }
 
     private PtVehicleData extractTrainData(VehicleSubscriptionResult veh) {
