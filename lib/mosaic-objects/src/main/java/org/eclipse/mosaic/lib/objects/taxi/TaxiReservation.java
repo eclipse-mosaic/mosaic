@@ -18,9 +18,18 @@ package org.eclipse.mosaic.lib.objects.taxi;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 
-public class TaxiReservation {
+/**
+ * Contains information about taxi reservations, such as the start and target location and
+ * the person(s) assigned to the reservation.
+ */
+public class TaxiReservation implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     public enum ReservationState {
         NEW, RETRIEVED, ASSIGNED, PICKED_UP;
@@ -38,35 +47,50 @@ public class TaxiReservation {
     }
 
     private final String id;
-    private final ReservationState reservationState;
+    private final ReservationState state;
     private final List<String> personList;
     private final String fromEdge;
     private final String toEdge;
 
-    private TaxiReservation(String id, ReservationState reservationState, List<String> personList, String fromEdge, String toEdge) {
+    private TaxiReservation(String id, ReservationState state, List<String> personList, String fromEdge, String toEdge) {
         this.id = id;
-        this.reservationState = reservationState;
+        this.state = state;
         this.personList = personList;
         this.fromEdge = fromEdge;
         this.toEdge = toEdge;
     }
 
+    /**
+     * Returns the identifier of the reservation.
+     */
     public String getId() {
         return id;
     }
 
-    public ReservationState getReservationState() {
-        return reservationState;
+    /**
+     * Returns the {@link ReservationState} of the reservation.
+     */
+    public ReservationState getState() {
+        return state;
     }
 
+    /**
+     * Returns the list of persons associated with this trip reservation (usually 1 person).
+     */
     public List<String> getPersonList() {
         return personList;
     }
 
+    /**
+     * Returns the start edge of the trip reservation.
+     */
     public String getFromEdge() {
         return fromEdge;
     }
 
+    /**
+     * Returns the target edge of the trip reservation.
+     */
     public String getToEdge() {
         return toEdge;
     }
@@ -87,7 +111,7 @@ public class TaxiReservation {
         return new EqualsBuilder()
                 .appendSuper(super.equals(obj))
                 .append(this.id, other.id)
-                .append(this.reservationState, other.reservationState)
+                .append(this.state, other.state)
                 .append(this.personList, other.personList)
                 .append(this.fromEdge, other.fromEdge)
                 .append(this.toEdge, other.toEdge)
@@ -99,7 +123,7 @@ public class TaxiReservation {
         return new HashCodeBuilder(3, 89)
                 .appendSuper(super.hashCode())
                 .append(id)
-                .append(reservationState)
+                .append(state)
                 .append(personList)
                 .append(fromEdge)
                 .append(toEdge)
@@ -118,7 +142,7 @@ public class TaxiReservation {
             return this;
         }
 
-        public Builder withReservationState(ReservationState reservationState) {
+        public Builder withState(ReservationState reservationState) {
             this.reservationState = reservationState;
             return this;
         }

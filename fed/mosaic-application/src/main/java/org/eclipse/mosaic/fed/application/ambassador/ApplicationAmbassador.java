@@ -469,7 +469,7 @@ public class ApplicationAmbassador extends AbstractFederateAmbassador implements
                 addEvent(new Event(
                         taxiUpdates.getTime(),
                         e -> application.onTaxiDataUpdate(taxiUpdates.getTaxis(), taxiUpdates.getReservations()),
-                        EventNicenessPriorityRegister.UPDATE_SEEN_TRAFFIC_SIGN
+                        EventNicenessPriorityRegister.UPDATE_TAXI_DATA
                 ));
             }
         }

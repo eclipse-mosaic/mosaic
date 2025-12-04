@@ -66,26 +66,44 @@ public class TaxiVehicleData implements Serializable {
         this.personsToPickUpOrOnBoard = customersToPickUpOrOnBoard;
     }
 
+    /**
+     * Returns the vehicle id of the taxi.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Returns the current service state of the taxi.
+     */
     public TaxiState getState() {
         return state;
     }
 
+    /**
+     * Returns additional vehicle data of this taxi.
+     */
     public VehicleData getVehicleData() {
         return vehicleData;
     }
 
+    /**
+     * Returns the maximum capacity of this taxi.
+     */
     public int getPersonCapacity() {
         return personCapacity;
     }
 
+    /**
+     * Returns the total number of persons served by this taxi.
+     */
     public int getTotalNumPersonsServed() {
         return totalNumPersonsServed;
     }
 
+    /**
+     * Returns a list of persons planned to be picked up or currently being on board of this taxi.
+     */
     public List<String> getPersonsToPickUpOrOnBoard() {
         return personsToPickUpOrOnBoard;
     }

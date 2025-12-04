@@ -39,7 +39,7 @@ public class PersonGetTaxiReservations implements org.eclipse.mosaic.fed.sumo.br
         for (TraCIReservation res : traCIReservations) {
             taxiReservations.add(new TaxiReservation.Builder()
                     .withId(res.getId())
-                    .withReservationState(TaxiReservation.ReservationState.of(res.getState()))
+                    .withState(TaxiReservation.ReservationState.of(res.getState()))
                     .withPersonList(res.getPersons().stream().map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList())
                     .withFromEdge(res.getFromEdge())
                     .withToEdge(res.getToEdge())

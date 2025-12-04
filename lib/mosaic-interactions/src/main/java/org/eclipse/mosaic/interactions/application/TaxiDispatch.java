@@ -23,16 +23,20 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.io.Serial;
 import java.util.List;
 
+/**
+ * Provides information for assigning taxi reservations to a taxi vehicle.
+ */
 public class TaxiDispatch extends Interaction {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public static final String TYPE_ID = createTypeIdentifier(TaxiDispatch.class);
 
     private final String taxiId;
-
     private final List<String> reservations;
 
     public TaxiDispatch(long time, String taxiId, List<String> reservations) {
@@ -50,6 +54,9 @@ public class TaxiDispatch extends Interaction {
         return taxiId;
     }
 
+    /**
+     * The list of reservation IDs to be handled by the taxi in the given order.
+     */
     public List<String> getReservations() {
         return reservations;
     }

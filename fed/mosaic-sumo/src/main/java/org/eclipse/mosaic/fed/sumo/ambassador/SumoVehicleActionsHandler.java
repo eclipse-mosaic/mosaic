@@ -406,10 +406,6 @@ public class SumoVehicleActionsHandler extends AbstractHandler implements EventP
         }
     }
 
-	void handleTaxiDispatch(TaxiDispatch taxiDispatch) throws InternalFederateException {
-		bridge.getVehicleControl().dispatchTaxi(taxiDispatch.getTaxiId(), taxiDispatch.getReservations());
-	}
-
     @Override
     public void processEvent(Event event) throws Exception {
         if (event.getResource() instanceof VehicleSpeedChange speedChange) {
@@ -417,7 +413,6 @@ public class SumoVehicleActionsHandler extends AbstractHandler implements EventP
             bridge.getVehicleControl().setSpeed(speedChange.getVehicleId(), speedChange.getSpeed());
         }
     }
-
 
     /**
      * Adjusts the given value to a multiple of the configured sumo time step

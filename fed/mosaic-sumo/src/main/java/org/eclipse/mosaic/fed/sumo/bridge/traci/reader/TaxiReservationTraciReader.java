@@ -47,7 +47,7 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
         final int reservationState = readTypedInt(in);
 
         return new TaxiReservation.Builder().withId(reservationId)
-                .withReservationState(TaxiReservation.ReservationState.of(reservationState))
+                .withState(TaxiReservation.ReservationState.of(reservationState))
                 .withPersonList(personList)
                 .withFromEdge(fromEdge)
                 .withToEdge(toEdge)

@@ -33,7 +33,7 @@ public class TaxiDispatchTestApp extends AbstractApplication<ServerOperatingSyst
     @Override
     public void onTaxiDataUpdate(List<TaxiVehicleData> taxis, List<TaxiReservation> taxiReservations) {
         for (TaxiReservation reservation : taxiReservations) {
-            if (reservation.getReservationState() == TaxiReservation.ReservationState.NEW) {
+            if (reservation.getState() == TaxiReservation.ReservationState.NEW) {
                 for (TaxiVehicleData taxi : taxis) {
                     if (taxi.getState() == TaxiVehicleData.TaxiState.EMPTY) {
                         getLog().info("Assigned reservation '{}' of person '{}' to vehicle '{}'.",

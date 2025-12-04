@@ -495,8 +495,8 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
             vehicleActionsHandler.handleSpeedChange((VehicleSpeedChange) interaction);
         } else if (interaction.getTypeId().equals(SumoSurroundingObjectsSubscription.TYPE_ID)) {
             vehicleActionsHandler.handleSurroundingVehiclesSubscription((SumoSurroundingObjectsSubscription) interaction);
-        } else if(interaction.getTypeId().equals(TaxiDispatch.TYPE_ID)) {
-			vehicleActionsHandler.handleTaxiDispatch((TaxiDispatch) interaction);
+        } else if (interaction.getTypeId().equals(TaxiDispatch.TYPE_ID)) {
+            vehiclesHandler.handleTaxiDispatch((TaxiDispatch) interaction);
 		} else if (interaction.getTypeId().equals(InductionLoopDetectorSubscription.TYPE_ID)) {
             infrastructureHandler.handleDetectorSubscription((InductionLoopDetectorSubscription) interaction);
         } else if (interaction.getTypeId().equals(LaneAreaDetectorSubscription.TYPE_ID)) {
@@ -643,7 +643,9 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
             rti.triggerInteraction(simulationStepResult.personUpdates());
             rti.triggerInteraction(simulationStepResult.trafficDetectorUpdates());
             rti.triggerInteraction(simulationStepResult.trafficLightUpdates());
-			rti.triggerInteraction(simulationStepResult.taxiUpdates());
+            if (simulationStepResult.hasTaxiUpdates()) {
+                rti.triggerInteraction(simulationStepResult.taxiUpdates());
+            }
 
             rti.requestAdvanceTime(nextTimeStep, 0, FederatePriority.higher(descriptor.getPriority()));
 

@@ -27,4 +27,9 @@ public record TraciSimulationStepResult(
         TrafficDetectorUpdates trafficDetectorUpdates,
         TrafficLightUpdates trafficLightUpdates,
         TaxiUpdates taxiUpdates
-) {}
+) {
+
+    public boolean hasTaxiUpdates() {
+        return taxiUpdates != null && !taxiUpdates.getTaxis().isEmpty();
+    }
+}

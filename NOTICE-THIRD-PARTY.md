@@ -245,14 +245,6 @@ mapdb (1.0.8)
  * Source: https://github.com/jankotek/MapDB
 
 
-MySQL Connector/J (9.3.0)
-
- * License: The GNU General Public License, v2 with Universal FOSS Exception, v1.0
- * Maven artifact: `com.mysql:mysql-connector-j:9.3.0`
- * Project: http://dev.mysql.com/doc/connector-j/en/
- * Source: https://github.com/mysql/mysql-connector-j
-
-
 opencsv (5.9)
 
  * License: Apache-2.0
@@ -267,14 +259,6 @@ org.locationtech.jts:jts-core (1.19.0)
  * Maven artifact: `org.locationtech.jts:jts-core:1.19.0`
  * Project: https://www.locationtech.org/projects/technology.jts/jts-modules/jts-core
  * Source: https://github.com/locationtech/jts/jts-modules/jts-core
-
-
-Project Lombok (1.18.38)
-
- * License: MIT
- * Maven artifact: `org.projectlombok:lombok:1.18.38`
- * Project: https://projectlombok.org
- * Source: https://github.com/projectlombok/lombok
 
 
 Protocol Buffers [Core] (3.23.2)

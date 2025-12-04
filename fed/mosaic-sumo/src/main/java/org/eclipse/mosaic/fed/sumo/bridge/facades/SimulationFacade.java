@@ -33,6 +33,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationGetTrafficLightIds;
 import org.eclipse.mosaic.fed.sumo.bridge.api.SimulationSimulateStep;
 import org.eclipse.mosaic.fed.sumo.bridge.api.TrafficLightSubscribe;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleAdd;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTaxiFleet;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTeleportingList;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetRemove;
 import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetUpdateBestLanes;
@@ -48,12 +49,11 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TraciSimulationStepResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.TrafficLightSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleContextSubscriptionResult;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.VehicleSubscriptionResult;
-import org.eclipse.mosaic.fed.sumo.bridge.api.*;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.InductionLoop;
 import org.eclipse.mosaic.fed.sumo.util.TrafficLightStateDecoder;
-import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
 import org.eclipse.mosaic.interactions.agent.AgentUpdates;
+import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
@@ -69,16 +69,29 @@ import org.eclipse.mosaic.lib.objects.traffic.InductionLoopInfo;
 import org.eclipse.mosaic.lib.objects.traffic.LaneAreaDetectorInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroupInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightState;
-import org.eclipse.mosaic.lib.objects.vehicle.*;
+import org.eclipse.mosaic.lib.objects.vehicle.Consumptions;
+import org.eclipse.mosaic.lib.objects.vehicle.Emissions;
+import org.eclipse.mosaic.lib.objects.vehicle.SurroundingVehicle;
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleConsumptions;
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleEmissions;
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleSensors;
+import org.eclipse.mosaic.lib.objects.vehicle.VehicleSignals;
 import org.eclipse.mosaic.lib.objects.vehicle.sensor.DistanceSensor;
 import org.eclipse.mosaic.lib.objects.vehicle.sensor.RadarSensor;
 import org.eclipse.mosaic.lib.util.objects.Position;
 import org.eclipse.mosaic.rti.TIME;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class SimulationFacade {
 
@@ -749,7 +762,7 @@ public class SimulationFacade {
         final List<TaxiVehicleData> taxiData = new ArrayList<>();
 
         for (String id: allTaxis) {
-            taxiData.add(getTaxiData(id));
+            taxiData.add(bridge.getVehicleControl().getTaxiData(id));
         }
         return taxiData;
     }
@@ -768,21 +781,6 @@ public class SimulationFacade {
             log.warn("Could not get taxi fleet.");
             return new ArrayList<>();
         }
-    }
-
-    private TaxiVehicleData getTaxiData(String id) throws InternalFederateException {
-        final int taxiState = Integer.parseInt(bridge.getVehicleControl().getParameter(id, "device.taxi.state"));
-        final int numPersonsServed = Integer.parseInt(bridge.getVehicleControl().getParameter(id, "device.taxi.customers"));
-        final String currentCustomers = bridge.getVehicleControl().getParameter(id, "device.taxi.currentCustomers");
-
-        return new TaxiVehicleData(
-                id,
-                TaxiVehicleData.TaxiState.of(taxiState),
-                bridge.getVehicleControl().getPersonCapacity(id),
-                getLastKnownVehicleData(id),
-                numPersonsServed,
-                Arrays.stream(currentCustomers.split(",")).map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList()
-        );
     }
 
     private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {

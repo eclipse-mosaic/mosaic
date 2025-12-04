@@ -17,12 +17,48 @@ package org.eclipse.mosaic.fed.sumo.bridge.facades;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
-import org.eclipse.mosaic.fed.sumo.bridge.api.*;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleDispatchTaxi;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetParameter;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetPersonCapacity;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetRouteId;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetVehicleTypeId;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetChangeLane;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetColor;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetHighlight;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetImperfection;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetLaneChangeMode;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMaxAcceleration;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMaxDeceleration;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMaxSpeed;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMinGap;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetMoveToXY;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetParameter;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetReactionTime;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetResume;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetRouteById;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSlowDown;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSpeed;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSpeedFactor;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetSpeedMode;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetStop;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleSetVehicleLength;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetAccel;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetDecel;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetHeight;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetLength;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetMaxSpeed;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetMinGap;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetSigma;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetSpeedFactor;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetTau;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetVClass;
+import org.eclipse.mosaic.fed.sumo.bridge.api.VehicleTypeGetWidth;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoLaneChangeMode;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoSpeedMode;
 import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
+import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
@@ -30,6 +66,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,14 +183,6 @@ public class VehicleFacade {
             return getRouteId.execute(bridge, vehicleId);
         } catch (IllegalArgumentException | CommandException e) {
             throw new InternalFederateException("Could not request route for vehicle " + vehicleId, e);
-        }
-    }
-
-    public int getPersonCapacity(String vehicleId) throws InternalFederateException {
-        try {
-            return getPersonCapacity.execute(bridge, vehicleId);
-        } catch (IllegalArgumentException | CommandException e) {
-            throw new InternalFederateException("Could not request person capacity for vehicle " + vehicleId, e);
         }
     }
 
@@ -482,28 +511,6 @@ public class VehicleFacade {
     }
 
     /**
-     * Dispatches taxi to pick up and drop off customers in a specific order.<br>
-     * Valid example for the reservation list:
-     * <ul>
-     *     <li>[a,b,c,d] - picks up and drops off in this order</li>
-     *     <li>[a, b, a, c, b, d, c, d] - picks first a and b, then drops off a,
-     *     then picks up c, drops off b, etc.</li>
-     * </ul>
-     *
-     * @param taxiId The Id of the taxi to be dispatched.
-     * @param reservations A list of the reservations in which the customers should be picked up and dropped off.
-     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
-     */
-    public void dispatchTaxi(String taxiId, List<String> reservations) throws InternalFederateException {
-        try {
-            vehicleDispatchTaxi.execute(bridge, taxiId, reservations);
-        }
-		catch(IllegalArgumentException | CommandException e) {
-			log.warn("Could not dispatch taxi with vehicle Id {}", taxiId);
-		}
-	}
-
-    /**
      * Sets a vehicle parameter for the vehicle.
      *
      * @param vehicleId The Id of the vehicle.
@@ -570,7 +577,6 @@ public class VehicleFacade {
         }
     }
 
-
     /**
      * This method enables the vehicle to move to an explicit position.
      *
@@ -586,6 +592,53 @@ public class VehicleFacade {
             moveToXY.execute(bridge, vehicleId, "", 0, cartesianPoint, angle, mode);
         } catch (IllegalArgumentException | CommandException e) {
             throw new InternalFederateException("Could not move vehicle " + vehicleId, e);
+        }
+    }
+
+    /**
+     * Read all taxi relevant data for the given vehicle id.
+     */
+    public TaxiVehicleData getTaxiData(String vehicleId) throws InternalFederateException {
+        final int taxiState = Integer.parseInt(getParameter(vehicleId, "device.taxi.state"));
+        final int numPersonsServed = Integer.parseInt(getParameter(vehicleId, "device.taxi.customers"));
+        final String currentCustomers = getParameter(vehicleId, "device.taxi.currentCustomers");
+
+        return new TaxiVehicleData(
+                vehicleId,
+                TaxiVehicleData.TaxiState.of(taxiState),
+                getPersonCapacity(vehicleId),
+                bridge.getSimulationControl().getLastKnownVehicleData(vehicleId),
+                numPersonsServed,
+                Arrays.stream(currentCustomers.split(",")).map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList()
+        );
+    }
+
+    private int getPersonCapacity(String vehicleId) throws InternalFederateException {
+        try {
+            return getPersonCapacity.execute(bridge, vehicleId);
+        } catch (IllegalArgumentException | CommandException e) {
+            throw new InternalFederateException("Could not request person capacity for vehicle " + vehicleId, e);
+        }
+    }
+
+    /**
+     * Dispatches taxi to pick up and drop off customers in a specific order.<br>
+     * Valid example for the reservation list:
+     * <ul>
+     *     <li>[a,b,c,d] - picks up and drops off in this order</li>
+     *     <li>[a, b, a, c, b, d, c, d] - picks first a and b, then drops off a,
+     *     then picks up c, drops off b, etc.</li>
+     * </ul>
+     *
+     * @param vehicleId    The id of the taxi to be dispatched.
+     * @param reservations A list of the reservations in which the customers should be picked up and dropped off.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
+     */
+    public void dispatchTaxi(String vehicleId, List<String> reservations) throws InternalFederateException {
+        try {
+            vehicleDispatchTaxi.execute(bridge, vehicleId, reservations);
+        } catch (IllegalArgumentException | CommandException e) {
+            log.warn("Could not dispatch taxi with vehicle Id {}", vehicleId);
         }
     }
 
