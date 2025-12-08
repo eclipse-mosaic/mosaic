@@ -24,7 +24,7 @@ public class VehicleGetTaxiFleet implements org.eclipse.mosaic.fed.sumo.bridge.a
 
 	@Override
 	public List<String> execute(Bridge bridge) {
-		return Vehicle.getTaxiFleet(-1)
+		return Vehicle.getTaxiFleet()
 				.stream()
 				.map(Bridge.VEHICLE_ID_TRANSFORMER::toExternalId)
 				.toList();

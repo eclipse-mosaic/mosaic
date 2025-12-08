@@ -56,14 +56,14 @@ public class TaxiVehicleData implements Serializable {
     private final List<String> personsToPickUpOrOnBoard;
 
     public TaxiVehicleData(
-            String id, TaxiState state, int personCapacity, VehicleData vehicleData, int totalNumPersonsServed, List<String> customersToPickUpOrOnBoard
+            String id, TaxiState state, int personCapacity, VehicleData vehicleData, int totalNumPersonsServed, List<String> personsToPickUpOrOnBoard
     ) {
         this.id = id;
         this.state = state;
         this.personCapacity = personCapacity;
         this.vehicleData = vehicleData;
         this.totalNumPersonsServed = totalNumPersonsServed;
-        this.personsToPickUpOrOnBoard = customersToPickUpOrOnBoard;
+        this.personsToPickUpOrOnBoard = personsToPickUpOrOnBoard;
     }
 
     /**

@@ -758,10 +758,10 @@ public class SimulationFacade {
     }
 
     private List<TaxiVehicleData> collectTaxiData() throws InternalFederateException {
-        final List<String> allTaxis = getTaxiFleet();
+        final List<String> allTaxisIds = getTaxiFleet();
         final List<TaxiVehicleData> taxiData = new ArrayList<>();
 
-        for (String id: allTaxis) {
+        for (String id: allTaxisIds) {
             taxiData.add(bridge.getVehicleControl().getTaxiData(id));
         }
         return taxiData;

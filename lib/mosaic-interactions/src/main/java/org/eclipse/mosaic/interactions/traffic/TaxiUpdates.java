@@ -51,6 +51,7 @@ public final class TaxiUpdates extends Interaction {
      *
      * @param time         Timestamp of this interaction, unit: [ns]
      * @param taxis        Taxis that are available.
+     * @param reservations All available taxi reservations, including assigned reservations.
      */
     public TaxiUpdates(long time, List<TaxiVehicleData> taxis, List<TaxiReservation> reservations) {
         super(time);
