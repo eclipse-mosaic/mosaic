@@ -25,13 +25,14 @@ import java.util.List;
  * This class represents the SUMO command which allows getting all taxis.
  */
 public interface VehicleGetTaxiFleet {
-	/**
-	 * This method executes the command with the given arguments in order to retrieve all taxis .
-	 *
-     * @param bridge  Connection to SUMO.
-	 * @return a list of taxis (vehicle ids).
-	 * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
-	 * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
-	 */
-	List<String> execute(Bridge bridge) throws CommandException, InternalFederateException;
+
+    /**
+     * This method executes the command with the given arguments in order to retrieve all taxis .
+     *
+     * @param bridge Connection to SUMO.
+     * @return a list of taxis (vehicle ids).
+     * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
+     */
+    List<String> execute(Bridge bridge) throws CommandException, InternalFederateException;
 }

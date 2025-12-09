@@ -48,16 +48,16 @@ public class PersonFacade {
         } catch (IllegalArgumentException | CommandException e) {
             throw new InternalFederateException("Could not request type for person " + personId, e);
         }
-	}
+    }
 
-	/**
-	 * This method gets the available taxi reservations.
-	 */
-	public List<TaxiReservation> getTaxiReservations() throws InternalFederateException {
-		try {
-			return personGetTaxiReservations.execute(bridge);
-		} catch(CommandException e) {
-			throw new InternalFederateException("Could not retrieve taxi reservations.", e);
-		}
-	}
+    /**
+     * This method returns the available taxi reservations.
+     */
+    public List<TaxiReservation> getTaxiReservations() throws InternalFederateException {
+        try {
+            return personGetTaxiReservations.execute(bridge);
+        } catch (CommandException e) {
+            throw new InternalFederateException("Could not retrieve taxi reservations.", e);
+        }
+    }
 }

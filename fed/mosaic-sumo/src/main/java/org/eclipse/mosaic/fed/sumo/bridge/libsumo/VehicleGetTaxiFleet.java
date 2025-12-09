@@ -16,17 +16,18 @@
 package org.eclipse.mosaic.fed.sumo.bridge.libsumo;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
+
 import org.eclipse.sumo.libsumo.Vehicle;
 
 import java.util.List;
 
 public class VehicleGetTaxiFleet implements org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetTaxiFleet {
 
-	@Override
-	public List<String> execute(Bridge bridge) {
-		return Vehicle.getTaxiFleet()
-				.stream()
-				.map(Bridge.VEHICLE_ID_TRANSFORMER::toExternalId)
-				.toList();
-	}
+    @Override
+    public List<String> execute(Bridge bridge) {
+        return Vehicle.getTaxiFleet()
+                .stream()
+                .map(Bridge.VEHICLE_ID_TRANSFORMER::toExternalId)
+                .toList();
+    }
 }

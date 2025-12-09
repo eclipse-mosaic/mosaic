@@ -27,7 +27,6 @@ import static org.eclipse.mosaic.fed.sumo.ambassador.LogStatements.VEHICLE_STOP_
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoLaneChangeMode;
 import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoSpeedMode;
 import org.eclipse.mosaic.fed.sumo.config.CSumo;
-import org.eclipse.mosaic.interactions.application.TaxiDispatch;
 import org.eclipse.mosaic.interactions.application.SumoSurroundingObjectsSubscription;
 import org.eclipse.mosaic.interactions.vehicle.VehicleLaneChange;
 import org.eclipse.mosaic.interactions.vehicle.VehicleParametersChange;

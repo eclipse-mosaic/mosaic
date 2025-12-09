@@ -23,15 +23,16 @@ import org.eclipse.mosaic.rti.api.InternalFederateException;
  * This class represents the SUMO command which allows getting the vehicle's person capacity.
  */
 public interface VehicleGetPersonCapacity {
-	/**
-	 * This method executes the command with the given arguments in order to retrieve the
-	 * number of people that can ride this vehicle simultaneously.
-	 *
-	 * @param bridge Connection to SUMO.
-	 * @param vehicleId the ID of the vehicle
-	 * @return the vehicle's person capacity.
-	 * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
-	 * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
-	 */
-	int execute(Bridge bridge, String vehicleId) throws CommandException, InternalFederateException;
+
+    /**
+     * This method executes the command with the given arguments in order to retrieve the
+     * number of people that can ride this vehicle simultaneously.
+     *
+     * @param bridge    Connection to SUMO.
+     * @param vehicleId the ID of the vehicle
+     * @return the vehicle's person capacity.
+     * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
+     */
+    int execute(Bridge bridge, String vehicleId) throws CommandException, InternalFederateException;
 }

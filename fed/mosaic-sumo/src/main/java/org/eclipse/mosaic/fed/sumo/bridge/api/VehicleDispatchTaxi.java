@@ -25,18 +25,19 @@ import java.util.List;
  * This class represents the SUMO command which dispatches a taxi for the given reservations.
  */
 public interface VehicleDispatchTaxi {
-	/**
-	 * This method dispatches the taxi with the given id to service the given reservations.<br>
-	 * If only a single reservation is given, this implies pickup and drop-off.
-	 * If multiple reservations are given, each reservation id must occur twice
-	 * (once for pickup and once for drop-off) and the list encodes ride-sharing
-	 * of passengers (in pickup and drop-off order).
-	 *
-	 * @param bridge  Connection to SUMO.
-	 * @param vehicleId id of the taxi vehicle.
-	 * @param reservations list of reservations that has to be served by the taxi.
-	 * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
-	 * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
-	 */
-	void execute(Bridge bridge, String vehicleId, List<String> reservations) throws CommandException, InternalFederateException;
+    
+    /**
+     * This method dispatches the taxi with the given id to service the given reservations.<br>
+     * If only a single reservation is given, this implies pickup and drop-off.
+     * If multiple reservations are given, each reservation id must occur twice
+     * (once for pickup and once for drop-off) and the list encodes ride-sharing
+     * of passengers (in pickup and drop-off order).
+     *
+     * @param bridge       Connection to SUMO.
+     * @param vehicleId    id of the taxi vehicle.
+     * @param reservations list of reservations that has to be served by the taxi.
+     * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
+     * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
+     */
+    void execute(Bridge bridge, String vehicleId, List<String> reservations) throws CommandException, InternalFederateException;
 }

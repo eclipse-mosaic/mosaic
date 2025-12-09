@@ -16,12 +16,13 @@
 package org.eclipse.mosaic.fed.sumo.bridge.libsumo;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
+
 import org.eclipse.sumo.libsumo.Vehicle;
 
 public class VehicleGetPersonCapacity implements org.eclipse.mosaic.fed.sumo.bridge.api.VehicleGetPersonCapacity {
 
-	@Override
-	public int execute(Bridge bridge, String vehicleId) {
-		return Vehicle.getPersonCapacity(Bridge.VEHICLE_ID_TRANSFORMER.toExternalId(vehicleId));
-	}
+    @Override
+    public int execute(Bridge bridge, String vehicleId) {
+        return Vehicle.getPersonCapacity(Bridge.VEHICLE_ID_TRANSFORMER.toExternalId(vehicleId));
+    }
 }

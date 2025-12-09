@@ -498,7 +498,7 @@ public class SumoAmbassador extends AbstractFederateAmbassador {
             vehicleActionsHandler.handleSurroundingVehiclesSubscription((SumoSurroundingObjectsSubscription) interaction);
         } else if (interaction.getTypeId().equals(TaxiDispatch.TYPE_ID)) {
             vehiclesHandler.handleTaxiDispatch((TaxiDispatch) interaction);
-		} else if (interaction.getTypeId().equals(InductionLoopDetectorSubscription.TYPE_ID)) {
+        } else if (interaction.getTypeId().equals(InductionLoopDetectorSubscription.TYPE_ID)) {
             infrastructureHandler.handleDetectorSubscription((InductionLoopDetectorSubscription) interaction);
         } else if (interaction.getTypeId().equals(LaneAreaDetectorSubscription.TYPE_ID)) {
             infrastructureHandler.handleDetectorSubscription((LaneAreaDetectorSubscription) interaction);

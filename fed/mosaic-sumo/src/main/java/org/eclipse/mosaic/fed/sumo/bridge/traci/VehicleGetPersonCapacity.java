@@ -57,7 +57,7 @@ public class VehicleGetPersonCapacity
      * This method executes the command with the given arguments in order to retrieve the
      * number of people that can ride this vehicle simultaneously.
      *
-     * @param bridge  Connection to SUMO.
+     * @param bridge    Connection to SUMO.
      * @param vehicleId ID of the vehicle.
      * @return the person capacity of the given vehicle
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
