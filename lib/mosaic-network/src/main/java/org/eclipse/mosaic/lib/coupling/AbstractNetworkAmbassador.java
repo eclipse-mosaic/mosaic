@@ -173,6 +173,11 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
     protected final static int WAIT_BETWEEN_CONNECTION_TRIES = 100;
 
     /**
+     * Counter for generating unique node B identifiers
+     */
+    private int nodeBCounter = 0;
+
+    /**
      * Creates a new AbstractNetworkAmbassador.
      *
      * @param ambassadorParameter parameters to configure the ambassador
@@ -880,8 +885,10 @@ public abstract class AbstractNetworkAmbassador extends AbstractFederateAmbassad
     }
 
     protected synchronized void addNodeBToSimulation(CartesianPoint position) throws InternalFederateException {
+        String nodeBInternalId = "nodeB_" + (nodeBCounter++);
+        int id = simulatedNodes.toExternalId(nodeBInternalId);
         try {
-            if (CommandType.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(0L, NodeType.NODE_B, new NodeDataContainer(0, position))) {
+            if (CommandType.SUCCESS != ambassadorFederateChannel.writeAddNodeMessage(0L, NodeType.NODE_B, new NodeDataContainer(id, position))) {
                 log.error("Could not add new eNodeB.");
                 throw new InternalFederateException("Error in " + federateName + ": Could not add new node");
             }
