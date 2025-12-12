@@ -15,8 +15,8 @@
 #
 ################################################################################
 #
-# omnet_installer.sh - A utility script to install OMNeT++/INET for MOSAIC.
-# Ensure this file is executable via chmod a+x omnet_installer.
+# omnet_installer.sh - A utility script to install OMNeT++/INET/Simu5G for MOSAIC.
+# Ensure this file is executable via chmod a+x omnet_installer.sh
 #
 
 # ----------------------------------------
@@ -50,6 +50,7 @@ required_libraries=("libprotobuf-dev >= 3.7.0" "libxml2-dev" "python3-dev")
 omnet_federate_url="https://github.com/mosaic-addons/omnetpp-federate/archive/refs/tags/25.2.zip"
 omnet_src_url="https://github.com/omnetpp/omnetpp/releases/download/omnetpp-6.1.0/omnetpp-6.1.0-linux-x86_64.tgz"
 inet_src_url="https://github.com/inet-framework/inet/releases/download/v4.5.4/inet-4.5.4-src.tgz"
+simu5g_src_url="https://github.com/Unipisa/Simu5G/archive/refs/tags/v1.3.0.zip"
 
 premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-linux.tar.gz"
 premake5_tar="$(basename "$premake5_url")"
@@ -57,17 +58,20 @@ premake5_autoconf_url="https://github.com/Blizzard/premake-autoconf/archive/mast
 premake5_autoconf_zip="$(basename "$premake5_autoconf_url")"
 
 # User arguments
-arg_installation_type=UNSET # USER or DEVELOPER. If not defined by program argument, user will be asked during installtion process.
+arg_installation_type=USER # USER or DEVELOPER. If not defined by program argument, user will be asked during installtion process.
 arg_integration_testing=false
 arg_quiet=false
 arg_uninstall=false
 arg_omnet_tar=""
 arg_federate_src_file=""
 arg_inet_src_file=""
+arg_simu5g_src_file=""
 arg_make_parallel="-j$(nproc)"
 arg_force=false
 arg_skip_inet_installation=false
 arg_skip_omnetpp_installation=false
+arg_skip_simu5g_installation=false
+arg_rebuild_federate=false
 
 #paths and names
 omnet_dir_name_default="omnetpp-x.x"
@@ -76,6 +80,7 @@ omnet_dir_name="${omnet_dir_name_default}"
 omnet_federate_filename="$(basename "$omnet_federate_url")"
 omnet_src_filename="$(basename "$omnet_src_url")"
 inet_src_filename="$(basename "$inet_src_url")"
+simu5g_src_filename="$(basename "$simu5g_src_url")"
 working_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # INET configuration: Disabled features
@@ -91,7 +96,6 @@ disabled_inet_features=(
   "Eigrp"
   "EigrpExamples"
   "Flooding"
-  # "Gpsr"
   "Nexthop"
   "Ospfv2"
   "Ospfv2Examples"
@@ -103,68 +107,41 @@ disabled_inet_features=(
   "RipExamples"
   "WiseRoute"
 
-  # Application Protocols (not needed for basic V2X)
   "Dhcp"
   "DhcpExamples"
   "DiffServ"
   "DiffServExamples"
   "Rtp"
   "RtpExamples"
-  "Sctp"
   "SctpExamples"
   "SimpleVoip"
   "SimpleVoipExamples"
-
-  # Alternative MAC Protocols (using 802.11p instead)
   "AckingMac"
   "BMac"
   "CsmaCaMac"
   "LMac"
   "XMac"
-
-  # Other IEEE Standards (not relevant for V2X)
   "Ieee802154"
   "Ieee8021ae"
   "Ieee8021as"
-  "Ieee8021d"
   "Ieee8021dExamples"
-  "Ieee8021q"
-  "Ieee8021r"
   "Ieee8022"
-
-  # TSN Features (unless specifically needed)
   "TSN"
   "TSNShowcases"
   "GateScheduling"
-
-  # IPv6 (disabled as requested)
   "Ipv6"
   "Ipv6Examples"
   "Xmipv6"
   "Xmipv6Examples"
-
-  # MPLS (not needed for V2X)
   "Mpls"
   "MplsExamples"
-
-  # VoIP Stream (disabled by default anyway)
   "VoipStream"
   "VoipStreamExamples"
-
-  # Optional visualizations (keeping basic ones)
   "VisualizationOsg"
   "VisualizationOsgShowcases"
-
-  # Self documentation (not needed for runtime)
   "SelfDoc"
-
-  # Advanced scheduling (not needed for basic V2X)
   "Z3GateSchedulingConfigurator"
-
-  # TCP LwIP (keeping TcpInet instead)
   "TcpLwip"
-
-  # All Examples and Showcases (not needed for actual simulation work)
   "EthernetExamples"
   "InternetCloudExamples"
   "InternetProtocolExamples"
@@ -181,12 +158,8 @@ disabled_inet_features=(
   "ProtocolTutorial"
   "QueueingTutorial"
   "ClockExamples"
-
-  # Network Emulation Examples (keeping support but not examples)
   "NetworkEmulationExamples"
   "NetworkEmulationShowcases"
-
-  # TUN/TAP interfaces (uncomment next line if you don't need emulation)
   # "Tun"
 )
 downloaded_files=""
@@ -255,7 +228,7 @@ has() {
 # ----------------------------------------
 
 print_usage() {
-  log "${bold}${cyan}[$(basename "$0")] -- An OMNeT++/INET installation script for MOSAIC${restore}"
+  log "${bold}${cyan}[$(basename "$0")] -- An OMNeT++/INET/Simu5G installation script for MOSAIC${restore}"
   log "\nUsage: $0 -s path/to/omnetpp-6.1.x-src-linux.tgz [arguments]"
   log "\nArguments:"
   log "\n -o, --omnetpp path/to/omnetpp-6.1.x-src-linux.tgz"
@@ -268,10 +241,18 @@ print_usage() {
   log "\n     provide the archive containing the inet source code"
   log "\n     You can obtain it from ${cyan}https://inet.omnetpp.org/Download.html${restore}"
   log "\n     If not given, the inet-source files are downloaded by this installation script."
+  log "\n -s5g, --simu5g path/to/simu5g-1.3.0.zip"
+  log "\n     provide the archive containing the Simu5G source code"
+  log "\n     You can obtain it from ${cyan}https://github.com/Unipisa/Simu5G${restore}"
+  log "\n     If not given, the Simu5G source files are downloaded by this installation script."
   log "\n -so, --skip-omnetpp"
   log "\n     skip the installation of OMNeT++"
   log "\n -si, --skip-inet"
   log "\n     skip the installation of INET"
+  log "\n -ss5g, --skip-simu5g"
+  log "\n     skip the installation of Simu5G"
+  log "\n -rf, --rebuild-federate"
+  log "\n     force rebuild of the OMNeT++ federate even if already installed"
   log "\n -t, --installation-type <INSTALLATION_TYPE>"
   log "\n     either USER or DEVELOPER"
   log "\n -q, --quiet"
@@ -306,6 +287,10 @@ get_program_arguments() {
           arg_inet_src_file="$2"
           shift # past argument
           ;;
+        -s5g | --simu5g)
+          arg_simu5g_src_file="$2"
+          shift # past argument
+          ;;
         -f | --federate)
           arg_federate_src_file="$2"
           shift # past argument
@@ -326,6 +311,12 @@ get_program_arguments() {
           ;;
         -so | --skip-omnetpp)
           arg_skip_omnetpp_installation=true
+          ;;
+        -ss5g | --skip-simu5g)
+          arg_skip_simu5g_installation=true
+          ;;
+        -rf | --rebuild-federate)
+          arg_rebuild_federate=true
           ;;
         -F | --force)
           arg_force=true
@@ -420,6 +411,12 @@ configure_paths() {
   # where the inet ned files reside after successful build inet
   inet_target_dir="${working_directory}/inet"
 
+  # where the simu5g source tree reside
+  simu5g_src_dir="${working_directory}/simu5g_src"
+
+  # where the simu5g ned files reside after successful build simu5g
+  simu5g_target_dir="${working_directory}/simu5g"
+
   # where the omnetpp source tree reside
   omnetpp_src_dir="${working_directory}/${omnet_dir_name}"
 
@@ -481,7 +478,7 @@ ask_for_dependencies() {
   if [ "$arg_installation_type" == "DEVELOPER" ]; then
     # Ask & check if OMNeT++ is already preinstalled on the system
     if [ "$arg_quiet" == "false" ]; then
-      ask_user "Do you already have OMNeT++ 5.5.* installed on your system and linked in PATH and LD_LIBRARY_PATH?"
+      ask_user "Do you already have OMNeT++ 6.1.* installed on your system and linked in PATH and LD_LIBRARY_PATH?"
       option_positive "y" "Yes."
       option_negative "X" "No, abort installation."
       read -r answer
@@ -549,6 +546,9 @@ clean_up() {
   if [ -d "${inet_src_dir}" ]; then
     rm -rf "${inet_src_dir}"
   fi
+  if [ -d "${simu5g_src_dir}" ]; then
+    rm -rf "${simu5g_src_dir}"
+  fi
   if [ -d "${omnetpp_src_dir}" ]; then
     rm -rf "${omnetpp_src_dir}"
   fi
@@ -590,6 +590,10 @@ uninstall() {
         warn "Deleting INET directory..."
         rm -rf "${inet_target_dir}"
       fi
+      if [ -d "${simu5g_target_dir}" ]; then
+        warn "Deleting Simu5G directory..."
+        rm -rf "${simu5g_target_dir}"
+      fi
       if [ -d "${omnet_dir_name}" ]; then
         warn "Deleting OMNeT++ directory..."
         rm -rf "${omnet_dir_name}"
@@ -617,12 +621,25 @@ set_environment_variables() {
 
 omnetpp_install_ok=true
 inet_install_ok=true
+simu5g_install_ok=true
 federate_install_ok=true
 check_install() {
+  if [ "${arg_force}" == "true" ]; then
+    # Force reinstallation by marking everything as not installed
+    omnetpp_install_ok=false
+    inet_install_ok=false
+    simu5g_install_ok=false
+    federate_install_ok=false
+    return
+  fi
+  if [ "${arg_rebuild_federate}" == "true" ]; then
+    # Force rebuild of federate only
+    federate_install_ok=false
+  fi
   if [ "${arg_force}" == "false" ]; then
     if [ -d "${omnetpp_federate_target_dir}" ]; then
-      if [ -d "${omnetpp_federate_target_dir}/omnetpp_federate" ]; then
-        if [ ! -f "${omnetpp_federate_target_dir}/omnetpp_federate/package.ned" ]; then
+      if [ -d "${omnetpp_federate_target_dir}/src" ]; then
+        if [ ! -f "${omnetpp_federate_target_dir}/src/package.ned" ]; then
           federate_install_ok=false
         fi
       else
@@ -654,6 +671,9 @@ check_install() {
       if [ ! -f "${omnetpp_federate_target_dir_lib}/libINET_dbg.so" ]; then
         inet_install_ok=false
       fi
+      if [ ! -f "${omnetpp_federate_target_dir_lib}/libsimu5g_dbg.so" ]; then
+        simu5g_install_ok=false
+      fi
     else
       omnetpp_install_ok=false
       federate_install_ok=false
@@ -675,7 +695,18 @@ check_install() {
       inet_install_ok=false
     fi
 
-    if [ "${omnetpp_install_ok}" == "true" ] && [ "${inet_install_ok}" == "true" ] && [ "${federate_install_ok}" == "true" ]; then
+    if [ -d "${simu5g_target_dir}" ]; then
+      if [ ! -f "${simu5g_target_dir}/libsimu5g_dbg.so" ]; then
+        simu5g_install_ok=false
+      fi
+      if [ ! -f "${simu5g_target_dir}/package.ned" ]; then
+        simu5g_install_ok=false
+      fi
+    else
+      simu5g_install_ok=false
+    fi
+
+    if [ "${omnetpp_install_ok}" == "true" ] && [ "${inet_install_ok}" == "true" ] && [ "${simu5g_install_ok}" == "true" ] && [ "${federate_install_ok}" == "true" ]; then
       info "OMNeT++ federate already installed. Use -F or --force to overwrite existing installation."
       exit 0
     fi
@@ -790,7 +821,7 @@ extract_omnet() {
       fail "${omnetpp_src_dir} exists, please uninstall the existing installation before proceeding (-u or --uninstall)"
     fi
     tar -xf "$arg1"
-    
+
     # Find the actual extracted directory name
     extracted_dir=$(find . -maxdepth 1 -type d -name "omnetpp-[0-9]*.[0-9]*" | head -1)
     if [ -n "$extracted_dir" ]; then
@@ -838,18 +869,19 @@ extract_inet() {
   progress "Extracting INET from: $1 ..."
   cd "$working_directory"
   if [ -f "$1" ]; then
-    if [ -d "${inet_src_dir}" ]; then
-      # Check if inet was already built (libINET_dbg.so exists)
-      if [ -f "${inet_target_dir}/libINET_dbg.so" ]; then
-        fail "INET already installed in ${inet_src_dir}. Use -F or --force to overwrite existing installation."
-      else
-        # Remove existing inet_src_dir
-        rm -rf "${inet_src_dir}"
-      fi
-    fi
+	if [ -d "${inet_src_dir}" ]; then
+	  rm -rf "${inet_src_dir}"
+	fi
     tar -xf "$1"
     cd "$working_directory"
-    mv inet4.5 "${inet_src_dir}"
+
+    # Find the actual extracted directory name
+    extracted_inet_dir=$(find . -maxdepth 1 -type d -name "inet-*" -o -name "inet4*" | head -1)
+    if [ -n "$extracted_inet_dir" ]; then
+      mv "$extracted_inet_dir" "${inet_src_dir}"
+    else
+      fail "Could not find extracted INET directory. Abort!"
+    fi
     mkdir -p "${inet_target_dir}" # same name
   else
     fail "${1} not found! Abort!"
@@ -911,6 +943,83 @@ build_inet() {
   cd "${working_directory}"
 }
 
+# Simu5G
+# ----------------------------------------
+extract_simu5g() {
+  progress "Extracting Simu5G from: $1 ..."
+  cd "$working_directory"
+if [ -f "$1" ]; then
+	if [ -d "${simu5g_src_dir}" ]; then
+		# Check if simu5g was already built (libsimu5g_dbg.so exists)
+		if [ -f "${simu5g_target_dir}/libsimu5g_dbg.so" ]; then
+			fail "Simu5G already installed in ${simu5g_src_dir}. Use -F or --force to overwrite existing installation."
+		else
+			# Remove existing simu5g_src_dir
+			rm -rf "${simu5g_src_dir}"
+		fi
+	fi
+	unzip -q "$1"
+	cd "$working_directory"
+	# Find the actual extracted directory name (handles Simu5G-version pattern)
+	extracted_simu5g_dir=$(find . -maxdepth 1 -type d -name "Simu5G-*" | head -1)
+	if [ -n "$extracted_simu5g_dir" ]; then
+		mv "$extracted_simu5g_dir" "${simu5g_src_dir}"
+	else
+		fail "Could not find extracted Simu5G directory. Abort!"
+	fi
+	mkdir -p "${simu5g_target_dir}"
+  else
+    fail "${1} not found! Abort!"
+  fi
+}
+
+configure_simu5g() {
+  progress "Configuring Simu5G ..."
+  # Temporarily disable nounset before sourcing setenv
+  set +o nounset
+  cd "${omnetpp_src_dir}"
+  source setenv
+  cd "${inet_src_dir}"
+  source setenv
+  cd "${simu5g_src_dir}"
+  set -o nounset
+
+  # Create makefile for Simu5G
+  make makefiles
+}
+
+build_simu5g() {
+  progress "Building Simu5G framework ..."
+  mkdir -p "${omnetpp_federate_target_dir_lib}"
+  cd "${simu5g_src_dir}"
+  make "$arg_make_parallel" MODE=debug
+
+  # Find and copy the Simu5G library
+  if [ -f "out/gcc-debug/src/libsimu5g_dbg.so" ]; then
+    cp "out/gcc-debug/src/libsimu5g_dbg.so" "${simu5g_target_dir}"
+    cp "out/gcc-debug/src/libsimu5g_dbg.so" "${omnetpp_federate_target_dir_lib}"
+  elif [ -f "out/clang-debug/src/libsimu5g_dbg.so" ]; then
+    cp "out/clang-debug/src/libsimu5g_dbg.so" "${simu5g_target_dir}"
+    cp "out/clang-debug/src/libsimu5g_dbg.so" "${omnetpp_federate_target_dir_lib}"
+  elif [ -f "libsimu5g_dbg.so" ]; then
+    cp "libsimu5g_dbg.so" "${simu5g_target_dir}"
+    cp "libsimu5g_dbg.so" "${omnetpp_federate_target_dir_lib}"
+  else
+    fail "Shared library \"libsimu5g_dbg.so\" not found. Something went wrong while building Simu5G."
+  fi
+
+  # Copy NED files
+  if [ -d "src" ]; then
+    (
+      cd "src"
+      tar -cf - $(find . -name "*.ned" -print) | (cd "${simu5g_target_dir}" && tar xBf -)
+    )
+  else
+    fail "Directory \"src\" not found. Something went wrong while building Simu5G."
+  fi
+  cd "${working_directory}"
+}
+
 # OMNeT++ Federate
 # ----------------------------------------
 extract_federate() {
@@ -931,6 +1040,10 @@ extract_federate() {
   else
     progress "Extracting MOSAIC OMNeT++ Federate from: '$1' ..."
     unzip --qq -o "$1"
+    if [ -d "${omnetpp_federate_src_dir}" ]; then
+      info "Removing existing directory: ${omnetpp_federate_src_dir}"
+      rm -rf "${omnetpp_federate_src_dir}"
+    fi
     mv omnetpp-federate-* "${omnetpp_federate_src_dir}"
   fi
   chmod 755 -R "${omnetpp_federate_src_dir}"
@@ -953,15 +1066,16 @@ build_omnet_federate() {
   fi
 
   sed -i -e "s|/usr/local|.|" premake5.lua
-  sed -i -e "s|\"/usr/include\"|\"/usr/include\", \"${omnetpp_src_dir}/include\", \"${inet_src_dir}/src\"|" premake5.lua
-  sed -i -e "s|\"/usr/lib\"|\"/usr/lib\", \"${omnetpp_src_dir}/lib\", \"${inet_src_dir}/src\"|" premake5.lua
-  sed -i -e "s|\$\$ORIGIN\/lib'|\$\$ORIGIN\/lib',-rpath,'\$\$ORIGIN\/..\/inet',-rpath,'${omnetpp_src_dir}\/lib'|" premake5.lua
-  sed -i -e "s|\" --msg6 -I /usr/lib\"|\" --msg6 -I ${inet_src_dir}/src\"|" premake5.lua
+  sed -i -e "s|\"/usr/include\"|\"/usr/include\", \"${omnetpp_src_dir}/include\", \"${inet_src_dir}/src\", \"${simu5g_src_dir}/src\"|" premake5.lua
+  sed -i -e "s|\"/usr/lib\"|\"/usr/lib\", \"${omnetpp_src_dir}/lib\", \"${inet_src_dir}/src\", \"${simu5g_src_dir}/src\"|" premake5.lua
+  sed -i -e "s|\$\$ORIGIN\/lib'|\$\$ORIGIN\/lib',-rpath,'\$\$ORIGIN\/..\/inet',-rpath,'\$\$ORIGIN\/..\/simu5g',-rpath,'${omnetpp_src_dir}\/lib'|" premake5.lua
+  sed -i -e "s|\" --msg6 -I /usr/lib\"|\" --msg6 -I ${inet_src_dir}/src -I ${simu5g_src_dir}/src\"|" premake5.lua
   sed -i -e "s|'opp_msgc'|'${omnetpp_src_dir}/bin/opp_msgc'|" premake5.lua
   sed -i -e "s|/share/ned||" premake5.lua
-  sed -i -e "s|local PROTO_CC_PATH = \"\.\"|local PROTO_CC_PATH = \"src/util\"|" premake5.lua
+  sed -i -e "s|local PROTO_CC_PATH = \".\"|local PROTO_CC_PATH = \"src/util\"|" premake5.lua
 
-  
+
+
 
   ./premake5 gmake --generate-opp-messages --generate-protobuf --install
 
@@ -977,7 +1091,6 @@ build_omnet_federate() {
   cp lib/libomnetpp-federate.so "$omnetpp_federate_target_dir_lib"
   cp -r src "$omnetpp_federate_target_dir"
   cd "$working_directory"
-  rm -rf "${omnetpp_federate_src_dir}"
 
 }
 
@@ -1010,7 +1123,7 @@ fi
 
 # Extract OMNeT++ Federate
 # (INET patch is included in federate source)
-if [ "$federate_install_ok" == "false" ] || [ "$inet_install_ok" == "false" ]; then
+if [ "$federate_install_ok" == "false" ] || [ "$inet_install_ok" == "false" ] || [ "$simu5g_install_ok" == "false" ]; then
   extract_federate "$arg_federate_src_file"
 fi
 
@@ -1025,6 +1138,19 @@ if [ "$inet_install_ok" == "false" ] && [ "$arg_skip_inet_installation" == "fals
   fi
   configure_inet
   build_inet
+fi
+
+# Install Simu5G
+if [ "$simu5g_install_ok" == "false" ] && [ "$arg_skip_simu5g_installation" == "false" ]; then
+  if [ ! -f "$arg_simu5g_src_file" ]; then
+    download "Simu5G" "$simu5g_src_url" "Please try using option '-s5g' to provide the path to your local Simu5G zip file."
+    downloaded_files="$downloaded_files $simu5g_src_filename"
+    extract_simu5g "$simu5g_src_filename"
+  else
+    extract_simu5g "$arg_simu5g_src_file"
+  fi
+  configure_simu5g
+  build_simu5g
 fi
 
 # Install OMNeT++ Federate
