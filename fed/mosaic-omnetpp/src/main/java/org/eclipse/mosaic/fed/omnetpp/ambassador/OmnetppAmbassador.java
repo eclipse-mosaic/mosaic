@@ -46,6 +46,7 @@ public class OmnetppAmbassador extends AbstractNetworkAmbassador {
         super(ambassadorParameter, "OMNeT++ Ambassador", "OMNeT++ Federate");
 
         supportedRoutingAddress.add(Pair.of(RoutingType.AD_HOC_TOPOCAST, AddressType.IPV4_BROADCAST));
+        supportedRoutingAddress.add(Pair.of(RoutingType.CELL_TOPOCAST, AddressType.IPV4_UNICAST));
         supportedProtocols.add(ProtocolType.UDP);
     }
 
