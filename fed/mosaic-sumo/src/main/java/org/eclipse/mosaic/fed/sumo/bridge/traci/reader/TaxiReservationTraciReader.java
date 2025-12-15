@@ -15,13 +15,13 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.traci.reader;
 
-import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
+import org.eclipse.mosaic.lib.objects.fleet.RideReservation;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.List;
 
-public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiReservation> {
+public class TaxiReservationTraciReader extends AbstractTraciResultReader<RideReservation> {
 
     private final ListTraciReader<String> personListReader = new ListTraciReader<>(new PersonIdTraciReader(), true);
 
@@ -30,7 +30,7 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
     }
 
     @Override
-    protected TaxiReservation readFromStream(DataInputStream in) throws IOException {
+    protected RideReservation readFromStream(DataInputStream in) throws IOException {
         readTypedInt(in); //COMPOUND type of 10 items
 
         final String reservationId = readTypedString(in);
@@ -46,8 +46,8 @@ public class TaxiReservationTraciReader extends AbstractTraciResultReader<TaxiRe
         readTypedDouble(in); //reservationTime
         final int reservationState = readTypedInt(in);
 
-        return new TaxiReservation.Builder().withId(reservationId)
-                .withState(TaxiReservation.ReservationState.of(reservationState))
+        return new RideReservation.Builder().withId(reservationId)
+                .withState(RideReservation.State.of(reservationState))
                 .withPersonList(personList)
                 .withFromEdge(fromEdge)
                 .withToEdge(toEdge)

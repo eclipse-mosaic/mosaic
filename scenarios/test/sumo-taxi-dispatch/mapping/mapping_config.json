@@ -17,7 +17,7 @@
         {
             "name": "TaxiServer",
             "group": "DefaultServer",
-            "applications": [ "org.eclipse.mosaic.test.app.taxi.TaxiDispatchTestApp" ]
+            "applications": [ "org.eclipse.mosaic.test.app.fleet.FleetDispatchTestApp" ]
         }
     ]
 }

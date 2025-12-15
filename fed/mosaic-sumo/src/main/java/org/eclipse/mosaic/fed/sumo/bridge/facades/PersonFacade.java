@@ -19,7 +19,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
 import org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTypeId;
 import org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTaxiReservations;
-import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
+import org.eclipse.mosaic.lib.objects.fleet.RideReservation;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 import java.util.List;
@@ -53,7 +53,7 @@ public class PersonFacade {
     /**
      * This method returns the available taxi reservations.
      */
-    public List<TaxiReservation> getTaxiReservations() throws InternalFederateException {
+    public List<RideReservation> getTaxiReservations() throws InternalFederateException {
         try {
             return personGetTaxiReservations.execute(bridge);
         } catch (CommandException e) {

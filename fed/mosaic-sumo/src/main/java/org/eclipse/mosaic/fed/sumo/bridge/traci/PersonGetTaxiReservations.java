@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -22,14 +22,13 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.Status;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.constants.CommandRetrievePersonState;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.ListTraciReader;
 import org.eclipse.mosaic.fed.sumo.bridge.traci.reader.TaxiReservationTraciReader;
-import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
+import org.eclipse.mosaic.lib.objects.fleet.RideReservation;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-public class PersonGetTaxiReservations extends AbstractTraciCommand<List<TaxiReservation>>
+public class PersonGetTaxiReservations extends AbstractTraciCommand<List<RideReservation>>
         implements org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTaxiReservations {
 
     /**
@@ -55,18 +54,18 @@ public class PersonGetTaxiReservations extends AbstractTraciCommand<List<TaxiRes
                 .readComplex(new ListTraciReader<>(new TaxiReservationTraciReader(), true));
     }
 
-    public List<TaxiReservation> execute(Bridge bridge) throws CommandException, InternalFederateException {
+    public List<RideReservation> execute(Bridge bridge) throws CommandException, InternalFederateException {
         return executeAndReturn(bridge).orElseThrow(() -> new CommandException("Could not return taxi reservations."));
     }
 
     @Override
-    protected List<TaxiReservation> constructResult(Status status, Object... objects) {
+    protected List<RideReservation> constructResult(Status status, Object... objects) {
         List<?> intermediateResult = (List<?>) objects[0];
-        List<TaxiReservation> result = new ArrayList<>();
+        List<RideReservation> result = new ArrayList<>();
         for (Object element : intermediateResult) {
             // testing all elements for proper types
-            if (element instanceof TaxiReservation taxiReservation) {
-                result.add(taxiReservation);
+            if (element instanceof RideReservation rideReservation) {
+                result.add(rideReservation);
             }
         }
         return result;

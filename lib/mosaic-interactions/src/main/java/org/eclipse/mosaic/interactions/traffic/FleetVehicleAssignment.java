@@ -13,7 +13,7 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.interactions.application;
+package org.eclipse.mosaic.interactions.traffic;
 
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
@@ -27,22 +27,22 @@ import java.io.Serial;
 import java.util.List;
 
 /**
- * Provides information for assigning taxi reservations to a taxi vehicle.
+ * Provides information for assigning ride reservations to a fleet vehicle.
  */
-public class TaxiDispatch extends Interaction {
+public class FleetVehicleAssignment extends Interaction {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public static final String TYPE_ID = createTypeIdentifier(TaxiDispatch.class);
+    public static final String TYPE_ID = createTypeIdentifier(FleetVehicleAssignment.class);
 
-    private final String taxiId;
-    private final List<String> reservations;
+    private final String vehicleId;
+    private final List<String> reservationIds;
 
-    public TaxiDispatch(long time, String taxiId, List<String> reservations) {
+    public FleetVehicleAssignment(long time, String vehicleId, List<String> reservationIds) {
         super(time);
-        this.taxiId = taxiId;
-        this.reservations = reservations;
+        this.vehicleId = vehicleId;
+        this.reservationIds = reservationIds;
     }
 
     /**
@@ -50,22 +50,22 @@ public class TaxiDispatch extends Interaction {
      *
      * @return String identifying the vehicle sending this interaction
      */
-    public String getTaxiId() {
-        return taxiId;
+    public String getVehicleId() {
+        return vehicleId;
     }
 
     /**
      * The list of reservation IDs to be handled by the taxi in the given order.
      */
-    public List<String> getReservations() {
-        return reservations;
+    public List<String> getReservationIds() {
+        return reservationIds;
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(5, 67)
-                .append(taxiId)
-                .append(reservations)
+                .append(vehicleId)
+                .append(reservationIds)
                 .toHashCode();
     }
 
@@ -81,10 +81,10 @@ public class TaxiDispatch extends Interaction {
             return false;
         }
 
-        TaxiDispatch other = (TaxiDispatch) obj;
+        FleetVehicleAssignment other = (FleetVehicleAssignment) obj;
         return new EqualsBuilder()
-                .append(this.taxiId, other.taxiId)
-                .append(this.reservations, other.reservations)
+                .append(this.vehicleId, other.vehicleId)
+                .append(this.reservationIds, other.reservationIds)
                 .isEquals();
     }
 
@@ -92,8 +92,8 @@ public class TaxiDispatch extends Interaction {
     public String toString() {
         return new ToStringBuilder(this, SHORT_PREFIX_STYLE)
                 .appendSuper(super.toString())
-                .append("taxiId", taxiId)
-                .append("reservations", reservations)
+                .append("vehicleId", vehicleId)
+                .append("reservationIds", reservationIds)
                 .toString();
     }
 }

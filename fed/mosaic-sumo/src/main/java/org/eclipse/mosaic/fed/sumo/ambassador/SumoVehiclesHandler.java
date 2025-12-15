@@ -17,20 +17,18 @@ package org.eclipse.mosaic.fed.sumo.ambassador;
 
 import org.eclipse.mosaic.fed.sumo.bridge.traci.VehicleSetRemove;
 import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
-import org.eclipse.mosaic.interactions.application.TaxiDispatch;
+import org.eclipse.mosaic.interactions.traffic.FleetVehicleAssignment;
 import org.eclipse.mosaic.interactions.mapping.VehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
 import org.eclipse.mosaic.interactions.traffic.VehicleTypesInitialization;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
 import org.eclipse.mosaic.interactions.vehicle.VehicleFederateAssignment;
 import org.eclipse.mosaic.interactions.vehicle.VehicleParametersChange;
-import org.eclipse.mosaic.interactions.vehicle.VehicleRouteRegistration;
 import org.eclipse.mosaic.lib.enums.VehicleClass;
 import org.eclipse.mosaic.lib.math.MathUtils;
 import org.eclipse.mosaic.lib.objects.mapping.VehicleMapping;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleParameter;
-import org.eclipse.mosaic.lib.objects.vehicle.VehicleRoute;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
 import org.eclipse.mosaic.rti.api.IllegalValueException;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
@@ -413,10 +411,10 @@ public class SumoVehiclesHandler extends AbstractHandler {
     }
 
     /**
-     * Dispatches taxi reservation to taxi vehicles.
+     * Assigns ride reservations to fleet vehicles.
      */
-    void handleTaxiDispatch(TaxiDispatch taxiDispatch) throws InternalFederateException {
-        bridge.getVehicleControl().dispatchTaxi(taxiDispatch.getTaxiId(), taxiDispatch.getReservations());
+    void handleFleetVehicleAssignment(FleetVehicleAssignment fleetVehicleAssignment) throws InternalFederateException {
+        bridge.getVehicleControl().dispatchTaxi(fleetVehicleAssignment.getVehicleId(), fleetVehicleAssignment.getReservationIds());
     }
 
 }

@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.fed.sumo.bridge.api.complex;
 
-import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
+import org.eclipse.mosaic.interactions.traffic.FleetServiceUpdates;
 import org.eclipse.mosaic.interactions.agent.AgentUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
@@ -26,10 +26,10 @@ public record TraciSimulationStepResult(
         AgentUpdates personUpdates,
         TrafficDetectorUpdates trafficDetectorUpdates,
         TrafficLightUpdates trafficLightUpdates,
-        TaxiUpdates taxiUpdates
+        FleetServiceUpdates fleetUpdates
 ) {
 
-    public boolean hasTaxiUpdates() {
-        return taxiUpdates != null && !taxiUpdates.getTaxis().isEmpty();
+    public boolean hasFleetUpdates() {
+        return fleetUpdates != null && !fleetUpdates.getFleetVehicles().isEmpty();
     }
 }

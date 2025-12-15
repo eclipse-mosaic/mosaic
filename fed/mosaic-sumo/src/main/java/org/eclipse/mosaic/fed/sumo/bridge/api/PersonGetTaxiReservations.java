@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Fraunhofer FOKUS and others. All rights reserved.
+ * Copyright (c) 2025 Fraunhofer FOKUS and others. All rights reserved.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,7 +17,7 @@ package org.eclipse.mosaic.fed.sumo.bridge.api;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
-import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
+import org.eclipse.mosaic.lib.objects.fleet.RideReservation;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 import java.util.List;
@@ -34,5 +34,5 @@ public interface PersonGetTaxiReservations {
      * @throws CommandException          if the status code of the response is ERROR. The connection to SUMO is still available.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The connection to SUMO is shut down.
      */
-    List<TaxiReservation> execute(Bridge bridge) throws CommandException, InternalFederateException;
+    List<RideReservation> execute(Bridge bridge) throws CommandException, InternalFederateException;
 }

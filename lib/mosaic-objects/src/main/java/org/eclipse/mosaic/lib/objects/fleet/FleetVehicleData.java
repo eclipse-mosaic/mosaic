@@ -13,7 +13,7 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.lib.objects.taxi;
+package org.eclipse.mosaic.lib.objects.fleet;
 
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 
@@ -25,18 +25,18 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Holds information about taxi/drt vehicles, such as their
+ * Holds information about fleet/taxi/drt vehicles, such as their
  * transport capacity and service status.
  */
-public class TaxiVehicleData implements Serializable {
+public class FleetVehicleData implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public enum TaxiState {
+    public enum State {
         EMPTY, PICKUP, OCCUPIED, OCCUPIED_AND_PICK_UP;
 
-        public static TaxiState of(int stateIdSumo) {
+        public static State of(int stateIdSumo) {
             return switch (stateIdSumo) {
                 case 0 -> EMPTY;
                 case 1 -> PICKUP;
@@ -49,14 +49,14 @@ public class TaxiVehicleData implements Serializable {
     }
 
     private final String id;
-    private final TaxiState state;
+    private final State state;
     private final int personCapacity;
     private final VehicleData vehicleData;
     private final int totalNumPersonsServed;
     private final List<String> personsToPickUpOrOnBoard;
 
-    public TaxiVehicleData(
-            String id, TaxiState state, int personCapacity, VehicleData vehicleData, int totalNumPersonsServed, List<String> personsToPickUpOrOnBoard
+    public FleetVehicleData(
+            String id, State state, int personCapacity, VehicleData vehicleData, int totalNumPersonsServed, List<String> personsToPickUpOrOnBoard
     ) {
         this.id = id;
         this.state = state;
@@ -67,42 +67,42 @@ public class TaxiVehicleData implements Serializable {
     }
 
     /**
-     * Returns the vehicle id of the taxi.
+     * Returns the vehicle id of the vehicle.
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Returns the current service state of the taxi.
+     * Returns the current service state of the vehicle.
      */
-    public TaxiState getState() {
+    public State getState() {
         return state;
     }
 
     /**
-     * Returns additional vehicle data of this taxi.
+     * Returns additional vehicle data of this vehicle.
      */
     public VehicleData getVehicleData() {
         return vehicleData;
     }
 
     /**
-     * Returns the maximum capacity of this taxi.
+     * Returns the maximum capacity of this vehicle.
      */
     public int getPersonCapacity() {
         return personCapacity;
     }
 
     /**
-     * Returns the total number of persons served by this taxi.
+     * Returns the total number of persons served by this vehicle.
      */
     public int getTotalNumPersonsServed() {
         return totalNumPersonsServed;
     }
 
     /**
-     * Returns a list of persons planned to be picked up or currently being on board of this taxi.
+     * Returns a list of persons planned to be picked up or currently being on board of this vehicle.
      */
     public List<String> getPersonsToPickUpOrOnBoard() {
         return personsToPickUpOrOnBoard;
@@ -120,7 +120,7 @@ public class TaxiVehicleData implements Serializable {
             return false;
         }
 
-        TaxiVehicleData other = (TaxiVehicleData) obj;
+        FleetVehicleData other = (FleetVehicleData) obj;
         return new EqualsBuilder()
                 .appendSuper(super.equals(obj))
                 .append(this.id, other.id)

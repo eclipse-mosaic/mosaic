@@ -27,14 +27,14 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class SumoTaxiDispatchIT {
+public class SumoFleetVehicleAssignmentIT {
 
     @ClassRule
     public static MosaicSimulationRule simulationRule = new MosaicSimulationRule();
 
     private static MosaicSimulation.SimulationResult simulationResult;
 
-    private final static String DISPATCH_APP_LOG = "apps/server_0/TaxiDispatchTestApp.log";
+    private final static String DISPATCH_APP_LOG = "apps/server_0/FleetDispatchTestApp.log";
 
     private final static String TRAFFIC_LOG = "Traffic.log";
 
@@ -56,7 +56,7 @@ public class SumoTaxiDispatchIT {
         ));
 
         // the following line should _not_ occur in Traffic.log
-        assertEquals(0, LogAssert.count(simulationRule, TRAFFIC_LOG, ".*Could not dispatch taxi.*"));
+        assertEquals(0, LogAssert.count(simulationRule, TRAFFIC_LOG, ".*Could not dispatch vehicle.*"));
     }
 
     @Test

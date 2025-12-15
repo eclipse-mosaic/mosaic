@@ -42,7 +42,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.facades.VehicleFacade;
 import org.eclipse.mosaic.interactions.agent.AgentUpdates;
 import org.eclipse.mosaic.interactions.mapping.VehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioTrafficLightRegistration;
-import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
+import org.eclipse.mosaic.interactions.traffic.FleetServiceUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleRoutesInitialization;
@@ -352,7 +352,7 @@ public class SumoAmbassadorTest {
                 new AgentUpdates(time, Lists.newArrayList(), Lists.newArrayList()),
                 new TrafficDetectorUpdates(time, Lists.newArrayList(), Lists.newArrayList()),
                 new TrafficLightUpdates(time, new HashMap<>()),
-                new TaxiUpdates(time, Lists.newArrayList(), Lists.newArrayList())
+                new FleetServiceUpdates(time, Lists.newArrayList(), Lists.newArrayList())
         );
         when(traciClientBridgeMock.getSimulationControl().simulateUntil(anyLong())).thenReturn(traciSimulationResult);
     }

@@ -13,7 +13,7 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.lib.objects.taxi;
+package org.eclipse.mosaic.lib.objects.fleet;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -23,18 +23,18 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Contains information about taxi reservations, such as the start and target location and
+ * Contains information about ride reservations, such as the start and target location and
  * the person(s) assigned to the reservation.
  */
-public class TaxiReservation implements Serializable {
+public class RideReservation implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public enum ReservationState {
+    public enum State {
         NEW, RETRIEVED, ASSIGNED, PICKED_UP;
 
-        public static ReservationState of(int stateIdSumo) {
+        public static State of(int stateIdSumo) {
             return switch (stateIdSumo) {
                 case 1 -> NEW;
                 case 2 -> RETRIEVED;
@@ -47,12 +47,12 @@ public class TaxiReservation implements Serializable {
     }
 
     private final String id;
-    private final ReservationState state;
+    private final State state;
     private final List<String> personList;
     private final String fromEdge;
     private final String toEdge;
 
-    private TaxiReservation(String id, ReservationState state, List<String> personList, String fromEdge, String toEdge) {
+    private RideReservation(String id, State state, List<String> personList, String fromEdge, String toEdge) {
         this.id = id;
         this.state = state;
         this.personList = personList;
@@ -68,28 +68,28 @@ public class TaxiReservation implements Serializable {
     }
 
     /**
-     * Returns the {@link ReservationState} of the reservation.
+     * Returns the {@link State} of the reservation.
      */
-    public ReservationState getState() {
+    public State getState() {
         return state;
     }
 
     /**
-     * Returns the list of persons associated with this trip reservation (usually 1 person).
+     * Returns the list of persons associated with this ride reservation (usually 1 person).
      */
     public List<String> getPersonList() {
         return personList;
     }
 
     /**
-     * Returns the start edge of the trip reservation.
+     * Returns the start edge of the ride reservation.
      */
     public String getFromEdge() {
         return fromEdge;
     }
 
     /**
-     * Returns the target edge of the trip reservation.
+     * Returns the target edge of the ride reservation.
      */
     public String getToEdge() {
         return toEdge;
@@ -107,7 +107,7 @@ public class TaxiReservation implements Serializable {
             return false;
         }
 
-        TaxiReservation other = (TaxiReservation) obj;
+        RideReservation other = (RideReservation) obj;
         return new EqualsBuilder()
                 .appendSuper(super.equals(obj))
                 .append(this.id, other.id)
@@ -132,7 +132,7 @@ public class TaxiReservation implements Serializable {
 
     public static class Builder {
         private String id;
-        private ReservationState reservationState;
+        private State state;
         private List<String> personList;
         private String fromEdge;
         private String toEdge;
@@ -142,8 +142,8 @@ public class TaxiReservation implements Serializable {
             return this;
         }
 
-        public Builder withState(ReservationState reservationState) {
-            this.reservationState = reservationState;
+        public Builder withState(State state) {
+            this.state = state;
             return this;
         }
 
@@ -162,8 +162,8 @@ public class TaxiReservation implements Serializable {
             return this;
         }
 
-        public TaxiReservation build() {
-            return new TaxiReservation(id, reservationState, personList, fromEdge, toEdge);
+        public RideReservation build() {
+            return new RideReservation(id, state, personList, fromEdge, toEdge);
         }
     }
 }

@@ -58,7 +58,7 @@ import org.eclipse.mosaic.fed.sumo.bridge.api.complex.SumoSpeedMode;
 import org.eclipse.mosaic.fed.sumo.util.SumoVehicleClassMapping;
 import org.eclipse.mosaic.lib.enums.VehicleStopMode;
 import org.eclipse.mosaic.lib.geo.CartesianPoint;
-import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
+import org.eclipse.mosaic.lib.objects.fleet.FleetVehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
@@ -599,14 +599,14 @@ public class VehicleFacade {
     /**
      * Read all taxi relevant data for the given vehicle id.
      */
-    public TaxiVehicleData getTaxiData(String vehicleId) throws InternalFederateException {
+    public FleetVehicleData getTaxiData(String vehicleId) throws InternalFederateException {
         final int taxiState = Integer.parseInt(getParameter(vehicleId, "device.taxi.state"));
         final int numPersonsServed = Integer.parseInt(getParameter(vehicleId, "device.taxi.customers"));
         final String currentCustomers = getParameter(vehicleId, "device.taxi.currentCustomers");
 
-        return new TaxiVehicleData(
+        return new FleetVehicleData(
                 vehicleId,
-                TaxiVehicleData.TaxiState.of(taxiState),
+                FleetVehicleData.State.of(taxiState),
                 getPersonCapacity(vehicleId),
                 bridge.getSimulationControl().getLastKnownVehicleData(vehicleId),
                 numPersonsServed,
@@ -624,7 +624,7 @@ public class VehicleFacade {
 
     /**
      * Dispatches taxi to pick up and drop off customers in a specific order.<br>
-     * Valid example for the reservation list:
+     * Valid examples for the reservation list are:
      * <ul>
      *     <li>[a,b,c,d] - picks up and drops off in this order</li>
      *     <li>[a, b, a, c, b, d, c, d] - picks first a and b, then drops off a,
@@ -639,7 +639,7 @@ public class VehicleFacade {
         try {
             vehicleDispatchTaxi.execute(bridge, vehicleId, reservations);
         } catch (IllegalArgumentException | CommandException e) {
-            log.warn("Could not dispatch taxi with vehicle Id {}", vehicleId);
+            log.warn("Could not dispatch vehicle with Id {}", vehicleId);
         }
     }
 

@@ -27,8 +27,8 @@ import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.Centr
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.DefaultLidarSensorModule;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.EnvironmentBasicSensorModule;
 import org.eclipse.mosaic.fed.application.ambassador.util.EventNicenessPriorityRegister;
+import org.eclipse.mosaic.fed.application.app.api.FleetServiceApplication;
 import org.eclipse.mosaic.fed.application.app.api.MosaicApplication;
-import org.eclipse.mosaic.fed.application.app.api.TaxiServerApplication;
 import org.eclipse.mosaic.fed.application.app.api.TrafficSignAwareApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.modules.Perceptive;
 import org.eclipse.mosaic.fed.application.config.CApplicationAmbassador;
@@ -52,7 +52,7 @@ import org.eclipse.mosaic.interactions.mapping.TrafficLightRegistration;
 import org.eclipse.mosaic.interactions.mapping.VehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.RoutelessVehicleRegistration;
 import org.eclipse.mosaic.interactions.mapping.advanced.ScenarioVehicleRegistration;
-import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
+import org.eclipse.mosaic.interactions.traffic.FleetServiceUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleRoutesInitialization;
@@ -309,8 +309,8 @@ public class ApplicationAmbassador extends AbstractFederateAmbassador implements
                 this.process((TrafficDetectorUpdates) interaction);
             } else if (interaction.getTypeId().equals(VehicleSeenTrafficSignsUpdate.TYPE_ID)) {
                 this.process((VehicleSeenTrafficSignsUpdate) interaction);
-            } else if (interaction.getTypeId().equals(TaxiUpdates.TYPE_ID)) {
-                this.process((TaxiUpdates) interaction);
+            } else if (interaction.getTypeId().equals(FleetServiceUpdates.TYPE_ID)) {
+                this.process((FleetServiceUpdates) interaction);
             } else if (interaction.getTypeId().equals(SumoTraciResponse.TYPE_ID)) {
                 this.process((SumoTraciResponse) interaction);
             } else if (interaction.getTypeId().equals(V2xMessageAcknowledgement.TYPE_ID)) {
@@ -463,13 +463,13 @@ public class ApplicationAmbassador extends AbstractFederateAmbassador implements
         }
     }
 
-    private void process(final TaxiUpdates taxiUpdates) {
+    private void process(final FleetServiceUpdates updates) {
         for (ServerUnit serverUnit : UnitSimulator.UnitSimulator.getServers().values()) {
-            for (TaxiServerApplication application : serverUnit.getApplicationsIterator(TaxiServerApplication.class)) {
+            for (FleetServiceApplication application : serverUnit.getApplicationsIterator(FleetServiceApplication.class)) {
                 addEvent(new Event(
-                        taxiUpdates.getTime(),
-                        e -> application.onTaxiDataUpdate(taxiUpdates.getTaxis(), taxiUpdates.getReservations()),
-                        EventNicenessPriorityRegister.UPDATE_TAXI_DATA
+                        updates.getTime(),
+                        e -> application.onServiceUpdates(updates.getFleetVehicles(), updates.getReservations()),
+                        EventNicenessPriorityRegister.UPDATE_FLEET_SERVICES
                 ));
             }
         }

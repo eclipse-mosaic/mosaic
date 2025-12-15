@@ -17,7 +17,7 @@ package org.eclipse.mosaic.fed.sumo.bridge.libsumo;
 
 import org.eclipse.mosaic.fed.sumo.bridge.Bridge;
 import org.eclipse.mosaic.fed.sumo.bridge.CommandException;
-import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
+import org.eclipse.mosaic.lib.objects.fleet.RideReservation;
 import org.eclipse.mosaic.rti.api.InternalFederateException;
 
 import org.eclipse.sumo.libsumo.Person;
@@ -30,22 +30,22 @@ import java.util.List;
 public class PersonGetTaxiReservations implements org.eclipse.mosaic.fed.sumo.bridge.api.PersonGetTaxiReservations {
 
     @Override
-    public List<TaxiReservation> execute(Bridge bridge)
+    public List<RideReservation> execute(Bridge bridge)
             throws CommandException, InternalFederateException {
         TraCIReservationVector traCIReservations = Person.getTaxiReservations();
 
-        List<TaxiReservation> taxiReservations = new ArrayList<>();
+        List<RideReservation> rideReservations = new ArrayList<>();
 
         for (TraCIReservation res : traCIReservations) {
-            taxiReservations.add(new TaxiReservation.Builder()
+            rideReservations.add(new RideReservation.Builder()
                     .withId(res.getId())
-                    .withState(TaxiReservation.ReservationState.of(res.getState()))
+                    .withState(RideReservation.State.of(res.getState()))
                     .withPersonList(res.getPersons().stream().map(Bridge.PERSON_ID_TRANSFORMER::fromExternalId).toList())
                     .withFromEdge(res.getFromEdge())
                     .withToEdge(res.getToEdge())
                     .build());
         }
 
-        return taxiReservations;
+        return rideReservations;
     }
 }

@@ -37,7 +37,7 @@
                 "VehicleRoutesInitialization",
                 "VehicleTypesInitialization",
                 "VehicleSeenTrafficSignsUpdate",
-                "TaxiUpdates"
+                "FleetServiceUpdates"
             ],
             "javaClasspathEntries": []
         },
@@ -193,7 +193,7 @@
                 "TrafficLightSubscription",
                 "SumoSurroundingObjectsSubscription",
                 "AgentRegistration",
-                "TaxiDispatch"
+                "FleetVehicleAssignment"
             ],
             "javaClasspathEntries": []
         },

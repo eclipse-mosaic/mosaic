@@ -53,7 +53,7 @@ import org.eclipse.mosaic.fed.sumo.config.CSumo;
 import org.eclipse.mosaic.fed.sumo.util.InductionLoop;
 import org.eclipse.mosaic.fed.sumo.util.TrafficLightStateDecoder;
 import org.eclipse.mosaic.interactions.agent.AgentUpdates;
-import org.eclipse.mosaic.interactions.traffic.TaxiUpdates;
+import org.eclipse.mosaic.interactions.traffic.FleetServiceUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficDetectorUpdates;
 import org.eclipse.mosaic.interactions.traffic.TrafficLightUpdates;
 import org.eclipse.mosaic.interactions.traffic.VehicleUpdates;
@@ -63,8 +63,8 @@ import org.eclipse.mosaic.lib.objects.agent.AgentData;
 import org.eclipse.mosaic.lib.objects.pt.PtVehicleData;
 import org.eclipse.mosaic.lib.objects.road.IRoadPosition;
 import org.eclipse.mosaic.lib.objects.road.SimpleRoadPosition;
-import org.eclipse.mosaic.lib.objects.taxi.TaxiReservation;
-import org.eclipse.mosaic.lib.objects.taxi.TaxiVehicleData;
+import org.eclipse.mosaic.lib.objects.fleet.RideReservation;
+import org.eclipse.mosaic.lib.objects.fleet.FleetVehicleData;
 import org.eclipse.mosaic.lib.objects.traffic.InductionLoopInfo;
 import org.eclipse.mosaic.lib.objects.traffic.LaneAreaDetectorInfo;
 import org.eclipse.mosaic.lib.objects.trafficlight.TrafficLightGroupInfo;
@@ -553,7 +553,7 @@ public class SimulationFacade {
             final AgentUpdates personUpdates = new AgentUpdates(time, updatedPersons, removedPersons);
             final TrafficDetectorUpdates trafficDetectorUpdates = new TrafficDetectorUpdates(time, updatedLaneAreas, updatedInductionLoops);
             final TrafficLightUpdates trafficLightUpdates = new TrafficLightUpdates(time, trafficLightGroupInfos);
-            final TaxiUpdates taxiUpdates = new TaxiUpdates(time, collectTaxiData(), collectTaxiReservations());
+            final FleetServiceUpdates taxiUpdates = new FleetServiceUpdates(time, collectTaxiData(), collectTaxiReservations());
 
             currentTeleportingList = null; // reset cached teleporting list for this time step
 
@@ -757,11 +757,11 @@ public class SimulationFacade {
         );
     }
 
-    private List<TaxiVehicleData> collectTaxiData() throws InternalFederateException {
-        final List<String> allTaxisIds = getTaxiFleet();
-        final List<TaxiVehicleData> taxiData = new ArrayList<>();
+    private List<FleetVehicleData> collectTaxiData() throws InternalFederateException {
+        final List<String> taxiIds = getAllTaxiIds();
+        final List<FleetVehicleData> taxiData = new ArrayList<>();
 
-        for (String id: allTaxisIds) {
+        for (String id: taxiIds) {
             taxiData.add(bridge.getVehicleControl().getTaxiData(id));
         }
         return taxiData;
@@ -774,7 +774,7 @@ public class SimulationFacade {
      * @return A list with the available taxis.
      * @throws InternalFederateException if some serious error occurs during writing or reading. The TraCI connection is shut down.
      */
-    private List<String> getTaxiFleet() throws InternalFederateException {
+    private List<String> getAllTaxiIds() throws InternalFederateException {
         try {
             return vehicleGetTaxiFleet.execute(bridge);
         } catch (IllegalArgumentException | CommandException e) {
@@ -783,7 +783,7 @@ public class SimulationFacade {
         }
     }
 
-    private List<TaxiReservation> collectTaxiReservations() throws InternalFederateException {
+    private List<RideReservation> collectTaxiReservations() throws InternalFederateException {
         return new ArrayList<>(bridge.getPersonControl().getTaxiReservations());
     }
 

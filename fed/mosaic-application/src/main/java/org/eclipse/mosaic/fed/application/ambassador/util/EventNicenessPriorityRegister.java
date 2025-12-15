@@ -34,8 +34,8 @@ public class EventNicenessPriorityRegister {
     // update traffic detectors
     public final static long UPDATE_TRAFFIC_DETECTORS = -99_999_600;
 
-    // update taxi and reservation data
-    public final static long UPDATE_TAXI_DATA = -99_999_610;
+    // update fleet and reservation data
+    public final static long UPDATE_FLEET_SERVICES = -99_999_610;
 
     // update charging station
     public final static long UPDATE_CHARGING_STATION = -99_999_500;
