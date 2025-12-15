@@ -1,3 +1,10 @@
+# Changelog Eclipse MOSAIC 25.2 (December 2025)
+* [A+] Introduce support for modeling demand responsive traffic (e.g., ride pooling, taxis) using SUMO
+* [T+] Add support for integrating SUMO's taxi device API via TraCI/libsumo
+* [M+] Introduce concept of preemptive execution in the core RTI (see upcoming publication)
+* [C+] Improve performance of ns3 federate by utilizing preemptive execution
+* [T+] Now supports SUMO 1.25.0
+ 
 # Changelog Eclipse MOSAIC 25.1 (October 2025)
  
 * [C+] Introduced support for cellular communication in ns-3 (LTE stack).

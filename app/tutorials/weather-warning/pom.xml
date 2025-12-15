@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.eclipse.mosaic</groupId>
         <artifactId>mosaic-parent</artifactId>
-        <version>25.2-SNAPSHOT</version>
+        <version>25.2</version>
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
