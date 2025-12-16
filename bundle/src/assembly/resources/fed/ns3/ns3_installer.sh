@@ -340,9 +340,9 @@ build_ns3()
     patch --strip=1 --input=${ns3_installation_path}/federate/patches/ns3.45-lte.patch
 
     log "Build ns3 version ${ns3_version}"
-    cd "${ns3_installation_path}/ns-allinone-${ns3_version}"
-    # ns-3 prior to 3.28.1 does not compile without warnings using g++ 10.2.0
-    CXXFLAGS="-Wno-error" python3 ./build.py --disable-netanim
+    cd "${ns3_installation_path}/${ns3_long_affix}/${ns3_short_affix}"
+    ./ns3 configure
+    ./ns3 build
 }
 
 build_ns3_federate()
