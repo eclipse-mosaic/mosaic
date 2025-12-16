@@ -22,7 +22,9 @@ RUN \
   unzip \
   rsync \
   wget \
-  cmake
+  cmake \
+  libboost-dev \
+  libboost-system-dev
 
 WORKDIR /home/mosaic/bin/fed/ns3
 
