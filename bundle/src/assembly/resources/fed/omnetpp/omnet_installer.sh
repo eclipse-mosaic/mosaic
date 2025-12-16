@@ -58,7 +58,7 @@ premake5_autoconf_url="https://github.com/Blizzard/premake-autoconf/archive/mast
 premake5_autoconf_zip="$(basename "$premake5_autoconf_url")"
 
 # User arguments
-arg_installation_type=USER # USER or DEVELOPER. If not defined by program argument, user will be asked during installtion process.
+arg_installation_type=UNSET # USER or DEVELOPER. If not defined by program argument, user will be asked during installtion process.
 arg_integration_testing=false
 arg_quiet=false
 arg_uninstall=false
@@ -950,15 +950,9 @@ extract_simu5g() {
   cd "$working_directory"
   if [ -f "$1" ]; then
     if [ -d "${simu5g_src_dir}" ]; then
-      # Check if simu5g was already built (libsimu5g_dbg.so exists)
-      if [ -f "${simu5g_target_dir}/libsimu5g_dbg.so" ]; then
-        fail "Simu5G already installed in ${simu5g_src_dir}. Use -F or --force to overwrite existing installation."
-      else
-        # Remove existing simu5g_src_dir
-        rm -rf "${simu5g_src_dir}"
-      fi
+      rm -rf "${simu5g_src_dir}"
     fi
-    unzip -q "$1"
+    unzip -qq -o "$1"
     cd "$working_directory"
     # Find the actual extracted directory name (handles Simu5G-version pattern)
     extracted_simu5g_dir=$(find . -maxdepth 1 -type d -name "Simu5G-*" | head -1)
