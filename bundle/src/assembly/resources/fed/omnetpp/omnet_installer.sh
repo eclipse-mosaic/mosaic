@@ -948,26 +948,26 @@ build_inet() {
 extract_simu5g() {
   progress "Extracting Simu5G from: $1 ..."
   cd "$working_directory"
-if [ -f "$1" ]; then
-	if [ -d "${simu5g_src_dir}" ]; then
-		# Check if simu5g was already built (libsimu5g_dbg.so exists)
-		if [ -f "${simu5g_target_dir}/libsimu5g_dbg.so" ]; then
-			fail "Simu5G already installed in ${simu5g_src_dir}. Use -F or --force to overwrite existing installation."
-		else
-			# Remove existing simu5g_src_dir
-			rm -rf "${simu5g_src_dir}"
-		fi
-	fi
-	unzip -q "$1"
-	cd "$working_directory"
-	# Find the actual extracted directory name (handles Simu5G-version pattern)
-	extracted_simu5g_dir=$(find . -maxdepth 1 -type d -name "Simu5G-*" | head -1)
-	if [ -n "$extracted_simu5g_dir" ]; then
-		mv "$extracted_simu5g_dir" "${simu5g_src_dir}"
-	else
-		fail "Could not find extracted Simu5G directory. Abort!"
-	fi
-	mkdir -p "${simu5g_target_dir}"
+  if [ -f "$1" ]; then
+    if [ -d "${simu5g_src_dir}" ]; then
+      # Check if simu5g was already built (libsimu5g_dbg.so exists)
+      if [ -f "${simu5g_target_dir}/libsimu5g_dbg.so" ]; then
+        fail "Simu5G already installed in ${simu5g_src_dir}. Use -F or --force to overwrite existing installation."
+      else
+        # Remove existing simu5g_src_dir
+        rm -rf "${simu5g_src_dir}"
+      fi
+    fi
+    unzip -q "$1"
+    cd "$working_directory"
+    # Find the actual extracted directory name (handles Simu5G-version pattern)
+    extracted_simu5g_dir=$(find . -maxdepth 1 -type d -name "Simu5G-*" | head -1)
+    if [ -n "$extracted_simu5g_dir" ]; then
+      mv "$extracted_simu5g_dir" "${simu5g_src_dir}"
+    else
+      fail "Could not find extracted Simu5G directory. Abort!"
+    fi
+    mkdir -p "${simu5g_target_dir}"
   else
     fail "${1} not found! Abort!"
   fi
