@@ -85,9 +85,6 @@
     <!-- <default name="ns3::ConstantSpeedPropagationDelayModel::Speed" value="2.99792e+08"/> -->
 
     <!-- WIFI SETTINGS -->
-    <default name="ns3::WifiPhy::Frequency" value="5900"/>
-    <default name="ns3::WifiPhy::ChannelNumber" value="180"/>
-    <default name="ns3::WifiPhy::ChannelWidth" value="10"/>
     <default name="ns3::WifiPhy::RxSensitivity" value="-81.02"/>
     <default name="ns3::WifiPhy::CcaEdThreshold" value="-99.0"/>
     <!-- <default name="ns3::WifiPhy::TxGain" value="0.0"/> -->
