@@ -59,7 +59,7 @@ working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ns3_installation_path=${working_directory}
 ns3_simulator_path="${working_directory}/$ns3_long_affix/$ns3_short_affix" #due to the ns3 tarball structure
 
-ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/tags/25.2.zip"
+ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/heads/1033-upgrade-to-ns3.45.zip"
 ns3_url="https://www.nsnam.org/releases/$ns3_long_affix.tar.bz2"
 ns3_federate_filename="ns3-federate-$(basename "$ns3_federate_url")"
 ns3_filename="$(basename "$ns3_url")"
