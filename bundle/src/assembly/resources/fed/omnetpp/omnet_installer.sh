@@ -1007,6 +1007,22 @@ build_simu5g() {
     (
       cd "src"
       tar -cf - $(find . -name "*.ned" -print) | (cd "${simu5g_target_dir}" && tar xBf -)
+      cd "${simu5g_target_dir}"
+      # X2AppClient.ned
+      if ! grep -q "connectAddress @mutable" x2/X2AppClient.ned; then
+          sed -i '/startTime = default(0s);/a\        connectAddress @mutable = default(""); // it will be overwritten by the initialization procedure' x2/X2AppClient.ned
+          echo "Added connectAddress to X2AppClient.ned"
+      else
+          echo "connectAddress already exists in X2AppClient.ned, skipping"
+      fi
+
+      # X2AppServer.ned
+      if ! grep -q "localPort @mutable" x2/X2AppServer.ned; then
+          sed -i '/string binderModule = default("binder");/a\        localPort @mutable = default(5000); // it will be overwritten by the initialization' x2/X2AppServer.ned
+          echo "Added localPort to X2AppServer.ned"
+      else
+          echo "localPort already exists in X2AppServer.ned, skipping"
+      fi
     )
   else
     fail "Directory \"src\" not found. Something went wrong while building Simu5G."
