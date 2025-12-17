@@ -38,7 +38,7 @@ EXPOSE 40001 40002
 ENTRYPOINT \
     omnetpp-federate/omnetpp-federate -u Cmdenv \
     -f omnetpp-federate/simulations/omnetpp.ini \
-    -n "inet:omnetpp-federate/src" \
+    -n "inet:omnetpp-federate/src:simu5g" \
     --mosaiceventscheduler-host=0.0.0.0 \
     --mosaiceventscheduler-port=40001 \
     --mosaiccmd-port=40002

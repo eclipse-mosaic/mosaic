@@ -58,7 +58,7 @@ public class OmnetppAmbassador extends AbstractNetworkAmbassador {
             throw new IllegalArgumentException(omnetppConfigFileName + " missing");
         }
         String omnetppConfigFilePath = "omnetpp-federate/simulations/" + omnetppConfigFileName;
-        String inetSourceDirectories = "inet:omnetpp-federate/src";
+        String inetSourceDirectories = "inet:omnetpp-federate/src:simu5g";
         switch (os) {
             case LINUX:
                 return new ExecutableFederateExecutor(this.descriptor, "omnetpp-federate/omnetpp-federate",
