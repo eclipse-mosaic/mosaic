@@ -141,12 +141,14 @@ Purpose-built for autonomous coding agents working in `eclipse-mosaic/mosaic`.
 - Use `@SuppressWarnings` sparingly and always include the rationale, mirroring examples in `lib/mosaic-utils`.
 
 ## Testing Patterns
-- Stick with JUnit 4 rules and annotations; reuse helper classes like `MosaicSimulationRule`, `LibsumoCheckRule`, and `LogAssert` when spinning up simulations.
-- Mock external collaborators with Mockito and verify critical logging via `LogAssert.expect(String pattern)` if behavior is observable only via logs.
-- Use deterministic data: SUMO fixtures, JSON configs, and serialized payloads belong under `src/test/resources`; load them with `getResourceAsStream` and fail fast via `Objects.requireNonNull`.
-- Prefer descriptive test names mirroring existing `CamelCase` plus `_ExpectedBehavior` suffixes.
+- Differentiate strictly between **unit tests** and **integration tests**.
+- **Unit tests** stick with JUnit 4 rules and annotations; mock external collaborators with Mockito and verify critical logging via `LogAssert.expect(String pattern)` if behavior is observable only via logs.
+- **Unit test resources** (JSON configs, SUMO data, serialized payloads) belong under `src/test/resources`; load them with `getResourceAsStream` and fail fast via `Objects.requireNonNull` like existing tests.
 - Keep assertions concise using `assertEquals`, `assertTrue`, etc., and annotate exception tests with `@Test(expected = ...)` instead of manual try/catch, matching `RingBufferTest` style.
-- Integration tests often orchestrate MOSAIC end-to-end; mark them clearly with `*IT` suffixes and isolate scenario-specific code under `org.eclipse.mosaic.test.app.*` packages.
+- **Integration tests** orchestrate MOSAIC end-to-end; mark them clearly with `*IT` suffixes and isolate scenario-specific code under `org.eclipse.mosaic.test.app.*` packages.
+- Integration tests reuse helper classes like `MosaicSimulationRule` and `LibsumoCheckRule` when spinning up simulations.
+- **Integration test scenarios** must be placed in `scenarios/test` directory; the scenario name passed to `MosaicSimulationRule` must match the scenario name in `scenarios/test`.
+- Prefer descriptive test names mirroring existing `CamelCase` plus `_ExpectedBehavior` suffixes.
 
 ## AI & Assistant Notes
 - No Cursor rules (`.cursor/rules` or `.cursorrules`) or Copilot instructions exist in this repo as of 2026-01-30; treat this document plus `CONTRIBUTING.md` as the authority.
