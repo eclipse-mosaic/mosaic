@@ -53,12 +53,12 @@ public enum SumoVersion {
     SUMO_1_26_x("1.26.*", TraciVersion.API_22),
 
     /**
-     * lowest version supported by this client.
+     * The lowest version supported by this client.
      */
     LOWEST(SUMO_1_0_x),
 
     /**
-     * highest version supported by this client.
+     * The highest version supported by this client.
      */
     HIGHEST(SUMO_1_26_x);
 
