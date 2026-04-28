@@ -48,7 +48,7 @@ required_programs_display=( python3 gcc unzip tar protobuf-compiler )
 required_programs_test=( python3 gcc unzip tar protoc )
 required_libraries=( "libprotobuf-dev >= 3.7.0" "libxml2-dev" "libsqlite3-dev" )
 
-ns3_version="3.36.1"
+ns3_version="3.45"
 
 premake5_url="https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-linux.tar.gz"
 premake5_tar="$(basename "$premake5_url")"
@@ -59,7 +59,7 @@ working_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ns3_installation_path=${working_directory}
 ns3_simulator_path="${working_directory}/$ns3_long_affix/$ns3_short_affix" #due to the ns3 tarball structure
 
-ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/tags/25.2.zip"
+ns3_federate_url="https://github.com/mosaic-addons/ns3-federate/archive/refs/heads/1033-upgrade-to-ns3.45.zip"
 ns3_url="https://www.nsnam.org/releases/$ns3_long_affix.tar.bz2"
 ns3_federate_filename="ns3-federate-$(basename "$ns3_federate_url")"
 ns3_filename="$(basename "$ns3_url")"
@@ -337,12 +337,12 @@ build_ns3()
     log "Patch ns3"
     # create patch with: `git diff master 1057-lte-in-ns3.36-integration --output=../ns3-federate/patches/ns3-lte.patch`
     cd ${ns3_installation_path}/${ns3_long_affix}/${ns3_short_affix}
-    patch --strip=1 --input=${ns3_installation_path}/federate/patches/ns3-lte.patch
+    patch --strip=1 --input=${ns3_installation_path}/federate/patches/ns3.45-lte.patch
 
     log "Build ns3 version ${ns3_version}"
-    cd "${ns3_installation_path}/ns-allinone-${ns3_version}"
-    # ns-3 prior to 3.28.1 does not compile without warnings using g++ 10.2.0
-    CXXFLAGS="-Wno-error" python3 ./build.py --disable-netanim
+    cd "${ns3_installation_path}/${ns3_long_affix}/${ns3_short_affix}"
+    ./ns3 configure
+    ./ns3 build
 }
 
 build_ns3_federate()

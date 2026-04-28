@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 LABEL \
     description="Docker image containing the MOSAIC adapted ns-3 federate" \
@@ -22,7 +22,9 @@ RUN \
   unzip \
   rsync \
   wget \
-  cmake
+  cmake \
+  libboost-dev \
+  libboost-system-dev
 
 WORKDIR /home/mosaic/bin/fed/ns3
 
