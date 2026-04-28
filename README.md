@@ -41,6 +41,8 @@ IEEE Transactions on Intelligent Transportation Systems, pp. 1 - 11, Print ISSN:
 
 View our website at **[eclipse.dev/mosaic](https://eclipse.dev/mosaic)** for detailed documentation and many tutorials to get started with Eclipse MOSAIC. For a quick start on building and running the code in this repository, just jump to the bottom section of this README file.
 
+If you are using an autonomous coding agent, read `AGENTS.md` for repository-specific build, test, and style guidance.
+
 ## The Essential Edition of Eclipse MOSAIC
 
 This repository contains the *Essential* edition of Eclipse MOSAIC, which includes the runtime infrastructure, 

@@ -816,6 +816,7 @@ configure_omnet() {
   set +o nounset
   source setenv
   set -o nounset
+  python -m pip install setuptools==63.0.0
   python -m pip install -r python/requirements.txt
   sed -i -e "s/PREFER_CLANG=yes/PREFER_CLANG=no/" configure.user
   # sed -i -e "s/#CXXFLAGS=-std=c++17/CXXFLAGS=-std=c++17/" configure.user
