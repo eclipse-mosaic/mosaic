@@ -12,7 +12,7 @@
     "ol": "^5.1.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.1",
+    "@babel/core": "^7.29.6",
     "@babel/preset-env": "^7.11.0",
     "babelify": "^9.0.0",
     "browserify": "^16.5.2",
